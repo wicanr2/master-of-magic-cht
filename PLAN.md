@@ -92,7 +92,7 @@
 
 ### Phase 3 — 版面與打包
 - [ ] 破版修正 (`mapX/mapY`、密集面板自動縮字)
-- [ ] 跨平台打包 (Linux / Windows),沿用 MOO 打包經驗
+- [ ] 跨平台打包,順序見 [`docs/porting-difficulty.md`](docs/porting-difficulty.md):Linux/Windows (🟢) → Web WASM (🟢,上游已通) → macOS (🟡,GitHub Actions runner) → Android (🟠,觸控 UX)
 - [ ] README 升級成「給玩家的信」(套 rule `80-retro-cht-readme-polish`)
 
 ---
