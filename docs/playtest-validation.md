@@ -62,3 +62,27 @@ font 繪製的欄位標籤已中文化:**施法技巧:**、**法力儲蓄:**、*
 
 **仍待逐畫面疊字** (深層畫面,持續工程):魔法畫面 (Mana/Research/Skill/Overland Enchantments/Alchemy/Ok)、
 城市、戰鬥、魔法書、外交、英雄、物品等的烘字標題/按鈕。font 文字 (631 條) 已全面覆蓋。
+
+---
+
+## 最終驗證 (全 20 畫面 baked UI 疊字完成,2026-06-22)
+
+所有主要畫面的「烘進 LBX 圖片的英文 UI」已用 font 疊字中文化 (20 畫面),重建純內嵌 AppImage 最終驗證:
+
+**已中文化的 20 畫面**:主選單、Overworld、Game Options、魔法、城市、戰鬥、外交、巫師狀態鏡、
+巫師建立、雇用英雄、神器鍛造、召喚、商人、施法書/施法目標、讀取存檔/遊戲選單、地圖勘查、
+城市結界、雇用傭兵、精通施放、放逐。
+
+**機制**:
+- font 文字 (937 條譯文,item-powers/artifacts/spells/ui/units) — 顯示層覆蓋層自動翻譯。
+- 含 %v 的格式字串 — `font.TranslateFormat(模板)` 在 Sprintf 前翻譯模板。
+- 烘進圖片的標題/按鈕 — `util.ChtLabel`/`util.ChtLabelRect`/`game.chtButtonLabel`:擦底色 + font 疊銳利中文。
+
+**最終 AppImage 驗證** (純內嵌,無 env):
+- Overworld:頂部選單 (遊戲/法術/軍隊/城市/魔法/資訊/位面) + 單位按鈕 (完成/巡邏/等待/建造) + 標題全中文 (`img/final-overworld-1.60.png`)。
+- 魔法畫面 (in-game 導航):法力/研究/施法/全域結界/煉金/確定 + 底部欄位全中文 (`img/final-magic-1.60.png`)。
+- 主選單、Game Options:全中文。
+- 啟動/導航/無崩潰,皆從內嵌資產渲染。
+
+**剩餘英文**:動態資料 (城市名/巫師名/英雄名等專有名詞)、純數值 (4 MP/30(30))、
+少數合成字串 (race+unit 拼接如 "Halfling Spearmen")、美術 logo/製作群 — 屬「本就不該翻或翻不到」類別。
