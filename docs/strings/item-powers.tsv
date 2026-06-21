@@ -1,0 +1,68 @@
+source	zh	note
+# 物品能力 / 附魔 (itempow.lbx, 64 筆)。source 欄保留原文前導空白以利覆蓋層精確比對。
+ +1 Attack	+1 攻擊
+ +2 Attack	+2 攻擊
+ +3 Attack	+3 攻擊
+ +4 Attack	+4 攻擊
+ +5 Attack	+5 攻擊
+ +6 Attack	+6 攻擊
+ +1 Defense	+1 防禦
+ +2 Defense	+2 防禦
+ +3 Defense	+3 防禦
+ +4 Defense	+4 防禦
+ +5 Defense	+5 防禦
+ +6 Defense	+6 防禦
+ +1 To Hit	+1 命中
+ +2 To Hit	+2 命中
+ +3 To Hit	+3 命中
+ +1 Movement	+1 移動
+ +2 Movement	+2 移動
+ +3 Movement	+3 移動
+ +4 Movement	+4 移動
+ +1 Resistance	+1 抗性
+ +2 Resistance	+2 抗性
+ +3 Resistance	+3 抗性
+ +4 Resistance	+4 抗性
+ +5 Resistance	+5 抗性
+ +6 Resistance	+6 抗性
+ +5 Spell Skill	+5 法術技能
++10 Spell Skill	+10 法術技能
++15 Spell Skill	+15 法術技能
++20 Spell Skill	+20 法術技能
+ -1 Spell Save	-1 法術豁免	降低目標抵抗此物品法術的豁免
+ -2 Spell Save	-2 法術豁免
+ -3 Spell Save	-3 法術豁免
+ -4 Spell Save	-4 法術豁免
+Flaming	烈焰	火屬性傷害
+Lightning	閃電	無視部分防禦
+Chaos	混沌	混沌系傷害
+Destruction	毀滅	暴擊即死機率
+Vampiric	吸血	造成傷害回復生命
+Death	死亡	死亡屬性傷害
+Power Drain	法力汲取	攻擊汲取敵方法力
+Holy Avenger	神聖復仇者	對不死/混沌生物加成
+True Sight	真實視覺	免疫幻術
+Resist Elements	元素抗性	火/冷傷害減免
+Elemental Armor	元素護甲	強化元素抗性
+Giant Strength	巨人之力	提升攻擊力
+Stoning	石化	攻擊附帶石化
+Phantasmal	幻影	幻影傷害
+Guardian Wind	守護之風	抵禦遠程攻擊
+Haste	加速	攻擊與移動加速
+Resist Magic	魔法抗性	提升抗性對抗法術
+Magic Immunity	魔法免疫	免疫多數法術
+Wraithform	幽靈形態	物理攻擊減傷
+Cloak of Fear	恐懼斗篷	使近戰敵人恐懼
+Bless	祝福	抵禦死亡/混沌法術
+Righteousness	正義	免疫死亡/混沌法術
+@Invulnerability	無敵	大幅減免物理傷害
+Endurance	耐力	提升移動
+Planar Travel	位面旅行	可在位面間移動
+Lion Heart	獅心	提升生命/攻擊/抗性
+Water Walking	水上行走	可通行水域
+Regeneration	再生	每回合回復生命
+Pathfinding	尋路	地形移動消耗降低
+Merging	融合	可穿越地形
+ Flight	飛行	獲得飛行能力
+Invisibility	隱形	不易被攻擊
+Spell Charges	法術充能	物品儲存可施放的法術

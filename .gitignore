@@ -1,0 +1,29 @@
+# === 版權資產:絕不入 git ===
+# 原版遊戲檔 (DOS Master of Magic) 與手冊
+original_game/
+extracted/
+*.lbx
+*.LBX
+*.gam
+*.bak
+manual.pdf
+msdos_mom.zip
+
+# 引擎本體 (由 scripts/fetch-engine.sh 取得,不 vendor)
+engine/
+mom-engine/
+
+# === 建置 / 暫存 ===
+build/
+dist/
+*.exe
+*.o
+*.a
+.scratch/
+/tmp/
+
+# === 編輯器 / 系統 ===
+.DS_Store
+*.swp
+.idea/
+.vscode/
