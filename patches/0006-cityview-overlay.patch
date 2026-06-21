@@ -1,0 +1,99 @@
+--- /tmp/mom-engine/game/magic/cityview/city-screen.go	2026-06-21 19:30:05.864026410 +0800
++++ /tmp/mom-city/game/magic/cityview/city-screen.go	2026-06-22 02:16:18.311103262 +0800
+@@ -889,6 +889,7 @@
+             }
+ 
+             scale.DrawScaled(screen, buyButtons[use], &options)
++            util.ChtLabel(screen, element.Rect, buyButtons[use], cityScreen.Fonts.SmallFont, "購買")
+         },
+     })
+ 
+@@ -915,6 +916,7 @@
+                 var options ebiten.DrawImageOptions
+                 options.GeoM.Translate(float64(element.Rect.Min.X), float64(element.Rect.Min.Y))
+                 scale.DrawScaled(screen, changeButton, &options)
++                util.ChtLabel(screen, element.Rect, changeButton, cityScreen.Fonts.SmallFont, "更換")
+             },
+         })
+     }
+@@ -940,6 +942,7 @@
+                 var options ebiten.DrawImageOptions
+                 options.GeoM.Translate(float64(element.Rect.Min.X), float64(element.Rect.Min.Y))
+                 scale.DrawScaled(screen, okButton, &options)
++                util.ChtLabel(screen, element.Rect, okButton, cityScreen.Fonts.SmallFont, "確定")
+             },
+         })
+     }
+@@ -2340,6 +2343,12 @@
+     if err == nil {
+         var options ebiten.DrawImageOptions
+         scale.DrawScaled(screen, ui, &options)
++        // 疊蓋烘進背景圖的英文面板標題 (logical coords: scale=3)
++        util.ChtLabelRect(screen, image.Rect(0, 41, 138, 49), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "資源")
++        util.ChtLabelRect(screen, image.Rect(138, 41, 212, 49), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "城市魔法")
++        util.ChtLabelRect(screen, image.Rect(0, 94, 212, 102), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "建築物")
++        util.ChtLabelRect(screen, image.Rect(212, 94, 320, 102), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "單位")
++        util.ChtLabelRect(screen, image.Rect(212, 138, 320, 146), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "生產中")
+     }
+ 
+     cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", cityScreen.City.GetSize(), cityScreen.City.Name))
+@@ -2380,8 +2389,15 @@
+             scale.DrawScaled(screen, producingPics[index], &options)
+         }
+ 
++        // 生產中建築名稱：Housing/Trade Goods 直接換中文，其餘透過 strings 表
++        producingName := cityScreen.City.BuildingInfo.Name(cityScreen.City.ProducingBuilding)
++        switch cityScreen.City.ProducingBuilding {
++            case buildinglib.BuildingHousing: producingName = "住宅"
++            case buildinglib.BuildingTradeGoods: producingName = "貿易品"
++        }
++
+         var lines []string
+-        parts := strings.Split(cityScreen.City.BuildingInfo.Name(cityScreen.City.ProducingBuilding), " ")
++        parts := strings.Split(producingName, " ")
+         for _, part := range parts {
+             if len(lines) == 0 {
+                 lines = append(lines, part)
+@@ -2412,8 +2428,8 @@
+ 
+             description := ""
+             switch cityScreen.City.ProducingBuilding {
+-                case buildinglib.BuildingTradeGoods: description = "Trade Goods"
+-                case buildinglib.BuildingHousing: description = "Increases population growth rate."
++                case buildinglib.BuildingTradeGoods: description = "貿易品"
++                case buildinglib.BuildingHousing: description = "提升人口成長率"
+             }
+ 
+             cityScreen.Fonts.ProducingFont.PrintWrap(screen, 285, 155, 60, font.FontOptions{Justify: font.FontJustifyCenter, DropShadow: true, Scale: scale.ScaleAmount}, description)
+@@ -2441,9 +2457,9 @@
+         turn := ""
+         turns := (float64(workRequired) - float64(cityScreen.City.Production)) / float64(cityScreen.City.WorkProductionRate())
+         if turns <= 0 {
+-            turn = "1 Turn"
++            turn = "1 回合"
+         } else {
+-            turn = fmt.Sprintf("%v Turns", int(math.Ceil(turns)))
++            turn = fmt.Sprintf("%v 回合", int(math.Ceil(turns)))
+         }
+ 
+         cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 318, 140, font.FontOptions{Justify: font.FontJustifyRight, Scale: scale.ScaleAmount}, turn)
+--- /tmp/mom-engine/game/magic/cityview/build-screen.go	2026-06-21 19:30:05.863674321 +0800
++++ /tmp/mom-city/game/magic/cityview/build-screen.go	2026-06-22 02:13:32.596218998 +0800
+@@ -429,7 +429,7 @@
+                 options.GeoM.Translate(float64(cancelX), float64(cancelY))
+                 scale.DrawScaled(screen, buttonBackground, &options)
+ 
+-                fonts.OkCancelFont.PrintOptions(screen, float64(cancelX + buttonBackground.Bounds().Dx() / 2), float64(cancelY + 1), font.FontOptions{Scale: scale.ScaleAmount, Justify: font.FontJustifyCenter}, "Cancel")
++                util.ChtLabel(screen, this.Rect, buttonBackground, fonts.OkCancelFont, "取消")
+             },
+         })
+ 
+@@ -452,7 +452,7 @@
+                 options.GeoM.Translate(float64(okX), float64(okY))
+                 scale.DrawScaled(screen, buttonBackground, &options)
+ 
+-                fonts.OkCancelFont.PrintOptions(screen, float64(okX + buttonBackground.Bounds().Dx() / 2), float64(okY + 1), font.FontOptions{Scale: scale.ScaleAmount, Justify: font.FontJustifyCenter}, "Ok")
++                util.ChtLabel(screen, this.Rect, buttonBackground, fonts.OkCancelFont, "確定")
+             },
+         })
+     }
