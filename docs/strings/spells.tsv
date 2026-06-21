@@ -1,0 +1,217 @@
+source	zh	note
+# 法術名 (spelldat.lbx, 214 筆,含 index0 "None" 佔位不翻)。source 照原檔 (含原始拼字)。
+# 覆蓋層 TrimSpace 精確比對。1.31/1.60 此檔法術名 0 差異,兩版通用。
+Earth to Mud	化土為泥
+Resist Elements	元素抗性
+Wall of Stone	石牆
+Giant Strength	巨人之力
+War Bears	戰熊
+Stone Skin	石膚術
+Water Walking	水上行走
+Sprites	妖精
+Earth Lore	大地探知
+Cracks Call	地裂術
+Nature's Eye	自然之眼
+Ice Bolt	寒冰箭
+Giant Spiders	巨蜘蛛
+Change Terrain	改變地形
+Path Finding	尋路
+Cockatrices	雞蛇獸
+Transmute	嬗變術
+Nature's Cures	自然治癒
+Basilisk	石化蜥
+Elemental Armor	元素護甲
+Petrify	石化術
+Stone Giant	石巨人
+Iron Skin	鐵膚術
+Ice Storm	冰暴
+Earthquake	地震
+Gorgons	蛇髮女妖
+Move Fortress	遷移要塞
+Gaia's Blessing	蓋亞的祝福
+Earth Elemental	土元素
+Regeneration	再生
+Behemoth	比蒙巨獸
+Entangle	纏繞術
+Nature Awareness	自然感知
+Call Lightning	召喚閃電
+Colossus	巨像
+Earth Gate	大地之門
+Herb Mastery	草藥精通
+Great Wyrm	巨蠕龍
+Nature's Wrath	自然之怒
+Resist Magic	魔法抗性
+Dispel Magic True	真實解除魔法
+Floating Island	浮空島
+Guardian Wind	守護之風
+Phantom Warriors	幻影戰士
+Confusion	混亂術
+Word of Recall	召回咒語
+Counter Magic	反制魔法
+Nagas	娜迦
+Psionic Blast	心靈衝擊
+Blur	朦朧術
+Disenchant True	真實祛魔
+Vertigo	暈眩術
+Spell Lock	法術鎖
+Enchant Road	附魔道路
+Flight	飛行
+Wind Mastery	風之精通
+Spell Blast	法術爆破
+Aura of Majesty	威嚴光環
+Phantom Beast	幻影野獸
+Disjunction True	真實解離
+Invisiblity	隱形
+Wind Walking	御風行
+Banish	放逐術
+Storm Giant	風暴巨人
+Air Elemental	風元素
+Mind Storm	心靈風暴
+Stasis	停滯術
+Magic Immunity	魔法免疫
+Haste	加速術
+Djinn	迪精
+Spell Ward	法術守護
+Creature Binding	生物束縛
+Mass Invisibility	群體隱形
+Great Unsummoning	強力遣散
+Spell Binding	法術束縛
+Flying Fortress	飛行要塞
+Sky Drake	天空巨龍
+Suppress Magic	壓制魔法
+Time Stop	時間停止
+Warp Wood	扭木術
+Disrupt	破壞術
+Fire Bolt	火焰箭
+Hell Hounds	地獄犬
+Corruption	腐化術
+Eldritch Weapon	邪能武器
+Wall of Fire	火牆
+Shatter	碎裂術
+Warp Creature	扭曲生物
+Fire Elemental	火元素
+Lightning Bolt	閃電箭
+Fire Giant	火巨人
+Chaos Channels	混沌通道
+Flame Blade	烈焰刃
+Gargoyles	石像鬼
+Fireball	火球術
+Doom Bat	厄運蝙蝠
+Raise Volcano	隆起火山
+Immolation	焚身術
+Chimeras	奇美拉
+Warp Lightning	扭曲閃電
+Metal Fires	金屬烈焰
+Chaos Spawn	混沌孳生體
+Doom Bolt	厄運箭
+Magic Vortex	魔法漩渦
+Efreet	火焰巨靈
+Fire Storm	火焰風暴
+Warp Reality	扭曲現實
+Flame Strike	烈焰打擊
+Chaos Rift	混沌裂隙
+Hydra	九頭蛇
+Disintegrate	瓦解術
+Meteor Storm	流星風暴
+Great Wasting	大荒蕪
+Call Chaos	召喚混沌
+Chaos Surge	混沌洪流
+Doom Mastery	厄運精通
+Great Drake	偉大巨龍
+Call the Void	召喚虛空
+Armageddon	末日浩劫
+Bless	祝福術
+Star Fires	星辰之火
+Endurance	耐力術
+Holy Weapon	神聖武器
+Healing	治療術
+Holy Armor	神聖護甲
+Just Cause	正義之師
+True Light	真光術
+Guardian Spirit	守護靈
+Heroism	英雄氣概
+True Sight	真實視覺
+Plane Shift	位面轉移
+Resurrection	復活術
+Dispel Evil	驅邪術
+Planar Seal	位面封印
+Unicorns	獨角獸
+Raise Dead	復生術
+Planar Travel	位面旅行
+Heavenly Light	天堂之光
+Prayer	祈禱術
+Lionheart	獅心術
+Incarnation	化身術
+Invulnerability	無敵術
+Righteousness	正義術
+@Prosperity	繁榮術
+Prosperity	繁榮術
+Altar of Battle	戰鬥祭壇
+Angel	天使
+Stream of Life	生命之流
+Mass Healing	群體治療
+Holy Word	神聖言語
+High Prayer	高等祈禱
+Inspirations	鼓舞術
+Astral Gate	星界之門
+Holy Arms	神聖軍備
+Consecration	聖化術
+Life Force	生命力
+Tranquility	寧靜術
+Crusade	聖戰
+Arch Angel	大天使
+Charm of Life	生命護符
+Skeletons	骷髏
+Weakness	虛弱術
+Dark Rituals	黑暗儀式
+Cloak of Fear	恐懼斗篷
+Black Sleep	黑暗沉眠
+Ghouls	食屍鬼
+Life Drain	生命汲取
+Terror	恐怖術
+Darkness	黑暗術
+Mana Leak	法力洩漏
+Drain Power	汲取法力
+Possession	附身術
+Lycanthropy	狼化術
+Black Prayer	黑暗祈禱
+Black Channels	黑暗通道
+Night Stalker	夜行獵者
+Subversion	顛覆術
+Wall of Darkness	黑暗之牆
+Berserk	狂暴術
+Shadow Demons	暗影惡魔
+Wraith Form	幽魂形態
+Wrack	摧殘術
+Evil Presence	邪惡存在
+Wraiths	幽魂
+Cloud of Shadow	暗影之雲
+Warp Node	扭曲節點
+Black Wind	黑風術
+Zombie Mastery	殭屍精通
+Famine	饑荒術
+Cursed Lands	詛咒之地
+Cruel Unminding	殘酷消解
+Word of Death	死亡言語
+Death Knights	死亡騎士
+Death Spell	死亡咒語
+Animate Dead	喚醒亡者
+Pestilence	瘟疫術
+Eternal Night	永夜
+Evil Omens	邪惡預兆
+Death Wish	求死術
+Demon Lord	惡魔領主
+Magic Spirit	魔法精靈
+Dispel Magic	解除魔法
+Summoning Circle	召喚法陣
+Disenchant Area	區域祛魔
+Recall Hero	召回英雄
+Detect Magic	偵測魔法
+Enchant Item	附魔物品
+Summon Hero	召喚英雄
+Awareness	感知術
+Disjunction	解離術
+Create Artifact	製造神器
+Summon Champion	召喚勇士
+Spell of Mastery	精通咒語
+Spell of Return	歸返咒語
