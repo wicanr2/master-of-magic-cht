@@ -1,8 +1,17 @@
 diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
-index f0917fe..1b8c1b9 100644
+index f0917fe..d234680 100644
 --- a/game/magic/setup/new-game.go
 +++ b/game/magic/setup/new-game.go
-@@ -151,6 +151,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+@@ -2,6 +2,8 @@ package setup
+ 
+ import (
+     "log"
++    "image"
++    "image/color"
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/font"
+@@ -151,6 +153,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
              var options ebiten.DrawImageOptions
              options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
              scale.DrawScaled(screen, okButtons[okIndex], &options)
@@ -10,7 +19,7 @@ index f0917fe..1b8c1b9 100644
          },
      })
  
-@@ -172,6 +173,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+@@ -172,6 +175,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
              var options ebiten.DrawImageOptions
              options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
              scale.DrawScaled(screen, cancelButtons[cancelIndex], &options)
@@ -18,12 +27,26 @@ index f0917fe..1b8c1b9 100644
          },
      })
  
+@@ -275,6 +279,13 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+             optionsImage, _ := newGameScreen.ImageCache.GetImage("newgame.lbx", 1, 0)
+             scale.DrawScaled(screen, optionsImage, &options)
+ 
++            // 中文化:疊面板標題與 4 列標籤 (烘在 newgame.lbx 1 的英文)
++            tan := color.RGBA{R: 102, G: 72, B: 50, A: 255}
++            util.ChtLabelRect(screen, image.Rect(180, 6, 312, 22), buttonFont, tan, "遊戲設定")
++            util.ChtLabelRect(screen, image.Rect(168, 40, 248, 54), buttonFont, tan, "難度")
++            util.ChtLabelRect(screen, image.Rect(168, 67, 248, 81), buttonFont, tan, "對手")
++            util.ChtLabelRect(screen, image.Rect(168, 94, 248, 108), buttonFont, tan, "陸地大小")
++            util.ChtLabelRect(screen, image.Rect(168, 121, 248, 135), buttonFont, tan, "魔法")
+         },
+         HandleKeys: func(keys []ebiten.Key){
+             for _, key := range keys {
 diff --git a/game/magic/util/cht_label.go b/game/magic/util/cht_label.go
 new file mode 100644
-index 0000000..eabeebe
+index 0000000..124c9d5
 --- /dev/null
 +++ b/game/magic/util/cht_label.go
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,49 @@
 +package util
 +
 +// 中文化共用疊字:在烘進 LBX 的英文按鈕/標籤圖上,先填深色擦掉英文 (保留外框),
@@ -56,3 +79,20 @@ index 0000000..eabeebe
 +		float64(rect.Min.X)+bw/2, float64(rect.Min.Y)+2,
 +		font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
 +}
++
++// ChtLabelRect 在指定 logical rect 疊中文:先用 fill 色蓋掉烘入的英文 (面板紋理背景用取樣色),
++// 再用 fnt 置中疊中文。給 baked 在面板/背景圖、無獨立 sprite 的標籤用。
++func ChtLabelRect(screen *ebiten.Image, rect image.Rectangle, fnt *font.Font, fill color.Color, label string) {
++	if label == "" || fnt == nil {
++		return
++	}
++	S := scale.ScaleAmount
++	vector.DrawFilledRect(screen,
++		float32(float64(rect.Min.X)*S), float32(float64(rect.Min.Y)*S),
++		float32(float64(rect.Dx())*S), float32(float64(rect.Dy())*S),
++		fill, false)
++	fnt.PrintOptions(screen,
++		float64(rect.Min.X)+float64(rect.Dx())/2, float64(rect.Min.Y)+1,
++		font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
++}
++
