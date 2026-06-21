@@ -1,0 +1,120 @@
+diff --git a/game/magic/util/image-cache.go b/game/magic/util/image-cache.go
+index b7ac065..f8d8ebc 100644
+--- a/game/magic/util/image-cache.go
++++ b/game/magic/util/image-cache.go
+@@ -164,6 +164,12 @@ func (cache *ImageCache) GetImagesTransform(lbxPath string, index int, extra str
+         return images, nil
+     }
+ 
++    // 圖片覆蓋層 (中文化):若此 (lbx,index) 有中文替換圖,改用之 (版權 LBX 不動)
++    if images, ok := overrideImages(lbxPath, index); ok {
++        cache.Cache[key] = images
++        return images, nil
++    }
++
+     lbxFile, err := cache.LbxCache.GetLbxFile(lbxPath)
+     if err != nil {
+         return nil, err
+diff --git a/game/magic/util/image_override.go b/game/magic/util/image_override.go
+new file mode 100644
+index 0000000..5da75bf
+--- /dev/null
++++ b/game/magic/util/image_override.go
+@@ -0,0 +1,97 @@
++package util
++
++// 圖片覆蓋層 —— 工作魔法大帝中文化(處理「烘進 LBX 的圖片 UI 文字」)。
++//
++// 顯示層字串覆蓋 (lib/font) 只能換 font 繪製的文字;頂部選單 / 按鈕 / 畫面標題等是
++// 烘進版權 LBX 的點陣圖,font 覆蓋碰不到。本層在 ImageCache.GetImagesTransform 的單一
++// 載圖入口攔截:若某 (lbxFile, index) 有中文替換圖,改回傳中文版,版權 LBX 不動。
++//
++// 替換圖來源:環境變數 MOM_CHT_IMAGES 指向目錄,檔名規約 `<lbx>_<index>.png`
++// (lbx 去副檔名小寫,如 main.lbx index 12 -> main_12.png)。單張即覆蓋該 index 的所有 frame
++// 的第 0 張;多 frame 可用 `<lbx>_<index>_<frame>.png`。找不到則回退原圖,不影響英文。
++//
++// 探查:設 MOM_CHT_IMGLOG=<檔> 會把每個被請求的 (lbx,index,frameCount) 記下,
++// 供逐畫面定位哪張圖是哪個 UI 元素 (中文化美術的對照來源)。
++
++import (
++	"image/png"
++	"os"
++	"path/filepath"
++	"strconv"
++	"strings"
++	"sync"
++
++	"github.com/hajimehoshi/ebiten/v2"
++)
++
++var (
++	imgOverrideOnce sync.Once
++	imgOverrideDir  string
++	imgLogPath      string
++	imgLogMu        sync.Mutex
++	imgLogSeen      = map[string]bool{}
++)
++
++func initImageOverride() {
++	imgOverrideDir = os.Getenv("MOM_CHT_IMAGES")
++	imgLogPath = os.Getenv("MOM_CHT_IMGLOG")
++}
++
++// overrideImages 回傳 (lbxFile, index) 的中文替換圖;無替換時回傳 (nil, false)。
++func overrideImages(lbxPath string, index int) ([]*ebiten.Image, bool) {
++	imgOverrideOnce.Do(initImageOverride)
++
++	if imgLogPath != "" {
++		logImageRequest(lbxPath, index)
++	}
++	if imgOverrideDir == "" {
++		return nil, false
++	}
++
++	base := strings.TrimSuffix(strings.ToLower(lbxPath), ".lbx")
++	// 多 frame:<lbx>_<index>_<frame>.png 依序;否則單張 <lbx>_<index>.png
++	var out []*ebiten.Image
++	for frame := 0; ; frame++ {
++		p := filepath.Join(imgOverrideDir, base+"_"+strconv.Itoa(index)+"_"+strconv.Itoa(frame)+".png")
++		img := loadOverridePNG(p)
++		if img == nil {
++			break
++		}
++		out = append(out, img)
++	}
++	if len(out) > 0 {
++		return out, true
++	}
++	// 單張形式
++	if img := loadOverridePNG(filepath.Join(imgOverrideDir, base+"_"+strconv.Itoa(index)+".png")); img != nil {
++		return []*ebiten.Image{img}, true
++	}
++	return nil, false
++}
++
++func loadOverridePNG(path string) *ebiten.Image {
++	f, err := os.Open(path)
++	if err != nil {
++		return nil
++	}
++	defer f.Close()
++	img, err := png.Decode(f)
++	if err != nil {
++		return nil
++	}
++	return ebiten.NewImageFromImage(img)
++}
++
++func logImageRequest(lbxPath string, index int) {
++	imgLogMu.Lock()
++	defer imgLogMu.Unlock()
++	key := lbxPath + ":" + strconv.Itoa(index)
++	if imgLogSeen[key] {
++		return
++	}
++	imgLogSeen[key] = true
++	if f, err := os.OpenFile(imgLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
++		f.WriteString(key + "\n")
++		f.Close()
++	}
++}
