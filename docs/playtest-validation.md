@@ -43,3 +43,22 @@ font 繪製的欄位標籤已中文化:**施法技巧:**、**法力儲蓄:**、*
 
 - `dist/MasterOfMagic-CHT-x86_64.AppImage`(~40MB,含全 1.60 遊戲檔 + 內嵌中文化;版權檔不入公開 repo)。
 - 執行:`./MasterOfMagic-CHT-x86_64.AppImage`(自帶資料,直接玩);或 `-start` 直接開局。
+
+---
+
+## 第二輪驗證 (圖片 UI 疊字後,2026-06-22)
+
+對「烘進 LBX 的圖片 UI」用 font 疊字中文化後,重建 AppImage 重新驗證 (純內嵌,無 env):
+
+- **主選單**:快速開始/繼續遊戲/讀取進度/新遊戲/離開遊戲 全中文。
+- **Overworld**:頂部選單 (遊戲/法術/軍隊/城市/魔法/資訊/位面)、單位按鈕 (完成/巡邏/等待/建造)、
+  標題 (新城市命名) 全中文,字級放大、補丁色融入按鈕 (設計師微調)。見 `img/hud-overworld-chinese-1.60.png`。
+- **Game Options**:標題 (遊戲設定)、4 標籤 (難度/對手/陸地大小/魔法)、值 (入門/三/中/普通)、
+  按鈕 (取消/確定) 全中文,英文殘邊掃描歸零、填色取樣面板底色融入。見 `img/gameoptions-chinese-1.60.png`。
+- 啟動/導航/無崩潰,皆從內嵌資產渲染。
+
+技法:在引擎繪製烘字圖後,先填 (取樣) 底色擦掉英文、再用 font 疊銳利中文 (rule 81)。
+共用 helper:`game.chtButtonLabel` (game.go)、`util.ChtLabel`/`util.ChtLabelRect` (跨畫面)。
+
+**仍待逐畫面疊字** (深層畫面,持續工程):魔法畫面 (Mana/Research/Skill/Overland Enchantments/Alchemy/Ok)、
+城市、戰鬥、魔法書、外交、英雄、物品等的烘字標題/按鈕。font 文字 (631 條) 已全面覆蓋。
