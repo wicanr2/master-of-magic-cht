@@ -1,0 +1,103 @@
+source	zh	note
+# 單位名稱 (unit.go hardcode)。source 照原始碼字面量。覆蓋層 TrimSpace 精確比對。
+# 已在 spells.tsv 出現的 41 個召喚獸/神靈/幻象另有條目,本檔跳過(避免重複 key)。
+# ── 一般作戰單位 ──
+Swordsmen	劍士
+Spearmen	矛兵
+Bowmen	弓兵
+Cavalry	騎兵
+Calvary	騎兵	原始碼拼字 typo(Calvary),照字面保留作對應
+Halberdiers	戟兵
+Pikemen	長槍兵
+Settlers	開拓者
+Engineers	工兵
+Magicians	法師
+Priests	祭司
+Shamans	薩滿
+Shaman	薩滿	單數拼法,原始碼存在兩種 key
+Catapult	投石機
+Slingers	投石兵
+Longbowmen	長弓兵
+Javelineers	標槍兵
+Horsebowmen	馬弓兵
+Berserkers	狂戰士
+Nightblades	暗刃
+Wolf Riders	狼騎兵
+Warlocks	術士
+Hammerhands	鎚手
+Steam Cannon	蒸汽加農
+Stag Beetle	鍬形蟲
+Doom Drake	末日巨龍
+Golem	魔像
+Air Ship	飛空艇
+Paladins	聖騎士
+Rangers	遊俠
+Centaurs	半人馬
+Manticores	蠍獅
+Minotaurs	牛頭人
+WereWolves	狼人
+War Trolls	戰鬥巨魔
+Wyvern Riders	飛蛟騎士
+Nightmares	夢魘馬
+War Mammoths	戰象猛獁
+Dragon Turtle	龍龜
+Griffins	獅鷲
+Pegasai	飛馬	(原名複數 Pegasai)
+Demon	惡魔
+Zombies	殭屍
+Galley	槳帆船
+Trireme	三列槳戰船
+Warship	戰艦
+ElvenLord	精靈領主
+# ── 英雄 (固有名詞音譯為主,加括注職銜或種族) ──
+Brax	布拉克斯
+Gunther	根瑟
+B'Shan	貝珊
+Bahgtru	巴赫特魯
+Greyfairer	格雷法爾
+Jaer	亞爾
+Fang	牙	(英雄名)
+Aureus	歐瑞斯
+Aerie	艾麗
+Elana	伊拉娜
+Alorra	艾蘿拉
+Zaldron	薩爾德隆
+Rakir	拉奇爾
+Valana	瓦拉娜
+Serena	賽麗娜
+Shuri	舒里
+Theria	瑟芮雅
+Taki	塔奇
+Reywind	雷文
+Malleus	瑪雷斯
+Tumu	圖穆
+Marcus	馬庫斯
+Morgana	摩根娜
+Shin Bo	辛博
+Spyder	史派德
+Shalla	莎拉
+Yramrag	伊拉姆拉格
+Mystic X	神秘客X
+Deth Stryke	死亡突擊
+Roland	羅蘭
+Mortu	莫圖
+Sir Harold	哈洛德爵士
+Ravashack	拉瓦夏克
+Warrax	瓦拉克斯
+Torin	托林
+# ── 種族名 (Race.String() 回傳值,顯示層用) ──
+Lizardmen	蜥蜴人
+Nomad	游牧人
+Orc	獸人
+Troll	巨魔
+Barbarian	野蠻人
+Beastmen	獸人族	(Beastmen 與 Orc 同「獸人」惟族群不同,加括注區分)
+Dark Elf	黑暗精靈
+Draconian	龍人
+Dwarf	矮人
+Gnoll	豺狼人
+Halfling	半身人
+High Elf	高等精靈
+High Men	高等人族
+Klackon	克拉肯蟻族
+Fantastic	奇幻生物	(Race 分類標籤,非玩家種族)

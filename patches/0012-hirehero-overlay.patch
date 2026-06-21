@@ -1,0 +1,52 @@
+diff --git a/game/magic/data/abilities.go b/game/magic/data/abilities.go
+index fefc1a9..e9f3d72 100644
+--- a/game/magic/data/abilities.go
++++ b/game/magic/data/abilities.go
+@@ -392,7 +392,7 @@ func (ability Ability) Name() string {
+         case AbilityPurify: return "Purify"
+         case AbilityRegeneration: return "Regeneration"
+         case AbilityResistanceToAll: return "Resistance to all"
+-        case AbilityScouting: return fmt.Sprintf("Scouting %v", romanNumeral(int(ability.Value)))
++        case AbilityScouting: return fmt.Sprintf("偵察%v", romanNumeral(int(ability.Value)))
+         case AbilityStoningGaze: return fmt.Sprintf("Stoning Gaze %v", int(ability.Value))
+         case AbilityStoningImmunity: return "Stoning Immunity"
+         case AbilityStoningTouch: return fmt.Sprintf("Stoning Touch %v", int(ability.Value))
+@@ -414,7 +414,7 @@ func (ability Ability) Name() string {
+         case AbilitySuperArmsmaster: return plusValue("Super Armsmaster")
+         case AbilityBlademaster: return plusValue10("Blademaster")
+         case AbilitySuperBlademaster: return plusValue10("Super Blademaster")
+-        case AbilityCaster: return fmt.Sprintf("Caster %v mp", ability.Value)
++        case AbilityCaster: return fmt.Sprintf("施法 %v", ability.Value)
+         case AbilityCharmed: return "Charmed"
+         case AbilityConstitution: return plusValue("Constitution")
+         case AbilitySuperConstitution: return plusValue("Super Constitution")
+diff --git a/game/magic/game/hero.go b/game/magic/game/hero.go
+index 0a73645..913f371 100644
+--- a/game/magic/game/hero.go
++++ b/game/magic/game/hero.go
+@@ -59,10 +59,10 @@ func MakeHireHeroScreenUI(cache *lbx.LbxCache, ui *uilib.UI, hero *herolib.Hero,
+     getAlpha := ui.MakeFadeIn(fadeSpeed)
+ 
+     hireText := "Hire"
+-    titleText := fmt.Sprintf("Hero for Hire: %v gold", goldToHire)
++    titleText := fmt.Sprintf("雇用英雄: %v 金幣", goldToHire)
+     if hero.HeroType == herolib.HeroTorin {
+         hireText = "Accept"
+-        titleText = "Hero Summoned"
++        titleText = "英雄召喚"
+     }
+ 
+     uiGroup := uilib.MakeGroup()
+diff --git a/game/magic/unitview/unit.go b/game/magic/unitview/unit.go
+index b52c499..92dfa22 100644
+--- a/game/magic/unitview/unit.go
++++ b/game/magic/unitview/unit.go
+@@ -154,7 +154,7 @@ func RenderUnitInfoNormal(screen *ebiten.Image, imageCache *util.ImageCache, uni
+ 
+     options.GeoM.Translate(80, 0)
+     x, y = options.GeoM.Apply(0, 0)
+-    smallFont.PrintOptions(screen, x, y, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("Damage: %v", unit.GetDamage()))
++    smallFont.PrintOptions(screen, x, y, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("損傷: %v", unit.GetDamage()))
+ }
+ 
+ func RenderUnitInfoBuild(screen *ebiten.Image, imageCache *util.ImageCache, unit UnitView, descriptionFont *font.Font, smallFont *font.Font, defaultOptions ebiten.DrawImageOptions, discountedCost int) {

@@ -1,0 +1,88 @@
+diff --git a/game/magic/artifact/create-artifact.go b/game/magic/artifact/create-artifact.go
+index d9a0204..05a07b8 100644
+--- a/game/magic/artifact/create-artifact.go
++++ b/game/magic/artifact/create-artifact.go
+@@ -1129,6 +1129,13 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+ 
+     imageCache := util.MakeImageCache(cache)
+ 
++    // 畫面標題中文名 (依呼叫類型決定)
++    var screenTitle string
++    switch creationType {
++        case CreationEnchantItem:     screenTitle = "附魔物品"
++        case CreationCreateArtifact:  screenTitle = "製造神器"
++    }
++
+     ui := &uilib.UI{
+         Cache: cache,
+         Draw: func(ui *uilib.UI, screen *ebiten.Image){
+@@ -1136,6 +1143,13 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+             background, _ := imageCache.GetImage("spellscr.lbx", 13, 0)
+             scale.DrawScaled(screen, background, &options)
+ 
++            // 疊中文標題,蓋掉背景烘進的英文標題 (約在面板頂端 y=1 列)
++            util.ChtLabelRect(screen,
++                image.Rect(0, 1, background.Bounds().Dx(), 10),
++                fonts.TitleSpellFont,
++                color.RGBA{R: 0x18, G: 0x10, B: 0x08, A: 0xff},
++                screenTitle)
++
+             ui.StandardDraw(screen)
+         },
+     }
+@@ -1200,6 +1214,20 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+ 
+     var selectedButton *uilib.UIElement
+ 
++    // 物品類型按鈕中文名對照
++    artifactTypeName := map[ArtifactType]string{
++        ArtifactTypeSword:  "劍",
++        ArtifactTypeMace:   "錘",
++        ArtifactTypeAxe:    "斧",
++        ArtifactTypeBow:    "弓",
++        ArtifactTypeStaff:  "法杖",
++        ArtifactTypeWand:   "魔杖",
++        ArtifactTypeMisc:   "雜項",
++        ArtifactTypeShield: "盾",
++        ArtifactTypeChain:  "鎖甲",
++        ArtifactTypePlate:  "板甲",
++    }
++
+     makeButton := func(x int, y int, unselected int, selected int, item ArtifactType) *uilib.UIElement {
+         index := 0
+         imageRect, _ := imageCache.GetImage("spellscr.lbx", unselected, 0)
+@@ -1223,8 +1251,10 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+                 if selectedButton == element {
+                     use = selected
+                 }
+-                image, _ := imageCache.GetImage("spellscr.lbx", use, index)
+-                scale.DrawScaled(screen, image, &options)
++                img, _ := imageCache.GetImage("spellscr.lbx", use, index)
++                scale.DrawScaled(screen, img, &options)
++                // 疊中文物品類型名,蓋掉烘進 LBX 的英文
++                util.ChtLabel(screen, rect, img, fonts.PowerFont, artifactTypeName[item])
+             },
+         }
+     }
+@@ -1268,7 +1298,7 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+ 
+     ui.AddElement(&uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Cost: %v", artifactCost(currentArtifact.Cost)))
++            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("花費: %v", artifactCost(currentArtifact.Cost)))
+         },
+     })
+ 
+@@ -1314,8 +1344,10 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(okRect.Min.X), float64(okRect.Min.Y))
+-            image := okButtons[okIndex]
+-            scale.DrawScaled(screen, image, &options)
++            img := okButtons[okIndex]
++            scale.DrawScaled(screen, img, &options)
++            // 疊「確定」蓋掉烘進 LBX 的英文 "Ok"
++            util.ChtLabel(screen, okRect, img, fonts.PowerFont, "確定")
+         },
+     })
+ 

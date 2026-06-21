@@ -130,3 +130,155 @@ Sorcery Mastery	魔法精通	特長(Retort)
 Infernal Power	地獄力量	特長(Retort)
 Mana Focusing	法力聚焦	特長(Retort)
 Node Mastery	節點精通	特長(Retort)
+# 召喚畫面標題 (summon.go Title, 走 font.translateForDisplay 自動覆蓋)
+Magic Spirit Summoned	魔法精靈 召喚完成	summon
+Hell Hounds Summoned	地獄犬 召喚完成	summon
+Gargoyles Summoned	石像鬼 召喚完成	summon
+Fire Giant Summoned	火巨人 召喚完成	summon
+Chaos Spawn Summoned	混沌孳生體 召喚完成	summon
+Chimeras Summoned	奇美拉 召喚完成	summon
+Doom Bat Summoned	厄運蝙蝠 召喚完成	summon
+Efreet Summoned	火焰巨靈 召喚完成	summon
+Hydra Summoned	九頭蛇 召喚完成	summon
+Great Drake Summoned	偉大巨龍 召喚完成	summon
+Skeletons Summoned	骷髏 召喚完成	summon
+Ghouls Summoned	食屍鬼 召喚完成	summon
+Night Stalker Summoned	夜行獵者 召喚完成	summon
+WereWolves Summoned	狼人 召喚完成	summon
+Wraiths Summoned	幽魂 召喚完成	summon
+Shadow Demons Summoned	暗影惡魔 召喚完成	summon
+Death Knights Summoned	死亡騎士 召喚完成	summon
+Demon Lord Summoned	惡魔領主 召喚完成	summon
+Unicorns Summoned	獨角獸 召喚完成	summon
+Guardian Spirit Summoned	守護靈 召喚完成	summon
+Angel Summoned	天使 召喚完成	summon
+Arch Angel Summoned	大天使 召喚完成	summon
+War Bears Summoned	戰熊 召喚完成	summon
+Sprites Summoned	妖精 召喚完成	summon
+Cockatrices Summoned	雞蛇獸 召喚完成	summon
+Basilisk Summoned	石化蜥 召喚完成	summon
+Giant Spiders Summoned	巨蜘蛛 召喚完成	summon
+Stone Giant Summoned	石巨人 召喚完成	summon
+Colossus Summoned	巨像 召喚完成	summon
+Gorgons Summoned	蛇髮女妖 召喚完成	summon
+Earth Elemental Summoned	土元素 召喚完成	summon
+Behemoth Summoned	比蒙巨獸 召喚完成	summon
+Great Wyrm Summoned	巨蠕龍 召喚完成	summon
+Storm Giant Summoned	風暴巨人 召喚完成	summon
+Djinn Summoned	迪精 召喚完成	summon
+Sky Drake Summoned	天空巨龍 召喚完成	summon
+Nagas Summoned	娜迦 召喚完成	summon
+Artifact Summoned	神器 製造完成	summon
+Hero Summoned	英雄 召喚完成	summon
+Champion Summoned	勇者 召喚完成	summon
+Forester	林地通	英雄/單位技能
+Pathfinding	通行	英雄/單位技能
+Mountaineer	山地行者	英雄/單位技能
+Armor Piercing	穿甲	英雄/單位技能
+Cause Fear	恐懼術	英雄/單位技能
+Cold Immunity	冰霜免疫	英雄/單位技能
+Death Immunity	死亡免疫	英雄/單位技能
+Dispel Evil	驅邪	英雄/單位技能
+Fire Immunity	火焰免疫	英雄/單位技能
+First Strike	先攻	英雄/單位技能
+Healing Spell	治療法術	英雄/單位技能
+Holy Bonus	神聖加成	英雄/單位技能
+Illusion	幻象	英雄/單位技能
+Illusions Immunity	幻象免疫	英雄/單位技能
+Immolation	火焰護體	英雄/單位技能
+Invisibility	隱形	英雄/單位技能
+Large Shield	巨盾	英雄/單位技能
+Long Range	遠程攻擊	英雄/單位技能
+Magic Immunity	魔法免疫	英雄/單位技能
+Meld	融合	英雄/單位技能
+Merging	穿透	英雄/單位技能
+Missile Immunity	投射物免疫	英雄/單位技能
+Negate First Strike	消除先攻	英雄/單位技能
+NonCorporeal	無實體	英雄/單位技能
+Plane Shift	位面轉移	英雄/單位技能
+Poison Immunity	毒素免疫	英雄/單位技能
+Poison Touch	毒素接觸	英雄/單位技能
+Purify	淨化	英雄/單位技能
+Regeneration	再生	英雄/單位技能
+Resistance to all	全面抗性	英雄/單位技能
+Stoning Immunity	石化免疫	英雄/單位技能
+Summon Demons	召喚惡魔	英雄/單位技能
+Teleporting	瞬移	英雄/單位技能
+Transport	運輸	英雄/單位技能
+Wall Crusher	破牆	英雄/單位技能
+Weapon Immunity	武器免疫	英雄/單位技能
+Web Spell	蛛網法術	英雄/單位技能
+Wind Walking	御風而行	英雄/單位技能
+Agility	敏捷	英雄技能
+Charmed	魅惑	英雄技能
+Lucky	幸運	英雄技能
+Noble	高貴	英雄技能
+Chosen	天選之人	英雄稱號 (Torin)
+Draconian	龍族勇士	英雄稱號 (Fang)
+Dervish	旋風俠	英雄稱號 (BShan)
+Witch	女巫	英雄稱號 (Morgana)
+Chaos Warrior	混沌戰士	英雄稱號 (Warrax)
+Unknown	未知者	英雄稱號 (MysticX)
+Orc Warrior	獸人戰士	英雄稱號 (Bahgtru)
+Swordsman	劍士	英雄稱號 (DethStryke)
+Rogue	盜賊	英雄稱號 (Spyder)
+Knight	騎士	英雄稱號 (SirHarold)
+Dwarf	矮人	英雄稱號 (Brax)
+Necromancer	死靈法師	英雄稱號 (Ravashack)
+Druid	德魯伊	英雄稱號 (Greyfairer)
+Amazon	亞馬遜女勇士	英雄稱號 (Shalla)
+Paladin	聖騎士	英雄稱號 (Roland)
+Magician	魔術師	英雄稱號 (Malleus)
+Black Knight	黑騎士	英雄稱號 (Mortu)
+Barbarian	蠻族勇士	英雄稱號 (Gunther)
+Beastmaster	獸王	英雄稱號 (Rakir)
+Wind Mage	風系法師	英雄稱號 (Jaer)
+War Monk	戰鬥僧侶	英雄稱號 (Taki)
+Warlock	術士	英雄稱號 (Yramrag)
+Bard	吟遊詩人	英雄稱號 (Valana)
+Priestess	女祭司	英雄稱號 (Elana)
+Illusionist	幻術師	英雄稱號 (Aerie)
+Ranger	遊俠	英雄稱號 (Marcus)
+Warrior Mage	武鬥法師	英雄稱號 (Reywind)
+Elven Archer	精靈弓手	英雄稱號 (Alorra)
+Ninja	忍者	英雄稱號 (ShinBo)
+Healer	治療師	英雄稱號 (Serena)
+Huntress	女獵人	英雄稱號 (Shuri)
+Thief	盜賊	英雄稱號 (Theria)
+Assassin	刺客	英雄稱號 (Tumu)
+Golden One	黃金勇者	英雄稱號 (Aureus)
+The Chosen	天選之人	英雄稱謂 (Torin)
+The Draconian	龍族勇士	英雄稱謂 (Fang)
+The Dervish	旋風俠	英雄稱謂 (BShan)
+The Witch	女巫	英雄稱謂 (Morgana)
+The Chaos Warrior	混沌戰士	英雄稱謂 (Warrax)
+The Unknown	未知者	英雄稱謂 (MysticX)
+The Orc Warrior	獸人戰士	英雄稱謂 (Bahgtru)
+The Swordsman	劍士	英雄稱謂 (DethStryke)
+The Rogue	盜賊	英雄稱謂 (Spyder)
+The Knight	騎士	英雄稱謂 (SirHarold)
+The Dwarf	矮人	英雄稱謂 (Brax)
+The Necromancer	死靈法師	英雄稱謂 (Ravashack)
+The Druid	德魯伊	英雄稱謂 (Greyfairer)
+The Amazon	亞馬遜女勇士	英雄稱謂 (Shalla)
+The Paladin	聖騎士	英雄稱謂 (Roland)
+The Magician	魔術師	英雄稱謂 (Malleus)
+The Black Knight	黑騎士	英雄稱謂 (Mortu)
+The Barbarian	蠻族勇士	英雄稱謂 (Gunther)
+The Beastmaster	獸王	英雄稱謂 (Rakir)
+The Wind Mage	風系法師	英雄稱謂 (Jaer)
+The War Monk	戰鬥僧侶	英雄稱謂 (Taki)
+The Warlock	術士	英雄稱謂 (Yramrag)
+The Bard	吟遊詩人	英雄稱謂 (Valana)
+The Priestess	女祭司	英雄稱謂 (Elana)
+The Illusionist	幻術師	英雄稱謂 (Aerie)
+The Ranger	遊俠	英雄稱謂 (Marcus)
+The Warrior Mage	武鬥法師	英雄稱謂 (Reywind)
+The Elven Archer	精靈弓手	英雄稱謂 (Alorra)
+The Sage	智者	英雄稱謂 (Zaldron)
+The Ninja	忍者	英雄稱謂 (ShinBo)
+The Healer	治療師	英雄稱謂 (Serena)
+The Huntress	女獵人	英雄稱謂 (Shuri)
+The Thief	盜賊	英雄稱謂 (Theria)
+The Assassin	刺客	英雄稱謂 (Tumu)
+The Golden One	黃金勇者	英雄稱謂 (Aureus)
