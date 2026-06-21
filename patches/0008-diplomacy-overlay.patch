@@ -1,0 +1,73 @@
+diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
+index a2dd539..9fe14ba 100644
+--- a/game/magic/diplomacy/diplomacy.go
++++ b/game/magic/diplomacy/diplomacy.go
+@@ -353,7 +353,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+         return func(){
+             doTalk = true
+             talk.Clear()
+-            talk.SetTitle(fmt.Sprintf("I will trade you %v", choices.Spells[choice].Name))
++            talk.SetTitle(fmt.Sprintf("我願意以 %v 與你交換", choices.Spells[choice].Name))
+             talk.AddItem("Yes", true, func(){
+                 player.KnownSpells.AddSpell(choices.Spells[choice])
+                 enemy.KnownSpells.AddSpell(spell)
+@@ -393,21 +393,21 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+     talkEnterPact := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into a wizard pact.", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結巫師協定。", gameYear, player.Wizard.Name))
+         ui.AddDelay(140, talkMain)
+     }
+ 
+     talkEnterAlliance := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into an alliance.", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結同盟。", gameYear, player.Wizard.Name))
+         ui.AddDelay(140, talkMain)
+     }
+ 
+     talkEnterPeaceTreaty := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into a peace treaty.", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結和平條約。", gameYear, player.Wizard.Name))
+         ui.AddDelay(140, talkMain)
+     }
+ 
+@@ -454,7 +454,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+     talkThanksTribute := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("I thank you, glorius %v, for your tribute.", player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("感謝偉大的 %v 慷慨進貢。", player.Wizard.Name))
+         enemy.AdjustDiplomaticRelation(player, 5)
+         player.AdjustDiplomaticRelation(enemy, 5)
+         ui.AddDelay(140, talkMain)
+@@ -492,7 +492,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+         talk.SetTitle("What do you offer as tribute?")
+         gold := int(float64(player.Gold) * 0.1)
+         if gold > 5 {
+-            talk.AddItem(fmt.Sprintf("%v gold", gold), true, func(){
++            talk.AddItem(fmt.Sprintf("%v 金幣", gold), true, func(){
+                 player.Gold -= gold
+                 enemy.Gold += gold
+                 talkThanksTribute()
+@@ -503,7 +503,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+     }
+ 
+     talk.Clear()
+-    talk.SetTitle(fmt.Sprintf("Hail, mighty %v. I bear greetings and words of wisdom.", player.Wizard.Name))
++    talk.SetTitle(fmt.Sprintf("致敬,偉大的 %v。吾帶來問候與智慧之言。", player.Wizard.Name))
+ 
+     fadeOut := 0.0
+ 
+@@ -514,6 +514,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+         for !quit {
+             ui.StandardUpdate()
+             counter += 1
++
+             if counter % 7 == 0 {
+                 if animating && wizardAnimation.Done() {
+                     // 0 = happy, 1 = angry, 2 = neutral

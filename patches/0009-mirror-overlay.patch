@@ -1,0 +1,90 @@
+diff --git a/game/magic/mirror/mirror.go b/game/magic/mirror/mirror.go
+index d6b0ef4..75a46e2 100644
+--- a/game/magic/mirror/mirror.go
++++ b/game/magic/mirror/mirror.go
+@@ -3,13 +3,13 @@ package mirror
+ import (
+     "log"
+     "fmt"
++    "strings"
+     "math/rand/v2"
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/game/magic/util"
+     "github.com/kazzmir/master-of-magic/game/magic/scale"
+-    "github.com/kazzmir/master-of-magic/game/magic/setup"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+     "github.com/kazzmir/master-of-magic/game/magic/draw"
+     fontslib "github.com/kazzmir/master-of-magic/game/magic/fonts"
+@@ -51,6 +51,36 @@ func GetWizardPortraitIndex(base data.WizardBase, banner data.BannerType) int {
+     return wizardIndex + bannerIndex
+ }
+ 
++// retortCht 把英文 Retort 名稱對應到繁體中文。ui.tsv 的字串覆蓋層只做精確整段比對,
++// 無法拆解 JoinAbilities 的組合字串,故在此本地維護顯示層譯名。
++var retortCht = map[data.Retort]string{
++    data.RetortAlchemy:       "煉金術",
++    data.RetortWarlord:       "戰爭領主",
++    data.RetortChanneler:     "傳送師",
++    data.RetortArchmage:      "大巫師",
++    data.RetortArtificer:     "造物師",
++    data.RetortConjurer:      "召喚師",
++    data.RetortSageMaster:    "智慧大師",
++    data.RetortMyrran:        "米羅人",
++    data.RetortDivinePower:   "神聖力量",
++    data.RetortFamous:        "聲名顯赫",
++    data.RetortRunemaster:    "符文大師",
++    data.RetortCharismatic:   "魅力超凡",
++}
++
++// joinAbilitiesCht 把 Retort 列表用頓號串成繁中字串,取代英文 JoinAbilities 的顯示輸出。
++func joinAbilitiesCht(abilities []data.Retort) string {
++    parts := make([]string, 0, len(abilities))
++    for _, r := range abilities {
++        if zh, ok := retortCht[r]; ok {
++            parts = append(parts, zh)
++        } else {
++            parts = append(parts, r.String()) // fallback 英文
++        }
++    }
++    return strings.Join(parts, "、")
++}
++
+ type MirrorFonts struct {
+     Name *font.Font
+     Small *font.Font
+@@ -94,7 +124,7 @@ func MakeMirrorUI(cache *lbx.LbxCache, player *playerlib.Player, ui *uilib.UI) *
+         })
+     }
+ 
+-    wrappedAbilities := fonts.Small.CreateWrappedText(float64(160), 1, setup.JoinAbilities(player.Wizard.Retorts))
++    wrappedAbilities := fonts.Small.CreateWrappedText(float64(160), 1, joinAbilitiesCht(player.Wizard.Retorts))
+ 
+     element = &uilib.UIElement{
+         Layer: 1,
+@@ -121,20 +151,20 @@ func MakeMirrorUI(cache *lbx.LbxCache, player *playerlib.Player, ui *uilib.UI) *
+ 
+             fonts.Name.PrintOptions(screen, float64(cornerX + 110), float64(cornerY + 10), centerOptions, player.Wizard.Name)
+ 
+-            fonts.Small.PrintOptions(screen, float64(cornerX + 30), float64(cornerY + 75), centerOptions, fmt.Sprintf("%v GP", player.Gold))
+-            fonts.Small.PrintOptions(screen, float64(cornerX + 170), float64(cornerY + 75), font.FontOptions{Justify: font.FontJustifyRight, Options: &options, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("%v MP", player.Mana))
++            fonts.Small.PrintOptions(screen, float64(cornerX + 30), float64(cornerY + 75), centerOptions, fmt.Sprintf("%v 金幣", player.Gold))
++            fonts.Small.PrintOptions(screen, float64(cornerX + 170), float64(cornerY + 75), font.FontOptions{Justify: font.FontJustifyRight, Options: &options, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("%v 法力", player.Mana))
+ 
+             options.GeoM.Translate(float64(34), float64(55))
+             newRand := rand.New(rand.NewPCG(player.BookOrderSeed1, player.BookOrderSeed2))
+             draw.DrawBooks(screen, options, &imageCache, player.Wizard.Books, newRand)
+ 
+             if player.GetFame() > 0 {
+-                fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 95), centerOptions, fmt.Sprintf("%v Fame", player.GetFame()))
++                fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 95), centerOptions, fmt.Sprintf("%v 聲望", player.GetFame()))
+             }
+ 
+             fonts.Small.RenderWrapped(screen, float64(cornerX + 13), float64(cornerY + 112), wrappedAbilities, font.FontOptions{Scale: scale.ScaleAmount, Options: &options, DropShadow: true})
+ 
+-            fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 131), centerOptions, "Heroes")
++            fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 131), centerOptions, "英雄")
+ 
+             heroX := cornerX + 13
+             heroY := cornerY + 142

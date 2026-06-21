@@ -1,0 +1,111 @@
+diff --git a/game/magic/setup/new-wizard.go b/game/magic/setup/new-wizard.go
+index 7eb793b..c69cb86 100644
+--- a/game/magic/setup/new-wizard.go
++++ b/game/magic/setup/new-wizard.go
+@@ -1031,6 +1031,19 @@ func (screen *NewWizardScreen) Load(cache *lbx.LbxCache) error {
+     return nil
+ }
+ 
++// magicChtName 回傳魔法學派的繁體中文名稱，供「選擇 X 法術」標題使用。
++func magicChtName(magic data.MagicType) string {
++    switch magic {
++    case data.LifeMagic:    return "生命"
++    case data.SorceryMagic: return "魔法"
++    case data.NatureMagic:  return "自然"
++    case data.DeathMagic:   return "死亡"
++    case data.ChaosMagic:   return "混沌"
++    case data.ArcaneMagic:  return "秘法"
++    }
++    return magic.String()
++}
++
+ func JoinAbilities(abilities []data.Retort) string {
+     // this could be simplified by iterating backwards through the array and
+     // preprending 'and' or ', ' for each element, depending on its index
+@@ -1046,15 +1059,15 @@ func JoinAbilities(abilities []data.Retort) string {
+ 
+     // x and y
+     if len(abilities) == 2 {
+-        return fmt.Sprintf("%v and %v", abilities[0], abilities[1])
++        return fmt.Sprintf("%v、%v", abilities[0], abilities[1])
+     }
+ 
+     // x, y, and z
+     out := ""
+     for i := 0; i < len(abilities) - 2; i++ {
+-        out += fmt.Sprintf("%v, ", abilities[i])
++        out += fmt.Sprintf("%v、", abilities[i])
+     }
+-    out += fmt.Sprintf("%v and %v", abilities[len(abilities) - 2], abilities[len(abilities) - 1])
++    out += fmt.Sprintf("%v、%v", abilities[len(abilities) - 2], abilities[len(abilities) - 1])
+     return out
+ }
+ 
+@@ -1429,6 +1442,21 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
+             customWizardBooks, _ := screen.ImageCache.GetImage("newgame.lbx", 41, 0)
+             window.DrawImage(customWizardBooks, scale.ScaleOptions(options))
+ 
++            // 中文化:疊蓋 newgame.lbx 41 背景圖上烘進的魔法學派英文標籤
++            // 座標以 logical pixel (scale=1) 為準，取樣背景深棕色覆蓋原英文
++            // 各行書格頂部 Y: Life=49, Death=75, Chaos=101, Nature=127, Sorcery=153
++            // 標籤文字實測 logical Y 中心: Life≈57, Death≈83, Chaos≈109, Nature≈135, Sorcery≈161
++            // X 範圍: 書格右端 285 起延伸到背景圖邊緣 ~315
++            {
++                booksLabelFont := screen.Fonts.NameFont
++                brown := color.RGBA{R: 52, G: 32, B: 16, A: 255}
++                util.ChtLabelRect(window, image.Rect(220, 51, 315, 63), booksLabelFont, brown, "生命")
++                util.ChtLabelRect(window, image.Rect(220, 77, 315, 89), booksLabelFont, brown, "死亡")
++                util.ChtLabelRect(window, image.Rect(220, 103, 315, 115), booksLabelFont, brown, "混沌")
++                util.ChtLabelRect(window, image.Rect(220, 129, 315, 141), booksLabelFont, brown, "自然")
++                util.ChtLabelRect(window, image.Rect(220, 155, 315, 167), booksLabelFont, brown, "魔法")
++            }
++
+             options.GeoM.Translate(float64(portraitX), float64(portraitY))
+             portrait, _ := screen.ImageCache.GetImage("wizards.lbx", screen.CustomWizard.Portrait, 0)
+             window.DrawImage(portrait, scale.ScaleOptions(options))
+@@ -1441,7 +1469,7 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
+             ui.StandardDraw(window)
+ 
+             screen.Fonts.AbilityFontSelected.PrintOptions(window, 12, 180, font.FontOptions{Scale: scale.ScaleAmount}, JoinAbilities(screen.CustomWizard.Retorts))
+-            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v picks", picksLeft()))
++            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v 點數", picksLeft()))
+         },
+         HandleKeys: func(keys []ebiten.Key){
+             for _, key := range keys {
+@@ -1772,7 +1800,7 @@ func (screen *NewWizardScreen) MakeSelectSpellsUI(previousUI UIFunc) *uilib.UI {
+                 titleX := 240
+                 titleY := 5
+ 
+-                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("Select %v Spells", magic.String()))
++                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("選擇%v法術", magicChtName(magic)))
+ 
+                 options.GeoM.Reset()
+                 options.GeoM.Translate(180, 18)
+@@ -1780,7 +1808,7 @@ func (screen *NewWizardScreen) MakeSelectSpellsUI(previousUI UIFunc) *uilib.UI {
+                 window.DrawImage(windyBorder, scale.ScaleOptions(options))
+ 
+                 screen.Fonts.AbilityFontSelected.PrintOptions(window, 12, 180, font.FontOptions{Scale: scale.ScaleAmount}, JoinAbilities(screen.CustomWizard.Retorts))
+-                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v picks", picksLeft()))
++                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v 點數", picksLeft()))
+ 
+                 showDescription := func(y float64, text string, background *ebiten.Image){
+                     descriptionX := float64(167)
+@@ -2147,11 +2175,17 @@ func (screen *NewWizardScreen) Draw(window *ebiten.Image) {
+ }
+ 
+ func MakeNewWizardScreen(cache *lbx.LbxCache) *NewWizardScreen {
++    return MakeNewWizardScreenWithState(cache, NewWizardScreenStateSelectWizard)
++}
++
++// MakeNewWizardScreenWithState 建立 NewWizardScreen 並直接從指定子畫面開始，
++// 主要用於開發截圖/測試。
++func MakeNewWizardScreenWithState(cache *lbx.LbxCache, state NewWizardScreenState) *NewWizardScreen {
+     out := &NewWizardScreen{
+         LbxCache: cache,
+         ImageCache: util.MakeImageCache(cache),
+         CurrentWizard: 0,
+-        State: NewWizardScreenStateSelectWizard,
++        State: state,
+     }
+ 
+     err := out.Load(cache)
