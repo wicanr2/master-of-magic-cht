@@ -88,7 +88,8 @@
 - [ ] (Phase 2) 多字級對齊原版字高 + CJK 字型納入打包
 - [ ] (選項 A) `build_cjk_font.py` 烘 24×24 atlas、`util/fontviewer` 擴充顯示 CJK
 
-### Phase 2 — 字串翻譯與注入
+### Phase 2 — 字級對齊與字串翻譯注入
+- [x] **CJK 字級對齊字高**:`cjkGlyphImage(rune, height)` 依呼叫端字型 `GlyphHeight` 渲染、以 (rune,height) 為快取 key、多 face 快取;三路徑傳入字高。修掉行距重疊破版 (對比 `docs/img/phase1-engine-cjk.png` → `docs/img/phase2-cjk-aligned.png`)。trade-off:最小字型下 CJK 偏小,密集面板日後可走 hi-res canvas / 點陣固定尺寸。
 - [ ] LBX 字串覆蓋機制 (載入後 override,**不改版權 LBX**);譯文表以**英文原文為 key**,同時相容 1.31/1.60
 - [ ] **版本對齊** (見 [ADR 0002](docs/adr/0002-target-game-version.md)):取得 CP 1.60 LBX,對現有 1.31 baseline 做 string diff,補 delta
 - [ ] 翻譯表逐類完成:item powers → 神器名 → 法術 → 建築 → help → 單位名
