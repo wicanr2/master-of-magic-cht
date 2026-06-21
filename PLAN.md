@@ -88,7 +88,8 @@
 - [ ] (選項 A) `build_cjk_font.py` 烘 24×24 atlas、`util/fontviewer` 擴充顯示 CJK
 
 ### Phase 2 — 字串翻譯與注入
-- [ ] LBX 字串覆蓋機制 (載入後 override,**不改版權 LBX**)
+- [ ] LBX 字串覆蓋機制 (載入後 override,**不改版權 LBX**);譯文表以**英文原文為 key**,同時相容 1.31/1.60
+- [ ] **版本對齊** (見 [ADR 0002](docs/adr/0002-target-game-version.md)):取得 CP 1.60 LBX,對現有 1.31 baseline 做 string diff,補 delta
 - [ ] 翻譯表逐類完成:item powers → 神器名 → 法術 → 建築 → help → 單位名
 - [ ] 單位名 hardcode (`units/unit.go`) 改查表
 
@@ -111,6 +112,10 @@
 
 格式:TSV，欄位 `source(原文，含前導空白以利精確比對)` / `zh(繁中譯文)` / `note`。
 譯文表是本專案的**衍生資產**,版權 LBX 分毫未動。
+
+> **版本注意**:現有 `*.tsv` 由 **vanilla v1.31** 資料萃取,作為 baseline。主目標為
+> **Community Patch v1.60**(對齊引擎,見 [ADR 0002](docs/adr/0002-target-game-version.md));
+> 表以英文原文為 key,可同時相容兩版,取得 1.60 資料後補 delta。
 
 ---
 

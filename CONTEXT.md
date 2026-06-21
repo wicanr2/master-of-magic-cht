@@ -9,6 +9,9 @@
 - **kazzmir 引擎** — [kazzmir/master-of-magic](https://github.com/kazzmir/master-of-magic),Go + Ebiten 重製引擎,直接讀原版 `.lbx` 執行。 _Avoid_: 「模擬器」(它是重製,非 emulator)。
 - **patch-only repo** — `master-of-magic-cht` 只放譯文表 + 字型 + patch + 文件 + 腳本,**不 vendor 引擎本體、不散布版權遊戲檔**。
 - **CHT / 繁中化** — 繁體中文化。範圍見 PLAN.md。
+- **vanilla 1.31** — 官方最終 DOS 版 (Simtex/MicroProse, 1995);本專案目前手上的原版資料,翻譯 baseline。
+- **Community Patch / CP 1.60** — 社群現行非官方版;**引擎邏輯對齊的目標版本**,本專案主翻譯目標。見 ADR 0002。
+- **MOMDIFFP** — drake178 的差分補丁器,可在 1.20~1.60 間互轉正版資料 (不需 Slitherine launcher)。玩家升級到 1.60 的工具,非版權資料本身。
 
 ## 資料格式
 
