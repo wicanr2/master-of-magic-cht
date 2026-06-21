@@ -7,7 +7,6 @@ Arcanus	阿卡努斯	位面名 (主位面)
 Armor	護甲
 Army Strength	軍隊強度	巫師狀態
 Average	普通	難度
-B	法	單字母縮寫(法術書) ?
 Break Alliance With Another Wizard	與他位巫師斷盟	外交
 Building Maintenance	建築維護	城市資源明細
 Buy	購買	城市生產
@@ -27,12 +26,10 @@ Extreme	極難	難度
 Food	食物	城市資源明細
 Forget It	算了	外交選單取消
 Four	四	對手數量
-G	金	單字母縮寫(金幣) ?
 Gold	金幣	城市資源明細
 Gold Bonus	金幣加成
 Good bye	再見	外交
 Good Bye	再見	外交
-Guardian Spirit	守護精靈	單位名 ?
 Hard	困難	難度
 Heroes	英雄
 Hire	雇用
@@ -44,7 +41,6 @@ Intro	入門	難度
 Large	大	地圖大小
 Magic Power	魔力	資源明細
 Magic Reserve:	法力儲備:
-Magic Spirit	魔法精靈	單位名 ?
 Maintenance	維護
 Mana:	法力:
 Maximum Pop	人口上限	城市
@@ -62,7 +58,6 @@ No Spell	無法術
 Offer Tribute	進貢	外交
 Ok	確定
 One	一	對手數量
-P	生	單字母縮寫(生產) ?
 Peace Treaty	和平條約	外交
 Pop	人口	城市
 Power	力量	資源明細
@@ -92,7 +87,6 @@ Spell Research	法術研究	資源明細
 Spells	法術	外交
 Summon To:	召喚至:
 Surveyor	勘查員	地圖勘查面板
-The 	的	?(後接標題,非原子串,慎用)
 Threaten/Break Treaty	威脅/毀約	外交
 Three	三	對手數量
 Time	時間	生產所需回合
