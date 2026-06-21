@@ -21,8 +21,8 @@ jobs:
         run: |
           set -e
           ./scripts/fetch-engine.sh engine
-          git -C engine apply --whitespace=nowarn "$GITHUB_WORKSPACE/patches/0001-cjk-font-injection.patch"
-          git -C engine apply --whitespace=nowarn "$GITHUB_WORKSPACE/patches/0002-image-override.patch"
+          # 0099 = 權威完整引擎中文化 patch (CJK 注入 + 圖片 override + 20 畫面疊字)
+          git -C engine apply --whitespace=nowarn "$GITHUB_WORKSPACE/patches/0099-all-engine-cht.patch"
           ./scripts/prepare-embed.sh engine
 
       - name: Build arm64 binary
