@@ -1,0 +1,35 @@
+diff --git a/game/magic/game/game.go b/game/magic/game/game.go
+index 44c64b8..6527b12 100644
+--- a/game/magic/game/game.go
++++ b/game/magic/game/game.go
+@@ -5815,6 +5815,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+     ui.AddGroup(group)
+ 
+     // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
++    // 中文化:頂部選單按鈕 (main.lbx 1-7) 是烘進圖的英文,用 font 疊中文 (高解析緩衝內,銳利)
++    chtHudMenu := map[int]string{1: "遊戲", 2: "法術", 3: "軍隊", 4: "城市", 5: "魔法", 6: "資訊", 7: "位面"}
++
+     makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
+         buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
+         rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
+@@ -5853,6 +5856,20 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                 options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
+                 options.ColorScale.ScaleWithColorScale(colorScale)
+                 scale.DrawScaled(screen, buttons[index], &options)
++
++                // 中文化:先用深色填內部擦掉英文圖字 (保留金色外框),再疊銳利黃字中文
++                if label, ok := chtHudMenu[lbxIndex]; ok && game.Fonts != nil && game.Fonts.InfoFontYellow != nil {
++                    S := scale.ScaleAmount
++                    bw := float64(buttons[index].Bounds().Dx())
++                    bh := float64(buttons[index].Bounds().Dy())
++                    vector.DrawFilledRect(screen,
++                        float32((float64(rect.Min.X)+3)*S), float32((float64(rect.Min.Y)+2)*S),
++                        float32((bw-6)*S), float32((bh-4)*S),
++                        color.RGBA{R: 40, G: 26, B: 12, A: 255}, false)
++                    cx := float64(rect.Min.X) + bw/2
++                    cy := float64(rect.Min.Y) + 2
++                    game.Fonts.InfoFontYellow.PrintOptions(screen, cx, cy, font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
++                }
+             },
+         }
+     }
