@@ -1,9 +1,9 @@
 diff --git a/lib/font/cjk.go b/lib/font/cjk.go
 new file mode 100644
-index 0000000..f6924b6
+index 0000000..8f2d622
 --- /dev/null
 +++ b/lib/font/cjk.go
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,158 @@
 +package font
 +
 +// CJK (繁體中文) glyph 支線 —— 工作魔法大帝中文化注入。
@@ -20,6 +20,7 @@ index 0000000..f6924b6
 +
 +import (
 +	"image"
++	_ "embed"
 +	"image/color"
 +	"os"
 +	"sync"
@@ -30,6 +31,11 @@ index 0000000..f6924b6
 +	"golang.org/x/image/font/sfnt"
 +	"golang.org/x/image/math/fixed"
 +)
++
++// 內嵌 CJK 字型子集 (只含譯文用到的字),standalone 出包不依賴系統字型/env。
++//
++//go:embed cht_font.otf
++var embeddedFont []byte
 +
 +// CJK glyph 相對 cell 高度的基線位置 (0..1)。Noto 等字型 ink 約佔 em 上方,0.82 上下置中且不裁切。
 +const cjkBaselineRatio = 0.82
@@ -73,6 +79,10 @@ index 0000000..f6924b6
 +		}
 +	}
 +	if data == nil {
++		// fallback:內嵌字型子集 (standalone 出包)
++		data = embeddedFont
++	}
++	if len(data) == 0 {
 +		return // 無字型:CJK 支線停用,退回原行為
 +	}
 +	tt, err := opentype.Parse(data)
@@ -307,10 +317,10 @@ index 7e84629..6fd0484 100644
      textLines := bytes.Split([]byte(text), []byte{NewLine})
 diff --git a/lib/font/override.go b/lib/font/override.go
 new file mode 100644
-index 0000000..02416a6
+index 0000000..f28dcf9
 --- /dev/null
 +++ b/lib/font/override.go
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,101 @@
 +package font
 +
 +// 字串覆蓋層 (顯示層翻譯) —— 工作魔法大帝中文化。
@@ -330,11 +340,18 @@ index 0000000..02416a6
 +
 +import (
 +	"bufio"
++	"embed"
++	"io"
 +	"os"
 +	"path/filepath"
 +	"strings"
 +	"sync"
 +)
++
++// 內嵌譯文表:standalone 出包不依賴 MOM_CHT_STRINGS。env 仍可覆寫 (env 先載、先到先得)。
++//
++//go:embed cht_strings/*.tsv
++var embeddedStrings embed.FS
 +
 +var (
 +	overrideOnce  sync.Once
@@ -342,30 +359,35 @@ index 0000000..02416a6
 +)
 +
 +func loadOverrideTable() {
-+	dir := os.Getenv("MOM_CHT_STRINGS")
-+	if dir == "" {
-+		return
-+	}
-+	entries, err := os.ReadDir(dir)
-+	if err != nil {
-+		return
-+	}
-+	for _, e := range entries {
-+		if e.IsDir() || !strings.HasSuffix(strings.ToLower(e.Name()), ".tsv") {
-+			continue
++	// 1) 環境變數目錄優先 (dev 可覆寫內嵌表)
++	if dir := os.Getenv("MOM_CHT_STRINGS"); dir != "" {
++		if entries, err := os.ReadDir(dir); err == nil {
++			for _, e := range entries {
++				if e.IsDir() || !strings.HasSuffix(strings.ToLower(e.Name()), ".tsv") {
++					continue
++				}
++				if f, err := os.Open(filepath.Join(dir, e.Name())); err == nil {
++					loadOverrideReader(f)
++					f.Close()
++				}
++			}
 +		}
-+		loadOverrideFile(filepath.Join(dir, e.Name()))
++	}
++	// 2) 內嵌表補齊 (先到先得,env 已載的不覆寫)
++	if entries, err := embeddedStrings.ReadDir("cht_strings"); err == nil {
++		for _, e := range entries {
++			if !strings.HasSuffix(strings.ToLower(e.Name()), ".tsv") {
++				continue
++			}
++			if data, err := embeddedStrings.ReadFile("cht_strings/" + e.Name()); err == nil {
++				loadOverrideReader(strings.NewReader(string(data)))
++			}
++		}
 +	}
 +}
 +
-+func loadOverrideFile(path string) {
-+	f, err := os.Open(path)
-+	if err != nil {
-+		return
-+	}
-+	defer f.Close()
-+
-+	scanner := bufio.NewScanner(f)
++func loadOverrideReader(r io.Reader) {
++	scanner := bufio.NewScanner(r)
 +	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 +	for scanner.Scan() {
 +		line := scanner.Text()

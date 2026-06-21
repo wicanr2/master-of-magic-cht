@@ -85,7 +85,8 @@
 - [x] `font.go` 三條繪字路徑 (`doPrint` / `PrintOutline` / `MeasureTextWidth`) 加 CJK 分流;新增 `lib/font/cjk.go` (patch `patches/0001-cjk-font-injection.patch`)
 - [x] 套真實 lbx 在**真實引擎字型管線**跑一畫面 (`test/cjk-render`),CJK 三路徑全渲染 (`docs/img/phase1-engine-cjk.png`);發現並修正 `PrintOutline` 漏 patch
 - [x] 觀察破版:CJK 字級未對齊引擎字型高度 → 行距重疊 (Phase 2 首要精修)
-- [ ] (Phase 2) 多字級對齊原版字高 + CJK 字型納入打包
+- [x] (Phase 2) 多字級對齊原版字高
+- [x] **CJK 字型 + 譯文表 go:embed 內嵌**:`assets/cht-subset.otf` (126KB 子集,fonttools) + `cht_strings/*.tsv` 內建進引擎,standalone 出包不依賴 env/系統字型 (env 仍可覆寫);`scripts/prepare-embed.sh` 組裝。已驗證無 env 純內嵌渲染中文
 - [ ] (選項 A) `build_cjk_font.py` 烘 24×24 atlas、`util/fontviewer` 擴充顯示 CJK
 
 ### Phase 2 — 字級對齊與字串翻譯注入
