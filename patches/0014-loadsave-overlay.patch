@@ -1,0 +1,246 @@
+diff --git a/game/magic/gamemenu/menu.go b/game/magic/gamemenu/menu.go
+--- a/game/magic/gamemenu/menu.go
++++ b/game/magic/gamemenu/menu.go
+@@ -123,6 +123,8 @@
+ 
+     useFont := loader(fontslib.NameFont)
+     smallFont := loader(fontslib.SmallFont)
++    // 中文化:按鈕疊字用小黃字
++    buttonFont := loader(fontslib.SmallYellow)
+ 
+     maxWidth := useFont.MeasureTextWidth("AAAAAAAAAAAA", 1)
+ 
+@@ -216,7 +218,12 @@
+ 
+                 var options ebiten.DrawImageOptions
+                 options.ColorScale.ScaleAlpha(getAlpha())
+-                useFont.PrintOptions(screen, float64(x + 2), float64(y + 3), font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, name)
++                displayName := name
++                if displayName == "" {
++                    // 中文化:空槽顯示「空」
++                    displayName = "空"
++                }
++                useFont.PrintOptions(screen, float64(x + 2), float64(y + 3), font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, displayName)
+ 
+                 if selectedSlot == element {
+                     // draw cursor
+@@ -242,7 +249,7 @@
+         group.AddElement(newSlot)
+     }
+ 
+-    makeButton := func (index int, x int, y int, action func()) *uilib.UIElement {
++    makeButton := func (index int, x int, y int, label string, action func()) *uilib.UIElement {
+         useImage, _ := imageCache.GetImage("load.lbx", index, 0)
+         return &uilib.UIElement{
+             Layer: 3,
+@@ -256,6 +263,8 @@
+                 options.GeoM.Translate(float64(element.Rect.Min.X), float64(element.Rect.Min.Y))
+                 options.ColorScale.ScaleAlpha(getAlpha())
+                 scale.DrawScaled(screen, useImage, &options)
++                // 中文化:疊銳利中文按鈕標籤
++                util.ChtLabel(screen, element.Rect, useImage, buttonFont, label)
+             },
+         }
+     }
+@@ -266,11 +275,14 @@
+             var backgroundOptions ebiten.DrawImageOptions
+             backgroundOptions.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, background, &backgroundOptions)
++            // 中文化:蓋掉烘入背景的英文大標 "Master of Magic"(x≈50-268, y≈3-30)，疊副標題
++            panelColor := color.RGBA{R: 0x28, G: 0x28, B: 0x40, A: 255}
++            util.ChtLabelRect(screen, image.Rect(46, 3, 272, 31), buttonFont, panelColor, "讀取 / 儲存進度")
+         },
+     })
+ 
+-    // quit
+-    group.AddElement(makeButton(2, 43, 171, func(){
++    // quit → 離開
++    group.AddElement(makeButton(2, 43, 171, "離開", func(){
+         getAlpha = group.MakeFadeOut(7)
+         group.AddDelay(7, func(){
+             doQuit()
+@@ -278,8 +290,8 @@
+         })
+     }))
+ 
+-    // load
+-    group.AddElement(makeButton(1, 83, 171, func(){
++    // load → 讀取
++    group.AddElement(makeButton(1, 83, 171, "讀取", func(){
+         if selectedIndex != -1 {
+             err := gameLoader.LoadNew(saveFileName(selectedIndex))
+             if err != nil {
+@@ -290,8 +302,8 @@
+         }
+     }))
+ 
+-    // save
+-    group.AddElement(makeButton(3, 122, 171, func(){
++    // save → 儲存
++    group.AddElement(makeButton(3, 122, 171, "儲存", func(){
+         if selectedIndex != -1 {
+             doSave := func() bool {
+                 path := saveFileName(selectedIndex)
+@@ -315,16 +327,16 @@
+         }
+     }))
+ 
+-    // settings
+-    group.AddElement(makeButton(12, 172, 171, func(){
++    // settings → 設定
++    group.AddElement(makeButton(12, 172, 171, "設定", func(){
+         // disable for now
+         // ui.RemoveElements(elements)
+ 
+         settingsUI.RunSettingsUI()
+     }))
+ 
+-    // ok
+-    group.AddElement(makeButton(4, 231, 171, func(){
++    // ok → 確定
++    group.AddElement(makeButton(4, 231, 171, "確定", func(){
+         getAlpha = group.MakeFadeOut(7)
+         group.AddDelay(7, func(){
+             cancel()
+diff --git a/test/loadscreen/main.go b/test/loadscreen/main.go
+new file mode 100644
+--- /dev/null
++++ b/test/loadscreen/main.go
+@@ -0,0 +1,137 @@
++package main
++
++// 讀取/儲存畫面截圖測試 (中文化驗證)
++// 建立 gamemenu UI stub，靜置數 frames，截圖到 /out/loadscreen.png。
++// 全部存槽為空，驗證「空」標籤、「讀取 / 儲存進度」標題、按鈕中文。
++
++import (
++	"image"
++	"image/png"
++	"io"
++	"log"
++	"os"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	"github.com/hajimehoshi/ebiten/v2/inpututil"
++
++	"github.com/kazzmir/master-of-magic/game/magic/data"
++	"github.com/kazzmir/master-of-magic/game/magic/gamemenu"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/kazzmir/master-of-magic/game/magic/serialize"
++	uilib "github.com/kazzmir/master-of-magic/game/magic/ui"
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++	"github.com/kazzmir/master-of-magic/lib/system"
++)
++
++// stub GameLoader — 全部空槽
++type stubLoader struct{}
++
++func (s *stubLoader) Load(_ io.Reader) error                               { return nil }
++func (s *stubLoader) LoadNew(_ string) error                               { return nil }
++func (s *stubLoader) LoadNewReader(_ io.Reader) error                      { return nil }
++func (s *stubLoader) LoadMetadata(_ string) (serialize.SaveMetadata, bool) { return serialize.SaveMetadata{}, false }
++func (s *stubLoader) GetFS() system.WriteableFS                             { return nil }
++
++type stubSaver struct{}
++
++func (s *stubSaver) SaveToPath(_ string, _ string) error { return nil }
++
++type stubSettings struct{}
++
++func (s *stubSettings) RunSettingsUI() {}
++
++// Engine
++type Engine struct {
++	ui     *uilib.UI
++	frames int
++	output string
++}
++
++func NewEngine(output string) (*Engine, error) {
++	cache := lbx.AutoCache()
++
++	group, _ := gamemenu.MakeGameMenuUI(
++		cache,
++		&stubLoader{},
++		&stubSaver{},
++		&stubSettings{},
++		func() {},
++	)
++
++	ui := &uilib.UI{}
++	ui.SetElementsFromArray(nil)
++	ui.AddGroup(group)
++
++	return &Engine{
++		ui:     ui,
++		output: output,
++	}, nil
++}
++
++func (e *Engine) Update() error {
++	keys := inpututil.AppendJustPressedKeys(nil)
++	for _, k := range keys {
++		if k == ebiten.KeyEscape {
++			return ebiten.Termination
++		}
++	}
++	e.ui.StandardUpdate()
++	e.frames++
++	if e.frames > 4 {
++		return ebiten.Termination
++	}
++	return nil
++}
++
++func (e *Engine) Draw(screen *ebiten.Image) {
++	e.ui.StandardDraw(screen)
++	if e.frames == 3 {
++		e.saveScreenshot(screen)
++	}
++}
++
++func (e *Engine) saveScreenshot(screen *ebiten.Image) {
++	w, h := screen.Bounds().Dx(), screen.Bounds().Dy()
++	pixels := make([]byte, w*h*4)
++	screen.ReadPixels(pixels)
++	rgba := image.NewRGBA(image.Rect(0, 0, w, h))
++	copy(rgba.Pix, pixels)
++
++	f, err := os.Create(e.output)
++	if err != nil {
++		log.Printf("Error creating output: %v", err)
++		return
++	}
++	defer f.Close()
++	if err := png.Encode(f, rgba); err != nil {
++		log.Printf("Error encoding PNG: %v", err)
++		return
++	}
++	log.Printf("Screenshot saved → %v (%dx%d)", e.output, w, h)
++}
++
++func (e *Engine) Layout(_, _ int) (int, int) {
++	return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++}
++
++func main() {
++	log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
++
++	output := "/out/loadscreen.png"
++	if len(os.Args) > 1 {
++		output = os.Args[1]
++	}
++
++	engine, err := NewEngine(output)
++	if err != nil {
++		log.Printf("Error: %v", err)
++		return
++	}
++
++	ebiten.SetWindowSize(data.ScreenWidth*3, data.ScreenHeight*3)
++	ebiten.SetWindowTitle("loadscreen-CHT")
++
++	if err := ebiten.RunGame(engine); err != nil && err != ebiten.Termination {
++		log.Printf("Error: %v", err)
++	}
++}

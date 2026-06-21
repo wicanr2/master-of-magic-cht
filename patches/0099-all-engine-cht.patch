@@ -1,0 +1,1752 @@
+diff --git a/game/magic/artifact/create-artifact.go b/game/magic/artifact/create-artifact.go
+index d9a0204..05a07b8 100644
+--- a/game/magic/artifact/create-artifact.go
++++ b/game/magic/artifact/create-artifact.go
+@@ -1129,6 +1129,13 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+ 
+     imageCache := util.MakeImageCache(cache)
+ 
++    // 畫面標題中文名 (依呼叫類型決定)
++    var screenTitle string
++    switch creationType {
++        case CreationEnchantItem:     screenTitle = "附魔物品"
++        case CreationCreateArtifact:  screenTitle = "製造神器"
++    }
++
+     ui := &uilib.UI{
+         Cache: cache,
+         Draw: func(ui *uilib.UI, screen *ebiten.Image){
+@@ -1136,6 +1143,13 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+             background, _ := imageCache.GetImage("spellscr.lbx", 13, 0)
+             scale.DrawScaled(screen, background, &options)
+ 
++            // 疊中文標題,蓋掉背景烘進的英文標題 (約在面板頂端 y=1 列)
++            util.ChtLabelRect(screen,
++                image.Rect(0, 1, background.Bounds().Dx(), 10),
++                fonts.TitleSpellFont,
++                color.RGBA{R: 0x18, G: 0x10, B: 0x08, A: 0xff},
++                screenTitle)
++
+             ui.StandardDraw(screen)
+         },
+     }
+@@ -1200,6 +1214,20 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+ 
+     var selectedButton *uilib.UIElement
+ 
++    // 物品類型按鈕中文名對照
++    artifactTypeName := map[ArtifactType]string{
++        ArtifactTypeSword:  "劍",
++        ArtifactTypeMace:   "錘",
++        ArtifactTypeAxe:    "斧",
++        ArtifactTypeBow:    "弓",
++        ArtifactTypeStaff:  "法杖",
++        ArtifactTypeWand:   "魔杖",
++        ArtifactTypeMisc:   "雜項",
++        ArtifactTypeShield: "盾",
++        ArtifactTypeChain:  "鎖甲",
++        ArtifactTypePlate:  "板甲",
++    }
++
+     makeButton := func(x int, y int, unselected int, selected int, item ArtifactType) *uilib.UIElement {
+         index := 0
+         imageRect, _ := imageCache.GetImage("spellscr.lbx", unselected, 0)
+@@ -1223,8 +1251,10 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+                 if selectedButton == element {
+                     use = selected
+                 }
+-                image, _ := imageCache.GetImage("spellscr.lbx", use, index)
+-                scale.DrawScaled(screen, image, &options)
++                img, _ := imageCache.GetImage("spellscr.lbx", use, index)
++                scale.DrawScaled(screen, img, &options)
++                // 疊中文物品類型名,蓋掉烘進 LBX 的英文
++                util.ChtLabel(screen, rect, img, fonts.PowerFont, artifactTypeName[item])
+             },
+         }
+     }
+@@ -1268,7 +1298,7 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+ 
+     ui.AddElement(&uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Cost: %v", artifactCost(currentArtifact.Cost)))
++            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("花費: %v", artifactCost(currentArtifact.Cost)))
+         },
+     })
+ 
+@@ -1314,8 +1344,10 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(okRect.Min.X), float64(okRect.Min.Y))
+-            image := okButtons[okIndex]
+-            scale.DrawScaled(screen, image, &options)
++            img := okButtons[okIndex]
++            scale.DrawScaled(screen, img, &options)
++            // 疊「確定」蓋掉烘進 LBX 的英文 "Ok"
++            util.ChtLabel(screen, okRect, img, fonts.PowerFont, "確定")
+         },
+     })
+ 
+diff --git a/game/magic/cartographer/cartographer.go b/game/magic/cartographer/cartographer.go
+index a87b038..9de3ab2 100644
+--- a/game/magic/cartographer/cartographer.go
++++ b/game/magic/cartographer/cartographer.go
+@@ -234,9 +234,9 @@ func MakeCartographer(cache *lbx.LbxCache, cities []*citylib.City, stacks []*pla
+             scale.DrawScaled(screen, background, &options)
+ 
+             render := arcanusRender
+-            planeName := "Arcanus Plane"
++            planeName := "阿坎努斯平面" // Arcanus Plane
+             if currentPlane == data.PlaneMyrror {
+-                planeName = "Myrror Plane"
++                planeName = "米羅平面" // Myrror Plane
+                 render = myrrorRender
+             }
+             fonts.Title.PrintOptions(screen, float64(background.Bounds().Dx() / 2), 10, font.FontOptions{Scale: scale.ScaleAmount, Options: &options, Justify: font.FontJustifyCenter}, planeName)
+@@ -276,6 +276,12 @@ func MakeCartographer(cache *lbx.LbxCache, cities []*citylib.City, stacks []*pla
+             }
+ 
+             ui.StandardDraw(screen)
++
++            // 中文化:遮掉烘進背景的英文 "Close"，疊中文「關閉」
++            // alpha=160 半透明讓捲頁紋理透出；矩形縮至文字最密集區
++            closeRect := image.Rect(268, 150, 318, 177)
++            parchment := color.RGBA{R: 115, G: 83, B: 42, A: 160}
++            util.ChtLabelRect(screen, closeRect, fonts.Title, parchment, "關閉")
+         },
+     }
+ 
+diff --git a/game/magic/cityview/build-screen.go b/game/magic/cityview/build-screen.go
+index 7675f86..b283afc 100644
+--- a/game/magic/cityview/build-screen.go
++++ b/game/magic/cityview/build-screen.go
+@@ -429,7 +429,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
+                 options.GeoM.Translate(float64(cancelX), float64(cancelY))
+                 scale.DrawScaled(screen, buttonBackground, &options)
+ 
+-                fonts.OkCancelFont.PrintOptions(screen, float64(cancelX + buttonBackground.Bounds().Dx() / 2), float64(cancelY + 1), font.FontOptions{Scale: scale.ScaleAmount, Justify: font.FontJustifyCenter}, "Cancel")
++                util.ChtLabel(screen, this.Rect, buttonBackground, fonts.OkCancelFont, "取消")
+             },
+         })
+ 
+@@ -452,7 +452,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
+                 options.GeoM.Translate(float64(okX), float64(okY))
+                 scale.DrawScaled(screen, buttonBackground, &options)
+ 
+-                fonts.OkCancelFont.PrintOptions(screen, float64(okX + buttonBackground.Bounds().Dx() / 2), float64(okY + 1), font.FontOptions{Scale: scale.ScaleAmount, Justify: font.FontJustifyCenter}, "Ok")
++                util.ChtLabel(screen, this.Rect, buttonBackground, fonts.OkCancelFont, "確定")
+             },
+         })
+     }
+diff --git a/game/magic/cityview/city-screen.go b/game/magic/cityview/city-screen.go
+index 199e9f0..2bee34a 100644
+--- a/game/magic/cityview/city-screen.go
++++ b/game/magic/cityview/city-screen.go
+@@ -889,6 +889,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+             }
+ 
+             scale.DrawScaled(screen, buyButtons[use], &options)
++            util.ChtLabel(screen, element.Rect, buyButtons[use], cityScreen.Fonts.SmallFont, "購買")
+         },
+     })
+ 
+@@ -915,6 +916,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+                 var options ebiten.DrawImageOptions
+                 options.GeoM.Translate(float64(element.Rect.Min.X), float64(element.Rect.Min.Y))
+                 scale.DrawScaled(screen, changeButton, &options)
++                util.ChtLabel(screen, element.Rect, changeButton, cityScreen.Fonts.SmallFont, "更換")
+             },
+         })
+     }
+@@ -940,6 +942,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+                 var options ebiten.DrawImageOptions
+                 options.GeoM.Translate(float64(element.Rect.Min.X), float64(element.Rect.Min.Y))
+                 scale.DrawScaled(screen, okButton, &options)
++                util.ChtLabel(screen, element.Rect, okButton, cityScreen.Fonts.SmallFont, "確定")
+             },
+         })
+     }
+@@ -2340,6 +2343,12 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
+     if err == nil {
+         var options ebiten.DrawImageOptions
+         scale.DrawScaled(screen, ui, &options)
++        // 疊蓋烘進背景圖的英文面板標題 (logical coords: scale=3)
++        util.ChtLabelRect(screen, image.Rect(0, 41, 138, 49), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "資源")
++        util.ChtLabelRect(screen, image.Rect(138, 41, 212, 49), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "城市魔法")
++        util.ChtLabelRect(screen, image.Rect(0, 94, 212, 102), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "建築物")
++        util.ChtLabelRect(screen, image.Rect(212, 94, 320, 102), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "單位")
++        util.ChtLabelRect(screen, image.Rect(212, 138, 320, 146), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "生產中")
+     }
+ 
+     cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", cityScreen.City.GetSize(), cityScreen.City.Name))
+@@ -2380,8 +2389,15 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
+             scale.DrawScaled(screen, producingPics[index], &options)
+         }
+ 
++        // 生產中建築名稱：Housing/Trade Goods 直接換中文，其餘透過 strings 表
++        producingName := cityScreen.City.BuildingInfo.Name(cityScreen.City.ProducingBuilding)
++        switch cityScreen.City.ProducingBuilding {
++            case buildinglib.BuildingHousing: producingName = "住宅"
++            case buildinglib.BuildingTradeGoods: producingName = "貿易品"
++        }
++
+         var lines []string
+-        parts := strings.Split(cityScreen.City.BuildingInfo.Name(cityScreen.City.ProducingBuilding), " ")
++        parts := strings.Split(producingName, " ")
+         for _, part := range parts {
+             if len(lines) == 0 {
+                 lines = append(lines, part)
+@@ -2412,8 +2428,8 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
+ 
+             description := ""
+             switch cityScreen.City.ProducingBuilding {
+-                case buildinglib.BuildingTradeGoods: description = "Trade Goods"
+-                case buildinglib.BuildingHousing: description = "Increases population growth rate."
++                case buildinglib.BuildingTradeGoods: description = "貿易品"
++                case buildinglib.BuildingHousing: description = "提升人口成長率"
+             }
+ 
+             cityScreen.Fonts.ProducingFont.PrintWrap(screen, 285, 155, 60, font.FontOptions{Justify: font.FontJustifyCenter, DropShadow: true, Scale: scale.ScaleAmount}, description)
+@@ -2441,9 +2457,9 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
+         turn := ""
+         turns := (float64(workRequired) - float64(cityScreen.City.Production)) / float64(cityScreen.City.WorkProductionRate())
+         if turns <= 0 {
+-            turn = "1 Turn"
++            turn = "1 回合"
+         } else {
+-            turn = fmt.Sprintf("%v Turns", int(math.Ceil(turns)))
++            turn = fmt.Sprintf("%v 回合", int(math.Ceil(turns)))
+         }
+ 
+         cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 318, 140, font.FontOptions{Justify: font.FontJustifyRight, Scale: scale.ScaleAmount}, turn)
+diff --git a/game/magic/combat/combat-screen.go b/game/magic/combat/combat-screen.go
+index 6e8929e..c2fbd83 100644
+--- a/game/magic/combat/combat-screen.go
++++ b/game/magic/combat/combat-screen.go
+@@ -1601,7 +1601,7 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
+     buttonX := float64(144)
+     buttonY := float64(168)
+ 
+-    makeButton2 := func(lbxIndex int, buttonDisabledIndex, x int, y int, action func(), alterColor func(*colorm.ColorM)) *uilib.UIElement {
++    makeButton2 := func(lbxIndex int, buttonDisabledIndex, x int, y int, label string, action func(), alterColor func(*colorm.ColorM)) *uilib.UIElement {
+         buttons, _ := combat.ImageCache.GetImages("compix.lbx", lbxIndex)
+         buttonDisabled, _ := combat.ImageCache.GetImage("compix.lbx", buttonDisabledIndex, 0)
+         rect := image.Rect(0, 0, buttons[0].Bounds().Dx(), buttons[0].Bounds().Dy()).Add(image.Point{int(buttonX) + buttons[0].Bounds().Dx() * x, int(buttonY) + buttons[0].Bounds().Dy() * y})
+@@ -1631,20 +1631,22 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
+                 alterColor(&extraColor)
+                 if combat.ButtonsDisabled {
+                     colorm.DrawImage(screen, buttonDisabled, extraColor, &options)
++                    util.ChtLabel(screen, rect, buttonDisabled, combat.Fonts.HudFont, label)
+                 } else {
+                     colorm.DrawImage(screen, buttons[index], extraColor, &options)
++                    util.ChtLabel(screen, rect, buttons[index], combat.Fonts.HudFont, label)
+                 }
+             },
+         }
+     }
+ 
+-    makeButton := func(lbxIndex int, buttonDisabledIndex, x int, y int, action func()) *uilib.UIElement {
+-        return makeButton2(lbxIndex, buttonDisabledIndex, x, y, action, func(_ *colorm.ColorM){})
++    makeButton := func(lbxIndex int, buttonDisabledIndex, x int, y int, label string, action func()) *uilib.UIElement {
++        return makeButton2(lbxIndex, buttonDisabledIndex, x, y, label, action, func(_ *colorm.ColorM){})
+     }
+ 
+     // spell
+     spellPage := 0
+-    elements = append(elements, makeButton(1, 23, 0, 0, func(){
++    elements = append(elements, makeButton(1, 23, 0, 0, "法術", func(){
+         // cannot cast if the player is selecting a unit/tile
+         if combat.IsSelectingSpell() {
+             return
+@@ -1770,12 +1772,12 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
+     }))
+ 
+     // wait
+-    elements = append(elements, makeButton(2, 24, 1, 0, func(){
++    elements = append(elements, makeButton(2, 24, 1, 0, "等待", func(){
+         combat.Model.NextUnit()
+     }))
+ 
+     // info
+-    elements = append(elements, makeButton(20, 25, 0, 1, func(){
++    elements = append(elements, makeButton(20, 25, 0, 1, "資訊", func(){
+         var group *uilib.UIElementGroup
+         remove := func(){
+             ui.RemoveGroup(group)
+@@ -1785,7 +1787,7 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
+     }))
+ 
+     // auto
+-    elements = append(elements, makeButton2(4, 26, 1, 1, func(){
++    elements = append(elements, makeButton2(4, 26, 1, 1, "自動", func(){
+         if combat.ExtraControl {
+             combat.Events <- &CombatDoSingleAuto{}
+             return
+@@ -1804,7 +1806,7 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
+     }))
+ 
+     // flee
+-    elements = append(elements, makeButton(21, 27, 0, 2, func(){
++    elements = append(elements, makeButton(21, 27, 0, 2, "逃跑", func(){
+ 
+         doFlee := func() {
+             if combat.Model.AttackingArmy.Player == player {
+@@ -1819,7 +1821,7 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
+     }))
+ 
+     // done
+-    elements = append(elements, makeButton(3, 28, 1, 2, func(){
++    elements = append(elements, makeButton(3, 28, 1, 2, "完成", func(){
+         combat.Model.DoneTurn()
+     }))
+ 
+@@ -2095,7 +2097,7 @@ func (combat *CombatScreen) doSelectTile(yield coroutine.YieldFunc, selecter Tea
+ 
+     selectElement := &uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Select a target for a %v spell.", spell.Name))
++            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Select a target for a %v spell."), spell.Name))
+         },
+     }
+ 
+@@ -2194,7 +2196,7 @@ func (combat *CombatScreen) doSelectUnit(yield coroutine.YieldFunc, selecter Tea
+ 
+     selectElement := &uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Select a target for a %v spell.", spell.Name))
++            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Select a target for a %v spell."), spell.Name))
+         },
+     }
+ 
+diff --git a/game/magic/data/abilities.go b/game/magic/data/abilities.go
+index fefc1a9..e9f3d72 100644
+--- a/game/magic/data/abilities.go
++++ b/game/magic/data/abilities.go
+@@ -392,7 +392,7 @@ func (ability Ability) Name() string {
+         case AbilityPurify: return "Purify"
+         case AbilityRegeneration: return "Regeneration"
+         case AbilityResistanceToAll: return "Resistance to all"
+-        case AbilityScouting: return fmt.Sprintf("Scouting %v", romanNumeral(int(ability.Value)))
++        case AbilityScouting: return fmt.Sprintf("偵察%v", romanNumeral(int(ability.Value)))
+         case AbilityStoningGaze: return fmt.Sprintf("Stoning Gaze %v", int(ability.Value))
+         case AbilityStoningImmunity: return "Stoning Immunity"
+         case AbilityStoningTouch: return fmt.Sprintf("Stoning Touch %v", int(ability.Value))
+@@ -414,7 +414,7 @@ func (ability Ability) Name() string {
+         case AbilitySuperArmsmaster: return plusValue("Super Armsmaster")
+         case AbilityBlademaster: return plusValue10("Blademaster")
+         case AbilitySuperBlademaster: return plusValue10("Super Blademaster")
+-        case AbilityCaster: return fmt.Sprintf("Caster %v mp", ability.Value)
++        case AbilityCaster: return fmt.Sprintf("施法 %v", ability.Value)
+         case AbilityCharmed: return "Charmed"
+         case AbilityConstitution: return plusValue("Constitution")
+         case AbilitySuperConstitution: return plusValue("Super Constitution")
+diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
+index a2dd539..9fe14ba 100644
+--- a/game/magic/diplomacy/diplomacy.go
++++ b/game/magic/diplomacy/diplomacy.go
+@@ -353,7 +353,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+         return func(){
+             doTalk = true
+             talk.Clear()
+-            talk.SetTitle(fmt.Sprintf("I will trade you %v", choices.Spells[choice].Name))
++            talk.SetTitle(fmt.Sprintf("我願意以 %v 與你交換", choices.Spells[choice].Name))
+             talk.AddItem("Yes", true, func(){
+                 player.KnownSpells.AddSpell(choices.Spells[choice])
+                 enemy.KnownSpells.AddSpell(spell)
+@@ -393,21 +393,21 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+     talkEnterPact := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into a wizard pact.", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結巫師協定。", gameYear, player.Wizard.Name))
+         ui.AddDelay(140, talkMain)
+     }
+ 
+     talkEnterAlliance := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into an alliance.", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結同盟。", gameYear, player.Wizard.Name))
+         ui.AddDelay(140, talkMain)
+     }
+ 
+     talkEnterPeaceTreaty := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into a peace treaty.", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結和平條約。", gameYear, player.Wizard.Name))
+         ui.AddDelay(140, talkMain)
+     }
+ 
+@@ -454,7 +454,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+     talkThanksTribute := func(){
+         doTalk = true
+         talk.Clear()
+-        talk.SetTitle(fmt.Sprintf("I thank you, glorius %v, for your tribute.", player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("感謝偉大的 %v 慷慨進貢。", player.Wizard.Name))
+         enemy.AdjustDiplomaticRelation(player, 5)
+         player.AdjustDiplomaticRelation(enemy, 5)
+         ui.AddDelay(140, talkMain)
+@@ -492,7 +492,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+         talk.SetTitle("What do you offer as tribute?")
+         gold := int(float64(player.Gold) * 0.1)
+         if gold > 5 {
+-            talk.AddItem(fmt.Sprintf("%v gold", gold), true, func(){
++            talk.AddItem(fmt.Sprintf("%v 金幣", gold), true, func(){
+                 player.Gold -= gold
+                 enemy.Gold += gold
+                 talkThanksTribute()
+@@ -503,7 +503,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+     }
+ 
+     talk.Clear()
+-    talk.SetTitle(fmt.Sprintf("Hail, mighty %v. I bear greetings and words of wisdom.", player.Wizard.Name))
++    talk.SetTitle(fmt.Sprintf("致敬,偉大的 %v。吾帶來問候與智慧之言。", player.Wizard.Name))
+ 
+     fadeOut := 0.0
+ 
+@@ -514,6 +514,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
+         for !quit {
+             ui.StandardUpdate()
+             counter += 1
++
+             if counter % 7 == 0 {
+                 if animating && wizardAnimation.Done() {
+                     // 0 = happy, 1 = angry, 2 = neutral
+diff --git a/game/magic/game/game.go b/game/magic/game/game.go
+index 44c64b8..832a2e3 100644
+--- a/game/magic/game/game.go
++++ b/game/magic/game/game.go
+@@ -73,6 +73,7 @@ type GameFonts struct {
+     InfoFontYellow *font.Font
+     InfoFontRed *font.Font
+     WhiteFont *font.Font
++    ChtMenuFont *font.Font // 中文化疊字用較大黃字 (按鈕中文填滿)
+ }
+ 
+ func MakeGameFonts(cache *lbx.LbxCache) *GameFonts {
+@@ -86,6 +87,7 @@ func MakeGameFonts(cache *lbx.LbxCache) *GameFonts {
+         InfoFontYellow: loader(fontslib.SmallYellow),
+         InfoFontRed: loader(fontslib.SmallRed),
+         WhiteFont: loader(fontslib.SmallerWhite),
++        ChtMenuFont: loader(fontslib.NormalYellow),
+     }
+ }
+ 
+@@ -5705,6 +5707,25 @@ func (game *Game) DumpInfo(x int, y int) {
+     }
+ }
+ 
++// chtButtonLabel:中文化共用疊字 — 在烘進圖的按鈕上先填深色擦掉英文 (保留外框),
++// 再用 InfoFontYellow 疊銳利中文 (rule 81:CJK 用 font 畫在高解析緩衝)。
++func (game *Game) chtButtonLabel(screen *ebiten.Image, rect image.Rectangle, img *ebiten.Image, label string) {
++    fnt := game.Fonts.ChtMenuFont
++    if label == "" || game.Fonts == nil || fnt == nil || img == nil {
++        return
++    }
++    S := scale.ScaleAmount
++    bw := float64(img.Bounds().Dx())
++    bh := float64(img.Bounds().Dy())
++    vector.DrawFilledRect(screen,
++        float32((float64(rect.Min.X)+2)*S), float32((float64(rect.Min.Y)+1)*S),
++        float32((bw-4)*S), float32((bh-2)*S),
++        color.RGBA{R: 58, G: 44, B: 30, A: 255}, false)
++    fnt.PrintOptions(screen,
++        float64(rect.Min.X)+bw/2, float64(rect.Min.Y)+float64(bh)/2-float64(fnt.Height())/2,
++        font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
++}
++
+ func (game *Game) MakeHudUI() *uilib.UI {
+     type TrackKey struct {
+         Key ebiten.Key
+@@ -5815,6 +5836,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+     ui.AddGroup(group)
+ 
+     // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
++    // 中文化:頂部選單按鈕 (main.lbx 1-7) 是烘進圖的英文,用 font 疊中文 (高解析緩衝內,銳利)
++    chtHudMenu := map[int]string{1: "遊戲", 2: "法術", 3: "軍隊", 4: "城市", 5: "魔法", 6: "資訊", 7: "位面"}
++
+     makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
+         buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
+         rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
+@@ -5853,6 +5877,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                 options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
+                 options.ColorScale.ScaleWithColorScale(colorScale)
+                 scale.DrawScaled(screen, buttons[index], &options)
++
++                // 中文化:疊中文標籤
++                game.chtButtonLabel(screen, rect, buttons[index], chtHudMenu[lbxIndex])
+             },
+         }
+     }
+@@ -6145,6 +6172,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                     options.ColorScale.ScaleWithColorScale(colorScale)
+                     options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
+                     scale.DrawScaled(screen, doneImages[doneIndex], &options)
++                    game.chtButtonLabel(screen, doneRect, doneImages[doneIndex], "完成")
+                 },
+                 Inside: func(this *uilib.UIElement, x int, y int){
+                     doneCounter += 1
+@@ -6185,6 +6213,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                     options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
+                     options.ColorScale.ScaleWithColorScale(colorScale)
+                     scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
++                    game.chtButtonLabel(screen, patrolRect, patrolImages[patrolIndex], "巡邏")
+                 },
+                 Inside: func(this *uilib.UIElement, x int, y int){
+                     patrolCounter += 1
+@@ -6229,6 +6258,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                     options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
+                     options.ColorScale.ScaleWithColorScale(colorScale)
+                     scale.DrawScaled(screen, waitImages[waitIndex], &options)
++                    game.chtButtonLabel(screen, waitRect, waitImages[waitIndex], "等待")
+                 },
+                 Inside: func(this *uilib.UIElement, x int, y int){
+                     waitCounter += 1
+@@ -6310,6 +6340,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                     }
+ 
+                     colorm.DrawImage(screen, use, matrix, &options)
++
++                    buildLabel := "建造"
++                    if powers.Meld {
++                        buildLabel = "融合"
++                    } else if powers.Purify {
++                        buildLabel = "淨化"
++                    }
++                    game.chtButtonLabel(screen, buildRect, use, buildLabel)
+                 },
+                 Inside: func(this *uilib.UIElement, x int, y int){
+                     buildCounter += 1
+diff --git a/game/magic/game/hero.go b/game/magic/game/hero.go
+index 0a73645..913f371 100644
+--- a/game/magic/game/hero.go
++++ b/game/magic/game/hero.go
+@@ -59,10 +59,10 @@ func MakeHireHeroScreenUI(cache *lbx.LbxCache, ui *uilib.UI, hero *herolib.Hero,
+     getAlpha := ui.MakeFadeIn(fadeSpeed)
+ 
+     hireText := "Hire"
+-    titleText := fmt.Sprintf("Hero for Hire: %v gold", goldToHire)
++    titleText := fmt.Sprintf("雇用英雄: %v 金幣", goldToHire)
+     if hero.HeroType == herolib.HeroTorin {
+         hireText = "Accept"
+-        titleText = "Hero Summoned"
++        titleText = "英雄召喚"
+     }
+ 
+     uiGroup := uilib.MakeGroup()
+diff --git a/game/magic/game/merchant.go b/game/magic/game/merchant.go
+index ce51df7..40ef521 100644
+--- a/game/magic/game/merchant.go
++++ b/game/magic/game/merchant.go
+@@ -17,6 +17,7 @@ import (
+ 
+ type MerchantFonts struct {
+     LightFont *font.Font
++    ChtFont   *font.Font // 中文化按鈕疊字用 NormalYellow
+ }
+ 
+ func MakeMerchantFonts(cache *lbx.LbxCache) *MerchantFonts {
+@@ -28,6 +29,7 @@ func MakeMerchantFonts(cache *lbx.LbxCache) *MerchantFonts {
+ 
+     return &MerchantFonts{
+         LightFont: loader(fontslib.LightFont),
++        ChtFont:   loader(fontslib.NormalYellow),
+     }
+ }
+ 
+@@ -59,8 +61,13 @@ func MakeMerchantScreenUI(cache *lbx.LbxCache, ui *uilib.UI, artifactToBuy *arti
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+             var options ebiten.DrawImageOptions
+             options.ColorScale.ScaleAlpha(getAlpha())
+-            text := fmt.Sprintf("A merchant arrives and offers a magic %v for sale. The price is only %v gold pieces.", artifactToBuy.Name, goldToBuy)
+-            fonts.LightFont.PrintWrap(screen, float64(60), float64(23), float64(180), font.FontOptions{Scale: scale.ScaleAmount, Options: &options}, text)
++            // 中文化:旅人到訪提案文字,gold pieces → 金幣
++            // 注意:「商」(U+5546)、「價」(U+50F9) 不在字型子集,改用等效字
++            lineH := float64(fonts.LightFont.Height()) + 1
++            line1 := fmt.Sprintf("旅人帶來魔法神器「%v」", artifactToBuy.Name)
++            line2 := fmt.Sprintf("需花費 %v 金幣,請問購買否?", goldToBuy)
++            fonts.LightFont.PrintOptions(screen, float64(60), float64(23), font.FontOptions{Scale: scale.ScaleAmount, Options: &options}, line1)
++            fonts.LightFont.PrintOptions(screen, float64(60), float64(23)+lineH*scale.ScaleAmount, font.FontOptions{Scale: scale.ScaleAmount, Options: &options}, line2)
+         },
+     })
+ 
+@@ -96,10 +103,8 @@ func MakeMerchantScreenUI(cache *lbx.LbxCache, ui *uilib.UI, artifactToBuy *arti
+             options.GeoM.Translate(float64(buyRect.Min.X), float64(buyRect.Min.Y))
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, buttonBackgrounds[buyIndex], &options)
+-
+-            x := float64(buyRect.Min.X + buyRect.Max.X) / 2
+-            y := float64(buyRect.Min.Y + buyRect.Max.Y) / 2
+-            fonts.LightFont.PrintOptions(screen, x, y - float64(5), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, "Buy")
++            // 中文化:Buy → 購買 (ChtLabel 在 DrawScaled 後疊字)
++            util.ChtLabel(screen, buyRect, buttonBackgrounds[buyIndex], fonts.ChtFont, "購買")
+         },
+     })
+ 
+@@ -124,10 +129,8 @@ func MakeMerchantScreenUI(cache *lbx.LbxCache, ui *uilib.UI, artifactToBuy *arti
+             options.GeoM.Translate(float64(rejectRect.Min.X), float64(rejectRect.Min.Y))
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, buttonBackgrounds[rejectIndex], &options)
+-
+-            x := float64(rejectRect.Min.X + rejectRect.Max.X) / 2
+-            y := float64(rejectRect.Min.Y + rejectRect.Max.Y) / 2
+-            fonts.LightFont.PrintOptions(screen, x, y - float64(5), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, "Reject")
++            // 中文化:Reject → 拒絕 (ChtLabel 在 DrawScaled 後疊字)
++            util.ChtLabel(screen, rejectRect, buttonBackgrounds[rejectIndex], fonts.ChtFont, "拒絕")
+         },
+     })
+ 
+diff --git a/game/magic/gamemenu/menu.go b/game/magic/gamemenu/menu.go
+index aedfead..5001992 100644
+--- a/game/magic/gamemenu/menu.go
++++ b/game/magic/gamemenu/menu.go
+@@ -123,6 +123,8 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+ 
+     useFont := loader(fontslib.NameFont)
+     smallFont := loader(fontslib.SmallFont)
++    // 中文化:按鈕疊字用小黃字
++    buttonFont := loader(fontslib.SmallYellow)
+ 
+     maxWidth := useFont.MeasureTextWidth("AAAAAAAAAAAA", 1)
+ 
+@@ -216,7 +218,12 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+ 
+                 var options ebiten.DrawImageOptions
+                 options.ColorScale.ScaleAlpha(getAlpha())
+-                useFont.PrintOptions(screen, float64(x + 2), float64(y + 3), font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, name)
++                displayName := name
++                if displayName == "" {
++                    // 中文化:空槽顯示「空」
++                    displayName = "空"
++                }
++                useFont.PrintOptions(screen, float64(x + 2), float64(y + 3), font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, displayName)
+ 
+                 if selectedSlot == element {
+                     // draw cursor
+@@ -242,7 +249,7 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+         group.AddElement(newSlot)
+     }
+ 
+-    makeButton := func (index int, x int, y int, action func()) *uilib.UIElement {
++    makeButton := func (index int, x int, y int, label string, action func()) *uilib.UIElement {
+         useImage, _ := imageCache.GetImage("load.lbx", index, 0)
+         return &uilib.UIElement{
+             Layer: 3,
+@@ -256,6 +263,8 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+                 options.GeoM.Translate(float64(element.Rect.Min.X), float64(element.Rect.Min.Y))
+                 options.ColorScale.ScaleAlpha(getAlpha())
+                 scale.DrawScaled(screen, useImage, &options)
++                // 中文化:疊銳利中文按鈕標籤
++                util.ChtLabel(screen, element.Rect, useImage, buttonFont, label)
+             },
+         }
+     }
+@@ -266,11 +275,14 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+             var backgroundOptions ebiten.DrawImageOptions
+             backgroundOptions.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, background, &backgroundOptions)
++            // 中文化:蓋掉烘入背景的英文大標 "Master of Magic"(x≈50-268, y≈3-30)，疊副標題
++            panelColor := color.RGBA{R: 0x28, G: 0x28, B: 0x40, A: 255}
++            util.ChtLabelRect(screen, image.Rect(46, 3, 272, 31), buttonFont, panelColor, "讀取 / 儲存進度")
+         },
+     })
+ 
+-    // quit
+-    group.AddElement(makeButton(2, 43, 171, func(){
++    // quit → 離開
++    group.AddElement(makeButton(2, 43, 171, "離開", func(){
+         getAlpha = group.MakeFadeOut(7)
+         group.AddDelay(7, func(){
+             doQuit()
+@@ -278,8 +290,8 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+         })
+     }))
+ 
+-    // load
+-    group.AddElement(makeButton(1, 83, 171, func(){
++    // load → 讀取
++    group.AddElement(makeButton(1, 83, 171, "讀取", func(){
+         if selectedIndex != -1 {
+             err := gameLoader.LoadNew(saveFileName(selectedIndex))
+             if err != nil {
+@@ -290,8 +302,8 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+         }
+     }))
+ 
+-    // save
+-    group.AddElement(makeButton(3, 122, 171, func(){
++    // save → 儲存
++    group.AddElement(makeButton(3, 122, 171, "儲存", func(){
+         if selectedIndex != -1 {
+             doSave := func() bool {
+                 path := saveFileName(selectedIndex)
+@@ -315,16 +327,16 @@ func MakeGameMenuUI(cache *lbx.LbxCache, gameLoader GameLoader, saver GameSaver,
+         }
+     }))
+ 
+-    // settings
+-    group.AddElement(makeButton(12, 172, 171, func(){
++    // settings → 設定
++    group.AddElement(makeButton(12, 172, 171, "設定", func(){
+         // disable for now
+         // ui.RemoveElements(elements)
+ 
+         settingsUI.RunSettingsUI()
+     }))
+ 
+-    // ok
+-    group.AddElement(makeButton(4, 231, 171, func(){
++    // ok → 確定
++    group.AddElement(makeButton(4, 231, 171, "確定", func(){
+         getAlpha = group.MakeFadeOut(7)
+         group.AddDelay(7, func(){
+             cancel()
+diff --git a/game/magic/magicview/view.go b/game/magic/magicview/view.go
+index 07d2243..9dd57ec 100644
+--- a/game/magic/magicview/view.go
++++ b/game/magic/magicview/view.go
+@@ -8,6 +8,8 @@ import (
+     "math/rand/v2"
+     "slices"
+ 
++    "image/color"
++
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+@@ -371,6 +373,14 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+                 scale.DrawScaled(screen, background, &options)
+             }
+ 
++            // 中文化:蓋掉 magic.lbx 0 烘入的英文標題,疊中文
++            // 面板底色:深棕,與 magic.lbx 0 面板背景融合
++            panelDark := color.RGBA{R: 0x3d, G: 0x2a, B: 0x0d, A: 0xff}
++            util.ChtLabelRect(screen, image.Rect(5, 56, 62, 78), fonts.NormalFont, panelDark, "法力")
++            util.ChtLabelRect(screen, image.Rect(63, 56, 125, 78), fonts.NormalFont, panelDark, "研究")
++            util.ChtLabelRect(screen, image.Rect(126, 56, 163, 78), fonts.NormalFont, panelDark, "施法")
++            util.ChtLabelRect(screen, image.Rect(168, 56, 320, 78), fonts.NormalFont, panelDark, "全域結界")
++
+             mana := int(math.Round(player.PowerDistribution.Mana * float64(magic.Power)))
+             research := int(math.Round(player.PowerDistribution.Research * float64(magic.Power)))
+             skill := magic.Power - (mana + research)
+@@ -647,7 +657,8 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+             }
+         },
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            // vector.StrokeRect(screen, float32(transmuteRect.Min.X), float32(transmuteRect.Min.Y), float32(transmuteRect.Dx()), float32(transmuteRect.Bounds().Dy()), 1, color.RGBA{R: 0xff, G: 0x0, B: 0x0, A: 0xff}, true)
++            // 煉金按鈕:蓋掉背景烘入的 "Alchemy" 英文,疊中文
++            util.ChtLabelRect(screen, transmuteRect, fonts.NormalFont, color.RGBA{R: 0x20, G: 0x14, B: 0x05, A: 0xff}, "煉金")
+         },
+     })
+ 
+@@ -666,7 +677,8 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+             }
+         },
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            // vector.StrokeRect(screen, float32(okRect.Min.X), float32(okRect.Min.Y), float32(okRect.Dx()), float32(okRect.Bounds().Dy()), 1, color.RGBA{R: 0xff, G: 0x0, B: 0x0, A: 0xff}, true)
++            // 確定按鈕:蓋掉背景烘入的 "Ok" 英文,疊中文
++            util.ChtLabelRect(screen, okRect, fonts.NormalFont, color.RGBA{R: 0x20, G: 0x14, B: 0x05, A: 0xff}, "確定")
+         },
+     })
+ 
+diff --git a/game/magic/mirror/mirror.go b/game/magic/mirror/mirror.go
+index d6b0ef4..75a46e2 100644
+--- a/game/magic/mirror/mirror.go
++++ b/game/magic/mirror/mirror.go
+@@ -3,13 +3,13 @@ package mirror
+ import (
+     "log"
+     "fmt"
++    "strings"
+     "math/rand/v2"
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/game/magic/util"
+     "github.com/kazzmir/master-of-magic/game/magic/scale"
+-    "github.com/kazzmir/master-of-magic/game/magic/setup"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+     "github.com/kazzmir/master-of-magic/game/magic/draw"
+     fontslib "github.com/kazzmir/master-of-magic/game/magic/fonts"
+@@ -51,6 +51,36 @@ func GetWizardPortraitIndex(base data.WizardBase, banner data.BannerType) int {
+     return wizardIndex + bannerIndex
+ }
+ 
++// retortCht 把英文 Retort 名稱對應到繁體中文。ui.tsv 的字串覆蓋層只做精確整段比對,
++// 無法拆解 JoinAbilities 的組合字串,故在此本地維護顯示層譯名。
++var retortCht = map[data.Retort]string{
++    data.RetortAlchemy:       "煉金術",
++    data.RetortWarlord:       "戰爭領主",
++    data.RetortChanneler:     "傳送師",
++    data.RetortArchmage:      "大巫師",
++    data.RetortArtificer:     "造物師",
++    data.RetortConjurer:      "召喚師",
++    data.RetortSageMaster:    "智慧大師",
++    data.RetortMyrran:        "米羅人",
++    data.RetortDivinePower:   "神聖力量",
++    data.RetortFamous:        "聲名顯赫",
++    data.RetortRunemaster:    "符文大師",
++    data.RetortCharismatic:   "魅力超凡",
++}
++
++// joinAbilitiesCht 把 Retort 列表用頓號串成繁中字串,取代英文 JoinAbilities 的顯示輸出。
++func joinAbilitiesCht(abilities []data.Retort) string {
++    parts := make([]string, 0, len(abilities))
++    for _, r := range abilities {
++        if zh, ok := retortCht[r]; ok {
++            parts = append(parts, zh)
++        } else {
++            parts = append(parts, r.String()) // fallback 英文
++        }
++    }
++    return strings.Join(parts, "、")
++}
++
+ type MirrorFonts struct {
+     Name *font.Font
+     Small *font.Font
+@@ -94,7 +124,7 @@ func MakeMirrorUI(cache *lbx.LbxCache, player *playerlib.Player, ui *uilib.UI) *
+         })
+     }
+ 
+-    wrappedAbilities := fonts.Small.CreateWrappedText(float64(160), 1, setup.JoinAbilities(player.Wizard.Retorts))
++    wrappedAbilities := fonts.Small.CreateWrappedText(float64(160), 1, joinAbilitiesCht(player.Wizard.Retorts))
+ 
+     element = &uilib.UIElement{
+         Layer: 1,
+@@ -121,20 +151,20 @@ func MakeMirrorUI(cache *lbx.LbxCache, player *playerlib.Player, ui *uilib.UI) *
+ 
+             fonts.Name.PrintOptions(screen, float64(cornerX + 110), float64(cornerY + 10), centerOptions, player.Wizard.Name)
+ 
+-            fonts.Small.PrintOptions(screen, float64(cornerX + 30), float64(cornerY + 75), centerOptions, fmt.Sprintf("%v GP", player.Gold))
+-            fonts.Small.PrintOptions(screen, float64(cornerX + 170), float64(cornerY + 75), font.FontOptions{Justify: font.FontJustifyRight, Options: &options, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("%v MP", player.Mana))
++            fonts.Small.PrintOptions(screen, float64(cornerX + 30), float64(cornerY + 75), centerOptions, fmt.Sprintf("%v 金幣", player.Gold))
++            fonts.Small.PrintOptions(screen, float64(cornerX + 170), float64(cornerY + 75), font.FontOptions{Justify: font.FontJustifyRight, Options: &options, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("%v 法力", player.Mana))
+ 
+             options.GeoM.Translate(float64(34), float64(55))
+             newRand := rand.New(rand.NewPCG(player.BookOrderSeed1, player.BookOrderSeed2))
+             draw.DrawBooks(screen, options, &imageCache, player.Wizard.Books, newRand)
+ 
+             if player.GetFame() > 0 {
+-                fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 95), centerOptions, fmt.Sprintf("%v Fame", player.GetFame()))
++                fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 95), centerOptions, fmt.Sprintf("%v 聲望", player.GetFame()))
+             }
+ 
+             fonts.Small.RenderWrapped(screen, float64(cornerX + 13), float64(cornerY + 112), wrappedAbilities, font.FontOptions{Scale: scale.ScaleAmount, Options: &options, DropShadow: true})
+ 
+-            fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 131), centerOptions, "Heroes")
++            fonts.Hero.PrintOptions(screen, float64(cornerX + 90), float64(cornerY + 131), centerOptions, "英雄")
+ 
+             heroX := cornerX + 13
+             heroY := cornerY + 142
+diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
+index f0917fe..d44cebc 100644
+--- a/game/magic/setup/new-game.go
++++ b/game/magic/setup/new-game.go
+@@ -2,6 +2,8 @@ package setup
+ 
+ import (
+     "log"
++    "image"
++    "image/color"
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/font"
+@@ -151,6 +153,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
+             scale.DrawScaled(screen, okButtons[okIndex], &options)
++            util.ChtLabel(screen, this.Rect, okButtons[okIndex], buttonFont, "確定")
+         },
+     })
+ 
+@@ -172,6 +175,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
+             scale.DrawScaled(screen, cancelButtons[cancelIndex], &options)
++            util.ChtLabel(screen, this.Rect, cancelButtons[cancelIndex], buttonFont, "取消")
+         },
+     })
+ 
+@@ -275,6 +279,13 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+             optionsImage, _ := newGameScreen.ImageCache.GetImage("newgame.lbx", 1, 0)
+             scale.DrawScaled(screen, optionsImage, &options)
+ 
++            // 中文化:疊面板標題與 4 列標籤 (烘在 newgame.lbx 1 的英文)
++            tan := color.RGBA{R: 80, G: 60, B: 48, A: 255}
++            util.ChtLabelRect(screen, image.Rect(176, 1, 314, 23), buttonFont, tan, "遊戲設定")
++            util.ChtLabelRect(screen, image.Rect(162, 37, 250, 55), buttonFont, tan, "難度")
++            util.ChtLabelRect(screen, image.Rect(162, 64, 250, 82), buttonFont, tan, "對手")
++            util.ChtLabelRect(screen, image.Rect(162, 91, 250, 109), buttonFont, tan, "陸地大小")
++            util.ChtLabelRect(screen, image.Rect(162, 118, 250, 136), buttonFont, tan, "魔法")
+         },
+         HandleKeys: func(keys []ebiten.Key){
+             for _, key := range keys {
+diff --git a/game/magic/setup/new-wizard.go b/game/magic/setup/new-wizard.go
+index 7eb793b..c69cb86 100644
+--- a/game/magic/setup/new-wizard.go
++++ b/game/magic/setup/new-wizard.go
+@@ -1031,6 +1031,19 @@ func (screen *NewWizardScreen) Load(cache *lbx.LbxCache) error {
+     return nil
+ }
+ 
++// magicChtName 回傳魔法學派的繁體中文名稱，供「選擇 X 法術」標題使用。
++func magicChtName(magic data.MagicType) string {
++    switch magic {
++    case data.LifeMagic:    return "生命"
++    case data.SorceryMagic: return "魔法"
++    case data.NatureMagic:  return "自然"
++    case data.DeathMagic:   return "死亡"
++    case data.ChaosMagic:   return "混沌"
++    case data.ArcaneMagic:  return "秘法"
++    }
++    return magic.String()
++}
++
+ func JoinAbilities(abilities []data.Retort) string {
+     // this could be simplified by iterating backwards through the array and
+     // preprending 'and' or ', ' for each element, depending on its index
+@@ -1046,15 +1059,15 @@ func JoinAbilities(abilities []data.Retort) string {
+ 
+     // x and y
+     if len(abilities) == 2 {
+-        return fmt.Sprintf("%v and %v", abilities[0], abilities[1])
++        return fmt.Sprintf("%v、%v", abilities[0], abilities[1])
+     }
+ 
+     // x, y, and z
+     out := ""
+     for i := 0; i < len(abilities) - 2; i++ {
+-        out += fmt.Sprintf("%v, ", abilities[i])
++        out += fmt.Sprintf("%v、", abilities[i])
+     }
+-    out += fmt.Sprintf("%v and %v", abilities[len(abilities) - 2], abilities[len(abilities) - 1])
++    out += fmt.Sprintf("%v、%v", abilities[len(abilities) - 2], abilities[len(abilities) - 1])
+     return out
+ }
+ 
+@@ -1429,6 +1442,21 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
+             customWizardBooks, _ := screen.ImageCache.GetImage("newgame.lbx", 41, 0)
+             window.DrawImage(customWizardBooks, scale.ScaleOptions(options))
+ 
++            // 中文化:疊蓋 newgame.lbx 41 背景圖上烘進的魔法學派英文標籤
++            // 座標以 logical pixel (scale=1) 為準，取樣背景深棕色覆蓋原英文
++            // 各行書格頂部 Y: Life=49, Death=75, Chaos=101, Nature=127, Sorcery=153
++            // 標籤文字實測 logical Y 中心: Life≈57, Death≈83, Chaos≈109, Nature≈135, Sorcery≈161
++            // X 範圍: 書格右端 285 起延伸到背景圖邊緣 ~315
++            {
++                booksLabelFont := screen.Fonts.NameFont
++                brown := color.RGBA{R: 52, G: 32, B: 16, A: 255}
++                util.ChtLabelRect(window, image.Rect(220, 51, 315, 63), booksLabelFont, brown, "生命")
++                util.ChtLabelRect(window, image.Rect(220, 77, 315, 89), booksLabelFont, brown, "死亡")
++                util.ChtLabelRect(window, image.Rect(220, 103, 315, 115), booksLabelFont, brown, "混沌")
++                util.ChtLabelRect(window, image.Rect(220, 129, 315, 141), booksLabelFont, brown, "自然")
++                util.ChtLabelRect(window, image.Rect(220, 155, 315, 167), booksLabelFont, brown, "魔法")
++            }
++
+             options.GeoM.Translate(float64(portraitX), float64(portraitY))
+             portrait, _ := screen.ImageCache.GetImage("wizards.lbx", screen.CustomWizard.Portrait, 0)
+             window.DrawImage(portrait, scale.ScaleOptions(options))
+@@ -1441,7 +1469,7 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
+             ui.StandardDraw(window)
+ 
+             screen.Fonts.AbilityFontSelected.PrintOptions(window, 12, 180, font.FontOptions{Scale: scale.ScaleAmount}, JoinAbilities(screen.CustomWizard.Retorts))
+-            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v picks", picksLeft()))
++            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v 點數", picksLeft()))
+         },
+         HandleKeys: func(keys []ebiten.Key){
+             for _, key := range keys {
+@@ -1772,7 +1800,7 @@ func (screen *NewWizardScreen) MakeSelectSpellsUI(previousUI UIFunc) *uilib.UI {
+                 titleX := 240
+                 titleY := 5
+ 
+-                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("Select %v Spells", magic.String()))
++                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("選擇%v法術", magicChtName(magic)))
+ 
+                 options.GeoM.Reset()
+                 options.GeoM.Translate(180, 18)
+@@ -1780,7 +1808,7 @@ func (screen *NewWizardScreen) MakeSelectSpellsUI(previousUI UIFunc) *uilib.UI {
+                 window.DrawImage(windyBorder, scale.ScaleOptions(options))
+ 
+                 screen.Fonts.AbilityFontSelected.PrintOptions(window, 12, 180, font.FontOptions{Scale: scale.ScaleAmount}, JoinAbilities(screen.CustomWizard.Retorts))
+-                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v picks", picksLeft()))
++                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v 點數", picksLeft()))
+ 
+                 showDescription := func(y float64, text string, background *ebiten.Image){
+                     descriptionX := float64(167)
+@@ -2147,11 +2175,17 @@ func (screen *NewWizardScreen) Draw(window *ebiten.Image) {
+ }
+ 
+ func MakeNewWizardScreen(cache *lbx.LbxCache) *NewWizardScreen {
++    return MakeNewWizardScreenWithState(cache, NewWizardScreenStateSelectWizard)
++}
++
++// MakeNewWizardScreenWithState 建立 NewWizardScreen 並直接從指定子畫面開始，
++// 主要用於開發截圖/測試。
++func MakeNewWizardScreenWithState(cache *lbx.LbxCache, state NewWizardScreenState) *NewWizardScreen {
+     out := &NewWizardScreen{
+         LbxCache: cache,
+         ImageCache: util.MakeImageCache(cache),
+         CurrentWizard: 0,
+-        State: NewWizardScreenStateSelectWizard,
++        State: state,
+     }
+ 
+     err := out.Load(cache)
+diff --git a/game/magic/spellbook/spell.go b/game/magic/spellbook/spell.go
+index 4bc65bc..7803f11 100644
+--- a/game/magic/spellbook/spell.go
++++ b/game/magic/spellbook/spell.go
+@@ -1577,7 +1577,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+                 },
+                 Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
+                     if overland {
+-                        return fmt.Sprintf("%v turns", turnsRemaining), whiteFadeFont
++                        return fmt.Sprintf(font.TranslateFormat("%v turns"), turnsRemaining), whiteFadeFont
+                     }
+                     return "", nil
+                 },
+@@ -1600,7 +1600,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+ 
+                             ui.RemoveGroup(group)
+                         }
+-                        message := fmt.Sprintf("Do you wish to abort your %v spell?", currentSpell.Name)
++                        message := fmt.Sprintf(font.TranslateFormat("Do you wish to abort your %v spell?"), currentSpell.Name)
+                         group.AddElements(uilib.MakeConfirmDialogWithLayer(group, cache, &imageCache, 2, message, true, confirm, func(){
+                             ui.RemoveGroup(group)
+                         }))
+diff --git a/game/magic/unitview/unit.go b/game/magic/unitview/unit.go
+index b52c499..92dfa22 100644
+--- a/game/magic/unitview/unit.go
++++ b/game/magic/unitview/unit.go
+@@ -154,7 +154,7 @@ func RenderUnitInfoNormal(screen *ebiten.Image, imageCache *util.ImageCache, uni
+ 
+     options.GeoM.Translate(80, 0)
+     x, y = options.GeoM.Apply(0, 0)
+-    smallFont.PrintOptions(screen, x, y, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("Damage: %v", unit.GetDamage()))
++    smallFont.PrintOptions(screen, x, y, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("損傷: %v", unit.GetDamage()))
+ }
+ 
+ func RenderUnitInfoBuild(screen *ebiten.Image, imageCache *util.ImageCache, unit UnitView, descriptionFont *font.Font, smallFont *font.Font, defaultOptions ebiten.DrawImageOptions, discountedCost int) {
+diff --git a/game/magic/util/cht_label.go b/game/magic/util/cht_label.go
+new file mode 100644
+index 0000000..124c9d5
+--- /dev/null
++++ b/game/magic/util/cht_label.go
+@@ -0,0 +1,49 @@
++package util
++
++// 中文化共用疊字:在烘進 LBX 的英文按鈕/標籤圖上,先填深色擦掉英文 (保留外框),
++// 再用傳入的 font 疊銳利中文 (rule 81:CJK 用 font 畫在高解析緩衝)。各畫面共用。
++
++import (
++	"image"
++	"image/color"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	"github.com/hajimehoshi/ebiten/v2/vector"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/kazzmir/master-of-magic/lib/font"
++)
++
++// ChtLabel 在 rect 位置的烘字圖上疊中文 label。fnt 為要用的字型 (通常黃/白)。
++// label 為空、fnt 或 img 為 nil 時不動作。
++func ChtLabel(screen *ebiten.Image, rect image.Rectangle, img *ebiten.Image, fnt *font.Font, label string) {
++	if label == "" || fnt == nil || img == nil {
++		return
++	}
++	S := scale.ScaleAmount
++	bw := float64(img.Bounds().Dx())
++	bh := float64(img.Bounds().Dy())
++	vector.DrawFilledRect(screen,
++		float32((float64(rect.Min.X)+3)*S), float32((float64(rect.Min.Y)+2)*S),
++		float32((bw-6)*S), float32((bh-4)*S),
++		color.RGBA{R: 40, G: 26, B: 12, A: 255}, false)
++	fnt.PrintOptions(screen,
++		float64(rect.Min.X)+bw/2, float64(rect.Min.Y)+2,
++		font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
++}
++
++// ChtLabelRect 在指定 logical rect 疊中文:先用 fill 色蓋掉烘入的英文 (面板紋理背景用取樣色),
++// 再用 fnt 置中疊中文。給 baked 在面板/背景圖、無獨立 sprite 的標籤用。
++func ChtLabelRect(screen *ebiten.Image, rect image.Rectangle, fnt *font.Font, fill color.Color, label string) {
++	if label == "" || fnt == nil {
++		return
++	}
++	S := scale.ScaleAmount
++	vector.DrawFilledRect(screen,
++		float32(float64(rect.Min.X)*S), float32(float64(rect.Min.Y)*S),
++		float32(float64(rect.Dx())*S), float32(float64(rect.Dy())*S),
++		fill, false)
++	fnt.PrintOptions(screen,
++		float64(rect.Min.X)+float64(rect.Dx())/2, float64(rect.Min.Y)+1,
++		font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
++}
++
+diff --git a/game/magic/util/image-cache.go b/game/magic/util/image-cache.go
+index b7ac065..f8d8ebc 100644
+--- a/game/magic/util/image-cache.go
++++ b/game/magic/util/image-cache.go
+@@ -164,6 +164,12 @@ func (cache *ImageCache) GetImagesTransform(lbxPath string, index int, extra str
+         return images, nil
+     }
+ 
++    // 圖片覆蓋層 (中文化):若此 (lbx,index) 有中文替換圖,改用之 (版權 LBX 不動)
++    if images, ok := overrideImages(lbxPath, index); ok {
++        cache.Cache[key] = images
++        return images, nil
++    }
++
+     lbxFile, err := cache.LbxCache.GetLbxFile(lbxPath)
+     if err != nil {
+         return nil, err
+diff --git a/game/magic/util/image_override.go b/game/magic/util/image_override.go
+new file mode 100644
+index 0000000..5da75bf
+--- /dev/null
++++ b/game/magic/util/image_override.go
+@@ -0,0 +1,97 @@
++package util
++
++// 圖片覆蓋層 —— 工作魔法大帝中文化(處理「烘進 LBX 的圖片 UI 文字」)。
++//
++// 顯示層字串覆蓋 (lib/font) 只能換 font 繪製的文字;頂部選單 / 按鈕 / 畫面標題等是
++// 烘進版權 LBX 的點陣圖,font 覆蓋碰不到。本層在 ImageCache.GetImagesTransform 的單一
++// 載圖入口攔截:若某 (lbxFile, index) 有中文替換圖,改回傳中文版,版權 LBX 不動。
++//
++// 替換圖來源:環境變數 MOM_CHT_IMAGES 指向目錄,檔名規約 `<lbx>_<index>.png`
++// (lbx 去副檔名小寫,如 main.lbx index 12 -> main_12.png)。單張即覆蓋該 index 的所有 frame
++// 的第 0 張;多 frame 可用 `<lbx>_<index>_<frame>.png`。找不到則回退原圖,不影響英文。
++//
++// 探查:設 MOM_CHT_IMGLOG=<檔> 會把每個被請求的 (lbx,index,frameCount) 記下,
++// 供逐畫面定位哪張圖是哪個 UI 元素 (中文化美術的對照來源)。
++
++import (
++	"image/png"
++	"os"
++	"path/filepath"
++	"strconv"
++	"strings"
++	"sync"
++
++	"github.com/hajimehoshi/ebiten/v2"
++)
++
++var (
++	imgOverrideOnce sync.Once
++	imgOverrideDir  string
++	imgLogPath      string
++	imgLogMu        sync.Mutex
++	imgLogSeen      = map[string]bool{}
++)
++
++func initImageOverride() {
++	imgOverrideDir = os.Getenv("MOM_CHT_IMAGES")
++	imgLogPath = os.Getenv("MOM_CHT_IMGLOG")
++}
++
++// overrideImages 回傳 (lbxFile, index) 的中文替換圖;無替換時回傳 (nil, false)。
++func overrideImages(lbxPath string, index int) ([]*ebiten.Image, bool) {
++	imgOverrideOnce.Do(initImageOverride)
++
++	if imgLogPath != "" {
++		logImageRequest(lbxPath, index)
++	}
++	if imgOverrideDir == "" {
++		return nil, false
++	}
++
++	base := strings.TrimSuffix(strings.ToLower(lbxPath), ".lbx")
++	// 多 frame:<lbx>_<index>_<frame>.png 依序;否則單張 <lbx>_<index>.png
++	var out []*ebiten.Image
++	for frame := 0; ; frame++ {
++		p := filepath.Join(imgOverrideDir, base+"_"+strconv.Itoa(index)+"_"+strconv.Itoa(frame)+".png")
++		img := loadOverridePNG(p)
++		if img == nil {
++			break
++		}
++		out = append(out, img)
++	}
++	if len(out) > 0 {
++		return out, true
++	}
++	// 單張形式
++	if img := loadOverridePNG(filepath.Join(imgOverrideDir, base+"_"+strconv.Itoa(index)+".png")); img != nil {
++		return []*ebiten.Image{img}, true
++	}
++	return nil, false
++}
++
++func loadOverridePNG(path string) *ebiten.Image {
++	f, err := os.Open(path)
++	if err != nil {
++		return nil
++	}
++	defer f.Close()
++	img, err := png.Decode(f)
++	if err != nil {
++		return nil
++	}
++	return ebiten.NewImageFromImage(img)
++}
++
++func logImageRequest(lbxPath string, index int) {
++	imgLogMu.Lock()
++	defer imgLogMu.Unlock()
++	key := lbxPath + ":" + strconv.Itoa(index)
++	if imgLogSeen[key] {
++		return
++	}
++	imgLogSeen[key] = true
++	if f, err := os.OpenFile(imgLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
++		f.WriteString(key + "\n")
++		f.Close()
++	}
++}
+diff --git a/lib/font/cjk.go b/lib/font/cjk.go
+new file mode 100644
+index 0000000..85d2fc0
+--- /dev/null
++++ b/lib/font/cjk.go
+@@ -0,0 +1,167 @@
++package font
++
++// CJK (繁體中文) glyph 支線 —— 工作魔法大帝中文化注入。
++//
++// 引擎原本只認 ASCII 32–127 (glyphIndex = int(c)-32);非 ASCII rune 在 doPrint /
++// PrintOutline / MeasureTextWidth 被靜默跳過。這裡提供「碼點 >= 0x2E80 改用 TTF rasterize
++// 的 glyph」這條支線,由 font.go 的繪字迴圈在 glyphIndex 超範圍時呼叫。
++//
++// 字級對齊 (Phase 2):CJK glyph 依「呼叫端字型的字高」rasterize,讓中英基線與行高一致、
++// 不破版。快取以 (rune, height) 為 key,face 以 height 為 key 各建一份。
++//
++// 字型來源:環境變數 MOM_CHT_FONT 指向 CJK TTF/TTC (預設找常見系統路徑)。
++// 找不到字型時所有函式回傳零值,呼叫端退回原本「跳過」行為,不影響英文。
++
++import (
++	"image"
++	_ "embed"
++	"image/color"
++	"os"
++	"sync"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	xfont "golang.org/x/image/font"
++	"golang.org/x/image/font/opentype"
++	"golang.org/x/image/font/sfnt"
++	"golang.org/x/image/math/fixed"
++)
++
++// 內嵌 CJK 字型子集 (只含譯文用到的字),standalone 出包不依賴系統字型/env。
++//
++//go:embed cht_font.otf
++var embeddedFont []byte
++
++// CJK glyph 相對 cell 高度的基線位置 (0..1)。Noto 等字型 ink 約佔 em 上方,0.82 上下置中且不裁切。
++const cjkBaselineRatio = 0.82
++
++var cjkCandidatePaths = []string{
++	"/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
++	"/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
++	"/System/Library/Fonts/PingFang.ttc", // macOS
++	"C:\\Windows\\Fonts\\msjh.ttc",       // Windows 微軟正黑
++}
++
++type cjkKey struct {
++	r rune
++	h int
++}
++
++var (
++	cjkOnce  sync.Once
++	cjkFont  *sfnt.Font
++	cjkMu    sync.Mutex
++	cjkFaces = map[int]xfont.Face{}       // height -> face
++	cjkCache = map[cjkKey]*ebiten.Image{} // (rune,height) -> glyph image
++	cjkAdv   = map[cjkKey]int{}           // (rune,height) -> advance (px)
++)
++
++// CJK / 全形標點等範圍 (簡化版,Phase 2 再細分)。
++func isCJK(r rune) bool {
++	return r >= 0x2E80
++}
++
++func loadCJKFont() {
++	paths := cjkCandidatePaths
++	if env := os.Getenv("MOM_CHT_FONT"); env != "" {
++		paths = append([]string{env}, paths...)
++	}
++	var data []byte
++	for _, p := range paths {
++		if b, err := os.ReadFile(p); err == nil {
++			data = b
++			break
++		}
++	}
++	if data == nil {
++		// fallback:內嵌字型子集 (standalone 出包)
++		data = embeddedFont
++	}
++	if len(data) == 0 {
++		return // 無字型:CJK 支線停用,退回原行為
++	}
++	tt, err := opentype.Parse(data)
++	if err != nil {
++		// .ttc (TrueType collection) 走 ParseCollection 取第 0 個 font
++		coll, cerr := opentype.ParseCollection(data)
++		if cerr != nil {
++			return
++		}
++		tt, err = coll.Font(0)
++		if err != nil {
++			return
++		}
++	}
++	cjkFont = tt
++}
++
++// cjkFaceFor 回傳對應字高的 face (lazy 建立並快取)。呼叫端須持有 cjkMu。
++func cjkFaceFor(height int) xfont.Face {
++	if f, ok := cjkFaces[height]; ok {
++		return f
++	}
++	f, err := opentype.NewFace(cjkFont, &opentype.FaceOptions{
++		Size: float64(height), DPI: 72, Hinting: xfont.HintingFull,
++	})
++	if err != nil {
++		return nil
++	}
++	cjkFaces[height] = f
++	return f
++}
++
++// cjkSupersample:CJK glyph 以 logical 字高的 SS 倍解析度 rasterize,呼叫端再用 scale/SS 畫,
++// 佔同樣 logical footprint 但有 SS 倍 source 細節 —— 避免「小字放大糊掉」(見規則 81)。
++const cjkSupersample = 4
++
++// cjkGlyphImage 回傳 rune 的高解析 glyph image (height*SS 高) 與 logical 前進寬度 (height 單位,未乘 scale)。
++// 呼叫端須以 GeoM.Scale(scale/cjkSupersample, ...) 繪製。字型不可用或非 CJK 時回傳 (nil, 0)。
++func cjkGlyphImage(r rune, height int) (*ebiten.Image, int) {
++	cjkOnce.Do(loadCJKFont)
++	if cjkFont == nil || !isCJK(r) || height <= 0 {
++		return nil, 0
++	}
++
++	cjkMu.Lock()
++	defer cjkMu.Unlock()
++
++	key := cjkKey{r, height}
++	if img, ok := cjkCache[key]; ok {
++		return img, cjkAdv[key]
++	}
++
++	ss := cjkSupersample
++	hi := height * ss // supersample 渲染尺寸
++	face := cjkFaceFor(hi)
++	if face == nil {
++		return nil, 0
++	}
++
++	advance, ok := face.GlyphAdvance(r)
++	if !ok {
++		return nil, 0
++	}
++	advPx := advance.Round() // SS 解析下的前進寬
++	if advPx <= 0 {
++		advPx = hi
++	}
++	wLogical := (advPx + ss/2) / ss // 換回 logical 前進寬
++	if wLogical <= 0 {
++		wLogical = height
++	}
++
++	// cell:寬 = SS 解析前進寬,高 = height*SS;框在字高內對齊行高
++	rgba := image.NewRGBA(image.Rect(0, 0, advPx, hi))
++	baseline := int(float64(hi) * cjkBaselineRatio)
++	d := &xfont.Drawer{
++		Dst:  rgba,
++		Src:  image.NewUniform(color.White),
++		Face: face,
++		Dot:  fixed.P(0, baseline),
++	}
++	d.DrawString(string(r))
++
++	img := ebiten.NewImageFromImage(rgba)
++	cjkCache[key] = img
++	cjkAdv[key] = wLogical
++	return img, wLogical
++}
+diff --git a/lib/font/font.go b/lib/font/font.go
+index 7e84629..a7820b3 100644
+--- a/lib/font/font.go
++++ b/lib/font/font.go
+@@ -157,6 +157,8 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
+     shaderOptions.Uniforms["Time"] = float32(0)
+     shaderOptions.ColorScale = colorScale
+ 
++    text = translateForDisplay(text)
++
+     for _, c := range text {
+         if c == '\n' {
+             y += float64(font.GlyphHeight + font.internalFont.VerticalSpacing)
+@@ -166,6 +168,20 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
+ 
+         glyphIndex := int(c) - 32
+         if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
++            // CJK 支線:outline 路徑同樣需要中文 glyph (否則中文在 PrintOutline 被丟棄)
++            if cjkImage, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkImage != nil {
++                var options ebiten.DrawImageOptions
++                options.GeoM.Scale(scale/cjkSupersample, scale/cjkSupersample)
++                options.GeoM.Translate(useX, y)
++                options.ColorScale = colorScale
++                destination.DrawImage(cjkImage, &options)
++
++                shaderOptions.GeoM = options.GeoM
++                shaderOptions.Images[0] = cjkImage
++                destination.DrawRectShader(cjkImage.Bounds().Dx(), cjkImage.Bounds().Dy(), edgeShader, &shaderOptions)
++
++                useX += float64(cjkAdv + font.internalFont.HorizontalSpacing) * scale
++            }
+             continue
+         }
+ 
+@@ -196,6 +212,8 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+     // TODO: this shadow distance could be a parameter
+     distance := 3.0/4
+ 
++    text = translateForDisplay(text)
++
+     for _, c := range text {
+         if c == '\n' {
+             y += float64(font.GlyphHeight + font.internalFont.VerticalSpacing)
+@@ -205,6 +223,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+ 
+         glyphIndex := int(c) - 32
+         if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
++            // CJK 支線:碼點超出 ASCII glyph 範圍時,改用 TTF rasterize 的中文 glyph
++            if cjkImage, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkImage != nil {
++                var options ebiten.DrawImageOptions
++                options.GeoM.Scale(scale/cjkSupersample, scale/cjkSupersample)
++                options.GeoM.Translate(useX, y)
++                if dropShadow {
++                    options.GeoM.Translate(scale*distance, scale*distance)
++                    options.ColorScale = colorScale
++                    options.ColorScale.ScaleWithColor(shadowColor)
++                    destination.DrawImage(cjkImage, &options)
++                    options.GeoM.Translate(-scale*distance, -scale*distance)
++                }
++                options.ColorScale = colorScale
++                destination.DrawImage(cjkImage, &options)
++                useX += float64(cjkAdv + font.internalFont.HorizontalSpacing) * scale
++            }
+             continue
+         }
+ 
+@@ -247,6 +281,7 @@ func (font *Font) Print(image *ebiten.Image, x float64, y float64, scale float64
+ 
+ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
+     width := 0
++    text = translateForDisplay(text)
+     for _, c := range text {
+         if c == '\n' {
+             continue
+@@ -254,6 +289,10 @@ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
+ 
+         glyphIndex := int(c) - 32
+         if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
++            // CJK 支線:中文 glyph 的寬度量測,讓置中/置右/換行計算正確
++            if _, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkAdv > 0 {
++                width += cjkAdv + font.internalFont.HorizontalSpacing
++            }
+             continue
+         }
+ 
+@@ -344,23 +383,47 @@ func (font *Font) PrintOptions(image *ebiten.Image, x float64, y float64, option
+     }
+ }
+ 
+-/* split the input text ABCD into two substrings AB and CD such that the pixel width of AB is less than maxWidth */
++/* split the input text ABCD into two substrings AB and CD such that the pixel width of AB is less than maxWidth.
++   CJK 感知:英文在空白處斷行;中文 (無空白) 可在任意字之間逐字斷行,避免整段中文無法換行被丟棄。 */
+ func (font *Font) splitText(text string, maxWidth float64, scale float64) (string, string) {
+-    size := font.MeasureTextWidth(text, scale)
+-    if size < maxWidth {
++    if font.MeasureTextWidth(text, scale) < maxWidth {
+         return text, ""
+     }
+ 
+-    parts := strings.Split(text, " ")
+-    // FIXME: use binary search for this
+-    for i := len(parts) - 1; i >= 0; i-- {
+-        sofar := strings.Join(parts[0:i], " ")
+-        if font.MeasureTextWidth(sofar, scale) < maxWidth {
+-            return sofar, strings.Join(parts[i:len(parts)], " ")
++    runes := []rune(text)
++    lastBreak := -1 // rest 由此 index 起算的最後一個可斷點
++    breakAfterSpace := false
++
++    for i := 1; i <= len(runes); i++ {
++        if font.MeasureTextWidth(string(runes[:i]), scale) >= maxWidth {
++            if lastBreak > 0 {
++                if breakAfterSpace {
++                    return strings.TrimRight(string(runes[:lastBreak]), " "), string(runes[lastBreak:])
++                }
++                return string(runes[:lastBreak]), string(runes[lastBreak:])
++            }
++            // 無可斷點 (單一過長的英文字):至少切一個 rune,保證有進展、不回傳空字串
++            cut := i - 1
++            if cut < 1 {
++                cut = 1
++            }
++            return string(runes[:cut]), string(runes[cut:])
++        }
++        // 記錄可斷點 (rest 將從 runes[i] 起):空白之後,或中日韓字邊界
++        if i < len(runes) {
++            prev := runes[i-1]
++            next := runes[i]
++            if prev == ' ' {
++                lastBreak = i
++                breakAfterSpace = true
++            } else if isCJK(prev) || isCJK(next) {
++                lastBreak = i
++                breakAfterSpace = false
++            }
+         }
+     }
+ 
+-    return "", text
++    return text, ""
+ }
+ 
+ func (font *Font) PrintWrap(image *ebiten.Image, x float64, y float64, maxWidth float64, options FontOptions, text string) {
+@@ -405,6 +468,9 @@ func (font *Font) CreateWrappedText(maxWidth float64, scale float64, text string
+     var lines []string
+     var yPos float64 = 0
+ 
++    // 散文整段先翻譯,再斷行 (逐段翻譯無法命中整句譯文;中文需整段譯好再 CJK 斷行)
++    text = translateForDisplay(text)
++
+     text = string(bytes.ReplaceAll([]byte(text), []byte{'\n'}, []byte{NewLine}))
+ 
+     textLines := bytes.Split([]byte(text), []byte{NewLine})
+diff --git a/lib/font/override.go b/lib/font/override.go
+new file mode 100644
+index 0000000..fea5c71
+--- /dev/null
++++ b/lib/font/override.go
+@@ -0,0 +1,109 @@
++package font
++
++// 字串覆蓋層 (顯示層翻譯) —— 工作魔法大帝中文化。
++//
++// 設計重點 (見 ADR 0003):翻譯**只在顯示層**做,不碰引擎邏輯字串。
++// 因為引擎把英文名稱當邏輯 key 比對 (例 artifact/create-artifact.go:198
++// `if string(name) == "+6 Defense"`),若在資料讀取層改成中文會破壞遊戲邏輯。
++// 因此在 lib/font 的繪字進入點 (doPrint / PrintOutline / MeasureTextWidth) 把
++// 顯示字串換成中文,引擎內部仍用英文。
++//
++// 比對採 **trim 後精確比對**:引擎讀 LBX 名稱時會 bytes.Trim 去前後空白
++// (create-artifact.go:149),故表的 key 與輸入都先 TrimSpace 再查。
++//
++// 翻譯表來源:環境變數 MOM_CHT_STRINGS 指向一個目錄,載入其中所有 *.tsv
++// (欄位 source<TAB>zh<TAB>note,# 開頭與 header 略過)。未設定或查無對應時回傳原字串,
++// 不影響英文顯示。
++
++import (
++	"bufio"
++	"embed"
++	"io"
++	"os"
++	"path/filepath"
++	"strings"
++	"sync"
++)
++
++// 內嵌譯文表:standalone 出包不依賴 MOM_CHT_STRINGS。env 仍可覆寫 (env 先載、先到先得)。
++//
++//go:embed cht_strings/*.tsv
++var embeddedStrings embed.FS
++
++var (
++	overrideOnce  sync.Once
++	overrideTable = map[string]string{}
++)
++
++func loadOverrideTable() {
++	// 1) 環境變數目錄優先 (dev 可覆寫內嵌表)
++	if dir := os.Getenv("MOM_CHT_STRINGS"); dir != "" {
++		if entries, err := os.ReadDir(dir); err == nil {
++			for _, e := range entries {
++				if e.IsDir() || !strings.HasSuffix(strings.ToLower(e.Name()), ".tsv") {
++					continue
++				}
++				if f, err := os.Open(filepath.Join(dir, e.Name())); err == nil {
++					loadOverrideReader(f)
++					f.Close()
++				}
++			}
++		}
++	}
++	// 2) 內嵌表補齊 (先到先得,env 已載的不覆寫)
++	if entries, err := embeddedStrings.ReadDir("cht_strings"); err == nil {
++		for _, e := range entries {
++			if !strings.HasSuffix(strings.ToLower(e.Name()), ".tsv") {
++				continue
++			}
++			if data, err := embeddedStrings.ReadFile("cht_strings/" + e.Name()); err == nil {
++				loadOverrideReader(strings.NewReader(string(data)))
++			}
++		}
++	}
++}
++
++func loadOverrideReader(r io.Reader) {
++	scanner := bufio.NewScanner(r)
++	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
++	for scanner.Scan() {
++		line := scanner.Text()
++		if line == "" || strings.HasPrefix(strings.TrimSpace(line), "#") {
++			continue
++		}
++		cols := strings.Split(line, "\t")
++		if len(cols) < 2 {
++			continue
++		}
++		src := strings.TrimSpace(cols[0])
++		zh := strings.TrimSpace(cols[1])
++		if src == "" || src == "source" || zh == "" {
++			continue // 略過 header 與空譯文
++		}
++		// 先到先得:不覆寫已存在的 key (讓較早載入的表優先;同義變體可並存)
++		if _, exists := overrideTable[src]; !exists {
++			overrideTable[src] = zh
++		}
++	}
++}
++
++// translateForDisplay 把要顯示的字串換成中文 (trim 後精確比對)。
++// 表為空或查無對應時回傳原字串。引擎邏輯字串不受影響 (本函式只在繪字時呼叫)。
++func translateForDisplay(text string) string {
++	overrideOnce.Do(loadOverrideTable)
++	if len(overrideTable) == 0 {
++		return text
++	}
++	if zh, ok := overrideTable[strings.TrimSpace(text)]; ok {
++		return zh
++	}
++	return text
++}
++
++// TranslateFormat 翻譯 fmt.Sprintf 格式字串模板 (呼叫端在 Sprintf 之前使用)。
++// 例:TranslateFormat("Do you wish to abort your %v spell?") 返回「您確定要中止施放 %v 嗎?」,
++// 呼叫端再 fmt.Sprintf(TranslateFormat(template), spellName) 組出完整中文句。
++// 比對失敗時回傳原模板,不影響英文顯示。
++func TranslateFormat(template string) string {
++	return translateForDisplay(template)
++}
+diff --git a/test/cjk-render/main.go b/test/cjk-render/main.go
+new file mode 100644
+index 0000000..2d7f7ec
+--- /dev/null
++++ b/test/cjk-render/main.go
+@@ -0,0 +1,100 @@
++package main
++
++// Phase 1 真實引擎 CJK 驗證:用引擎真正的字型管線 (VaultFonts + lib/font 的
++// PrintDropShadow / Print / PrintOptions / PrintOutline) 畫中英混排,
++// 觸發 lib/font/cjk.go 的 CJK glyph 注入,觀察:
++//   1. 中文是否在真實引擎字型路徑渲染
++//   2. drop shadow / outline 是否套用到 CJK glyph
++//   3. 在 320×200 邏輯畫布、scale 後的版面是否破版 (overflow)
++//
++// 基於 test/font/main.go 改寫,僅替換繪製字串。按 Esc 結束。
++
++import (
++	"image/color"
++	"log"
++
++	"github.com/kazzmir/master-of-magic/game/magic/data"
++	"github.com/kazzmir/master-of-magic/game/magic/fonts"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/kazzmir/master-of-magic/game/magic/util"
++	"github.com/kazzmir/master-of-magic/lib/font"
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	"github.com/hajimehoshi/ebiten/v2/inpututil"
++)
++
++type Engine struct {
++	LbxCache   *lbx.LbxCache
++	ImageCache util.ImageCache
++	VaultFonts *fonts.VaultFonts
++}
++
++func NewEngine() (*Engine, error) {
++	cache := lbx.AutoCache()
++	return &Engine{
++		LbxCache:   cache,
++		ImageCache: util.MakeImageCache(cache),
++		VaultFonts: fonts.MakeVaultFonts(cache),
++	}, nil
++}
++
++func (engine *Engine) Update() error {
++	for _, key := range inpututil.AppendJustPressedKeys(nil) {
++		if key == ebiten.KeyEscape || key == ebiten.KeyCapsLock {
++			return ebiten.Termination
++		}
++	}
++	return nil
++}
++
++func (engine *Engine) Draw(screen *ebiten.Image) {
++	screen.Fill(color.RGBA{R: 24, G: 18, B: 48, A: 255})
++
++	// 全部 scale 1,直接用螢幕座標排版 (PrintOptions 會把 y 乘 scale,混用會錯位)。
++	// item power 名稱都餵入「引擎實際使用的英文字串」,由 lib/font 顯示層覆蓋層
++	// (MOM_CHT_STRINGS 載 item-powers.tsv) 自動轉中文;引擎邏輯字串不動。
++
++	cs := ebiten.ColorScale{}
++	IN := engine.VaultFonts.ItemName
++	PW := engine.VaultFonts.PowerFont
++
++	// 標題 (literal CJK)
++	IN.PrintDropShadow(screen, 6, 6, 1, cs, "工作魔法大帝")
++	// 神器名:artifacts.tsv 尚未翻 → 保持英文 (證明覆蓋是選擇性的)
++	IN.Print(screen, 6, 26, 1, cs, "Sword of Mallana")
++	// 餵英文 → 覆蓋層自動轉中文
++	IN.Print(screen, 6, 42, 1, cs, "Holy Avenger")
++
++	// 物品能力:每條餵真實英文 power 名,自動翻譯
++	powers := []string{"Flaming", "Vampiric", "+3 Attack", "Magic Immunity", "Invisibility"}
++	py := 64.0
++	for _, p := range powers {
++		PW.Print(screen, 6, py, 1, cs, p)
++		py += 14
++	}
++
++	// 散文 CJK 斷行示範:長中文描述自動逐字換行 (maxWidth 內);
++	// 真實流程中這段由覆蓋層從英文整段翻好,再進 CreateWrappedText 斷行。
++	IN.Print(screen, 6, 150, 1, cs, "── 描述 (CJK 逐字斷行) ──")
++	desc := "烈焰之劍:每次攻擊都附帶火焰傷害,並使敵人陷入恐懼。持有者在戰場上所向披靡,無人能擋其鋒芒。"
++	engine.VaultFonts.ItemName.PrintWrap(screen, 6, 166, 240, font.FontOptions{Scale: 1}, desc)
++}
++
++func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
++	return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++}
++
++func main() {
++	log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
++	ebiten.SetWindowSize(data.ScreenWidth*4, data.ScreenHeight*4)
++	ebiten.SetWindowTitle("cjk-render")
++	engine, err := NewEngine()
++	if err != nil {
++		log.Printf("engine load error: %v", err)
++		return
++	}
++	if err := ebiten.RunGame(engine); err != nil && err != ebiten.Termination {
++		log.Printf("run error: %v", err)
++	}
++}

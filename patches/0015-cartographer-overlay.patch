@@ -1,0 +1,28 @@
+diff --git a/game/magic/cartographer/cartographer.go b/game/magic/cartographer/cartographer.go
+index XXXXXXX..YYYYYYY 100644
+--- a/game/magic/cartographer/cartographer.go
++++ b/game/magic/cartographer/cartographer.go
+@@ -234,9 +234,9 @@ func MakeCartographer(cache *lbx.LbxCache, cities []*citylib.City, stacks []*pl
+             scale.DrawScaled(screen, background, &options)
+ 
+             render := arcanusRender
+-            planeName := "Arcanus Plane"
++            planeName := "阿坎努斯平面" // Arcanus Plane
+             if currentPlane == data.PlaneMyrror {
+-                planeName = "Myrror Plane"
++                planeName = "米羅平面" // Myrror Plane
+                 render = myrrorRender
+             }
+             fonts.Title.PrintOptions(screen, float64(background.Bounds().Dx() / 2), 10, font.FontOptions{Scale: scale.ScaleAmount, Options: &options, Justify: font.FontJustifyCenter}, planeName)
+@@ -276,6 +276,12 @@ func MakeCartographer(cache *lbx.LbxCache, cities []*citylib.City, stacks []*pl
+             }
+ 
+             ui.StandardDraw(screen)
++
++            // 中文化:遮掉烘進背景的英文 "Close"，疊中文「關閉」
++            // alpha=160 半透明讓捲頁紋理透出；矩形縮至文字最密集區
++            closeRect := image.Rect(268, 150, 318, 177)
++            parchment := color.RGBA{R: 115, G: 83, B: 42, A: 160}
++            util.ChtLabelRect(screen, closeRect, fonts.Title, parchment, "關閉")
+         },
+     }

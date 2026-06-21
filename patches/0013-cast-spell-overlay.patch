@@ -1,0 +1,50 @@
+diff --git a/lib/font/override.go b/lib/font/override.go
+--- a/lib/font/override.go
++++ b/lib/font/override.go
+@@ -99,3 +99,11 @@ func translateForDisplay(text string) string {
+ 	}
+ 	return text
+ }
++
++// TranslateFormat 翻譯 fmt.Sprintf 格式字串模板 (呼叫端在 Sprintf 之前使用)。
++// 例:TranslateFormat("Do you wish to abort your %v spell?") 返回「您確定要中止施放 %v 嗎?」,
++// 呼叫端再 fmt.Sprintf(TranslateFormat(template), spellName) 組出完整中文句。
++// 比對失敗時回傳原模板,不影響英文顯示。
++func TranslateFormat(template string) string {
++	return translateForDisplay(template)
++}
+diff --git a/game/magic/spellbook/spell.go b/game/magic/spellbook/spell.go
+--- a/game/magic/spellbook/spell.go
++++ b/game/magic/spellbook/spell.go
+@@ -1577,7 +1577,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, char
+                 Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
+                     if overland {
+-                        return fmt.Sprintf("%v turns", turnsRemaining), whiteFadeFont
++                        return fmt.Sprintf(font.TranslateFormat("%v turns"), turnsRemaining), whiteFadeFont
+                     }
+                     return "", nil
+                 },
+@@ -1600,7 +1600,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, char
+                         ui.RemoveGroup(group)
+                         }
+                         }
+-                        message := fmt.Sprintf("Do you wish to abort your %v spell?", currentSpell.Name)
++                        message := fmt.Sprintf(font.TranslateFormat("Do you wish to abort your %v spell?"), currentSpell.Name)
+                         group.AddElements(uilib.MakeConfirmDialogWithLayer(group, cache, &imageCache, 2, message, true, confirm, func(){
+diff --git a/game/magic/combat/combat-screen.go b/game/magic/combat/combat-screen.go
+--- a/game/magic/combat/combat-screen.go
++++ b/game/magic/combat/combat-screen.go
+@@ -2097,7 +2097,7 @@ func (combat *CombatScreen) SelectTargetSpell(spell spellbook.Spell, x int, y i
+     selectElement := &uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Select a target for a %v spell.", spell.Name))
++            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Select a target for a %v spell."), spell.Name))
+         },
+     }
+@@ -2196,7 +2196,7 @@ func (combat *CombatScreen) SelectSpellTarget(spell spellbook.Spell, x int, y i
+     selectElement := &uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Select a target for a %v spell.", spell.Name))
++            combat.Fonts.WhiteFont.PrintWrap(screen, float64(x), float64(y), float64(75), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Select a target for a %v spell."), spell.Name))
+         },
+     }

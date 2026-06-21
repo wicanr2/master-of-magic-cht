@@ -4,6 +4,7 @@ Alliance	同盟	外交選單
 Allows	允許建造	建築/法術說明
 Arcanian Races:	阿坎努斯種族:	新巫師選種族
 Arcanus	阿坎努斯	位面名 (主位面)
+Arcanus Plane	阿坎努斯平面	製圖師畫面標題
 Armor	護甲
 Army Strength	軍隊強度	巫師狀態
 Average	普通	難度
@@ -16,6 +17,8 @@ Casting Skill:	施法技巧:
 Charges	充能次數	神器/法術
 Choose a new spell to research	選擇要研究的新法術
 Choose a spell to embed in this item	選擇要附魔到此物品的法術
+Cartographer	製圖師	地圖勘查畫面 (位面選擇)
+Close	關閉	製圖師/其他畫面右下按鈕 (烘進 LBX 圖的花體字)
 Current Status Of Wizards	巫師現況
 Declaration of War on Another Wizard	向他位巫師宣戰	外交
 Dismiss	解散	單位
@@ -50,6 +53,7 @@ More	更多
 Moves	移動	單位移動力
 Myrran Races:	米羅種族:	新巫師選種族
 Myrror	米羅	位面名 (異位面)
+Myrror Plane	米羅平面	製圖師畫面標題
 Name	名稱
 New Outpost Founded	建立新前哨	事件
 Nightshade	夜影草	城市資源加成
@@ -282,3 +286,23 @@ The Huntress	女獵人	英雄稱謂 (Shuri)
 The Thief	盜賊	英雄稱謂 (Theria)
 The Assassin	刺客	英雄稱謂 (Tumu)
 The Golden One	黃金勇者	英雄稱謂 (Aureus)
+# 施法書章節標題 (Section.Name, 走 titleFont.PrintOptions → translateForDisplay)
+Summoning	召喚
+Special Spells	特殊法術
+Enchantment	附魔
+City Spells	城市法術
+Unit Spells	單位法術
+Combat Spells	戰鬥法術
+# 施法書取消/確認對話 (格式字串 template,走 TranslateFormat → fmt.Sprintf)
+Do you wish to abort your %v spell?	您確定要中止施放 %v 嗎?
+# 施法書 overland tooltip
+%v turns	%v 回合
+# 戰鬥選目標提示 (combat-screen.go 兩處 fmt.Sprintf)
+Select a target for a %v spell.	請選擇 %v 的目標。
+# 讀取/存檔畫面 (gamemenu/menu.go — load.lbx 烘字按鈕疊中文)
+Save	儲存	按鈕 (load.lbx index 3)
+Quit	離開	按鈕 (load.lbx index 2)
+Settings	設定	按鈕 (load.lbx index 12)
+Empty	空	存槽為空時顯示
+Load Game	讀取進度	主選單選項
+Save Game	儲存進度	畫面副標題
