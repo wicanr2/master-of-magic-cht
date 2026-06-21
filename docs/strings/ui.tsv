@@ -332,3 +332,11 @@ and true Master of Magic.	成為真正的魔法大帝。	mastery.go win screen l
 # 橫幅標題直接在 code 用 fmt.Sprintf 組中文,不走 tsv (含 %v 佔位)
 # 傭兵橫幅 count==1: "雇用傭兵: %v 金幣"  (mercenaries.go line 180)
 # 傭兵橫幅 count>1 : "%v 名傭兵待雇: %v 金幣" (mercenaries.go line 182)
+Select An Advisor	選擇顧問	資訊選單標題
+Apprentice	見習巫師	顧問
+Historian	史官	顧問
+Astrologer	占星師	顧問
+Chancellor	大臣	顧問
+Tax Collector	稅務官	顧問
+Grand Vizier	大維齊爾	顧問
+Mirror	魔鏡	顧問 (巫師狀態鏡)
