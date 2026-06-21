@@ -1,0 +1,46 @@
+--- /tmp/mom-engine/game/magic/magicview/view.go	2026-06-21 19:30:05.870698244 +0800
++++ /tmp/mom-magic/game/magic/magicview/view.go	2026-06-22 02:11:51.432327638 +0800
+@@ -8,6 +8,8 @@
+     "math/rand/v2"
+     "slices"
+ 
++    "image/color"
++
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+@@ -371,6 +373,14 @@
+                 scale.DrawScaled(screen, background, &options)
+             }
+ 
++            // 中文化:蓋掉 magic.lbx 0 烘入的英文標題,疊中文
++            // 面板底色:深棕,與 magic.lbx 0 面板背景融合
++            panelDark := color.RGBA{R: 0x3d, G: 0x2a, B: 0x0d, A: 0xff}
++            util.ChtLabelRect(screen, image.Rect(5, 56, 62, 78), fonts.NormalFont, panelDark, "法力")
++            util.ChtLabelRect(screen, image.Rect(63, 56, 125, 78), fonts.NormalFont, panelDark, "研究")
++            util.ChtLabelRect(screen, image.Rect(126, 56, 163, 78), fonts.NormalFont, panelDark, "施法")
++            util.ChtLabelRect(screen, image.Rect(168, 56, 320, 78), fonts.NormalFont, panelDark, "全域結界")
++
+             mana := int(math.Round(player.PowerDistribution.Mana * float64(magic.Power)))
+             research := int(math.Round(player.PowerDistribution.Research * float64(magic.Power)))
+             skill := magic.Power - (mana + research)
+@@ -647,7 +657,8 @@
+             }
+         },
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            // vector.StrokeRect(screen, float32(transmuteRect.Min.X), float32(transmuteRect.Min.Y), float32(transmuteRect.Dx()), float32(transmuteRect.Bounds().Dy()), 1, color.RGBA{R: 0xff, G: 0x0, B: 0x0, A: 0xff}, true)
++            // 煉金按鈕:蓋掉背景烘入的 "Alchemy" 英文,疊中文
++            util.ChtLabelRect(screen, transmuteRect, fonts.NormalFont, color.RGBA{R: 0x20, G: 0x14, B: 0x05, A: 0xff}, "煉金")
+         },
+     })
+ 
+@@ -666,7 +677,8 @@
+             }
+         },
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            // vector.StrokeRect(screen, float32(okRect.Min.X), float32(okRect.Min.Y), float32(okRect.Dx()), float32(okRect.Bounds().Dy()), 1, color.RGBA{R: 0xff, G: 0x0, B: 0x0, A: 0xff}, true)
++            // 確定按鈕:蓋掉背景烘入的 "Ok" 英文,疊中文
++            util.ChtLabelRect(screen, okRect, fonts.NormalFont, color.RGBA{R: 0x20, G: 0x14, B: 0x05, A: 0xff}, "確定")
+         },
+     })
+ 
