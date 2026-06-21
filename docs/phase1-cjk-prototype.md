@@ -34,9 +34,28 @@
   需走離線烘字 (`build_cjk_font.py`,freetype) 而非引擎內即時 sfnt。
 - `.ttc` 一律走 `opentype.ParseCollection`,不是 `Parse`。
 
-## 待辦 (Phase 1 收尾 / Phase 2 接續)
+## 真實引擎驗證 (Phase 1 收尾)
 
-- [ ] 字級:目前 CJK 固定基準 16px,密集面板需多尺寸 (16/14) 與原版字高對齊 (避免破版)。
-- [ ] 路線 A 決策:若要點陣美術一致,離線烘 24×24 atlas;B 已足以推進翻譯與版面測試。
+不只獨立 prototype,進一步在**真實引擎字型管線**上驗證:新增引擎 `test/cjk-render`
+(基於 `test/font`),用引擎真正的 `VaultFonts` + `lib/font` 的 `Print` / `PrintDropShadow` /
+`PrintOutline` 畫中英混排,套真實 `fonts.lbx` (1.31 資料),docker + Xvfb 跑、ImageMagick 抓 root window。
+
+![真實引擎 CJK](img/phase1-engine-cjk.png)
+
+**結果:CJK 在真實引擎三條繪字路徑全部渲染** — 標題/神器名/物品能力中英混排、drop shadow、
+shader outline 都正確套到中文 glyph。英文續用引擎原本的金色花體點陣字,中文用 Noto。
+
+**這一畫面也暴露兩個必修項 (跑真畫面的價值):**
+
+1. **`PrintOutline` 原本漏 patch** → 中文在 outline 路徑被丟棄 (「神聖復仇者」一開始不顯示)。
+   **已修**:`PrintOutline` 的 glyph 迴圈補上同樣的 CJK 分流 (patch 已含)。三路徑現一致。
+2. **CJK 字級未對齊引擎字型高度** → CJK (固定基準 16px) 比引擎的小 ASCII 字 (如 ResourceFont) 大一截、
+   基線不齊,行距一擠就**重疊破版**。這是 Phase 2 的核心精修:`cjkGlyphImage` 需依呼叫端字型的
+   `internalFont.Height` 決定 CJK 渲染尺寸 (並以 (rune, size) 為快取 key),讓中英基線與行高一致。
+
+## 待辦 (Phase 2 接續)
+
+- [ ] **多字級對齊** (最高優先):CJK 尺寸跟著各引擎字型高度走,修基線/行高重疊。
 - [ ] 把 CJK 字型納入打包 (自由授權 Noto / 或自製點陣),而非依賴系統字型路徑。
-- [ ] 用真實遊戲 (套版權 lbx) 跑一畫面,觀察破版,回填 ADR 0001 定案。
+- [ ] 字串覆蓋層 (Phase 2):讓真實遊戲畫面的英文字串顯示為中文 (本測試是直接餵中文字串驗證渲染)。
+- [ ] (選項 A) 若要點陣美術一致,離線烘 24×24 atlas;B 已足以推進翻譯與版面。

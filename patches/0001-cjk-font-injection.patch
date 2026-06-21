@@ -126,10 +126,31 @@ index 0000000..359bef1
 +	return img, w
 +}
 diff --git a/lib/font/font.go b/lib/font/font.go
-index 7e84629..d61932d 100644
+index 7e84629..1369b2a 100644
 --- a/lib/font/font.go
 +++ b/lib/font/font.go
-@@ -205,6 +205,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+@@ -166,6 +166,20 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
+ 
+         glyphIndex := int(c) - 32
+         if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
++            // CJK 支線:outline 路徑同樣需要中文 glyph (否則中文在 PrintOutline 被丟棄)
++            if cjkImage, cjkAdv := cjkGlyphImage(c); cjkImage != nil {
++                var options ebiten.DrawImageOptions
++                options.GeoM.Scale(scale, scale)
++                options.GeoM.Translate(useX, y)
++                options.ColorScale = colorScale
++                destination.DrawImage(cjkImage, &options)
++
++                shaderOptions.GeoM = options.GeoM
++                shaderOptions.Images[0] = cjkImage
++                destination.DrawRectShader(cjkImage.Bounds().Dx(), cjkImage.Bounds().Dy(), edgeShader, &shaderOptions)
++
++                useX += float64(cjkAdv+font.internalFont.HorizontalSpacing) * scale
++            }
+             continue
+         }
+ 
+@@ -205,6 +219,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
@@ -152,7 +173,7 @@ index 7e84629..d61932d 100644
              continue
          }
  
-@@ -254,6 +270,10 @@ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
+@@ -254,6 +284,10 @@ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
@@ -163,3 +184,104 @@ index 7e84629..d61932d 100644
              continue
          }
  
+diff --git a/test/cjk-render/main.go b/test/cjk-render/main.go
+new file mode 100644
+index 0000000..6cc89fd
+--- /dev/null
++++ b/test/cjk-render/main.go
+@@ -0,0 +1,95 @@
++package main
++
++// Phase 1 真實引擎 CJK 驗證:用引擎真正的字型管線 (VaultFonts + lib/font 的
++// PrintDropShadow / Print / PrintOptions / PrintOutline) 畫中英混排,
++// 觸發 lib/font/cjk.go 的 CJK glyph 注入,觀察:
++//   1. 中文是否在真實引擎字型路徑渲染
++//   2. drop shadow / outline 是否套用到 CJK glyph
++//   3. 在 320×200 邏輯畫布、scale 後的版面是否破版 (overflow)
++//
++// 基於 test/font/main.go 改寫,僅替換繪製字串。按 Esc 結束。
++
++import (
++	"image/color"
++	"log"
++
++	"github.com/kazzmir/master-of-magic/game/magic/data"
++	"github.com/kazzmir/master-of-magic/game/magic/fonts"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/kazzmir/master-of-magic/game/magic/shaders"
++	"github.com/kazzmir/master-of-magic/game/magic/util"
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	"github.com/hajimehoshi/ebiten/v2/inpututil"
++)
++
++type Engine struct {
++	LbxCache   *lbx.LbxCache
++	ImageCache util.ImageCache
++	VaultFonts *fonts.VaultFonts
++}
++
++func NewEngine() (*Engine, error) {
++	cache := lbx.AutoCache()
++	return &Engine{
++		LbxCache:   cache,
++		ImageCache: util.MakeImageCache(cache),
++		VaultFonts: fonts.MakeVaultFonts(cache),
++	}, nil
++}
++
++func (engine *Engine) Update() error {
++	for _, key := range inpututil.AppendJustPressedKeys(nil) {
++		if key == ebiten.KeyEscape || key == ebiten.KeyCapsLock {
++			return ebiten.Termination
++		}
++	}
++	return nil
++}
++
++func (engine *Engine) Draw(screen *ebiten.Image) {
++	screen.Fill(color.RGBA{R: 24, G: 18, B: 48, A: 255})
++
++	shader, _ := engine.ImageCache.GetShader(shaders.ShaderEdgeGlow)
++
++	y := float64(6)
++	// 標題 (大字 + drop shadow)
++	engine.VaultFonts.ItemName.PrintDropShadow(screen, 6, y, 3, ebiten.ColorScale{}, "工作魔法大帝 Master of Magic")
++	y += 28
++	// 神器名 中英混排 (item name 字型,實際遊戲物品畫面用)
++	engine.VaultFonts.ItemName.Print(screen, 6, y, 3, ebiten.ColorScale{}, "烈焰之劍 Sword of Mallana")
++	y += 28
++	// outline 套在中文上
++	if shader != nil {
++		engine.VaultFonts.ItemName.PrintOutline(screen, shader, 6, y, 3, ebiten.ColorScale{}, "神聖復仇者")
++	}
++	y += 30
++
++	// 物品能力 (PowerFont,密集面板字型)
++	engine.VaultFonts.PowerFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, "+3 攻擊  吸血  魔法免疫")
++	y += 22
++	engine.VaultFonts.PowerFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, "隱形 飛行 再生 加速")
++	y += 24
++
++	// 英文基準行 (對照原本 ASCII 路徑沒被破壞)
++	engine.VaultFonts.ResourceFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, "ABC abc 123 英文與中文並排 mixed")
++}
++
++func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
++	return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++}
++
++func main() {
++	log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
++	ebiten.SetWindowSize(data.ScreenWidth*4, data.ScreenHeight*4)
++	ebiten.SetWindowTitle("cjk-render")
++	engine, err := NewEngine()
++	if err != nil {
++		log.Printf("engine load error: %v", err)
++		return
++	}
++	if err := ebiten.RunGame(engine); err != nil && err != ebiten.Termination {
++		log.Printf("run error: %v", err)
++	}
++}

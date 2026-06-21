@@ -82,9 +82,10 @@
 ### Phase 1 — 渲染管線 (CJK glyph) — 核心已完成
 - [x] ADR 0001 定案:採路線 B (TTF) 為主線,A 降為美術升級選項
 - [x] prototype 驗證「一行中文上畫面」(`prototype/cjk-hello/`,docker+Xvfb 截圖 `docs/img/phase1-cjk-hello.png`)
-- [x] `font.go` `doPrint` / `MeasureTextWidth` 加 CJK 分流 + 寬度量測;新增 `lib/font/cjk.go` (patch `patches/0001-cjk-font-injection.patch`,`go build ./lib/font` 通過)
-- [ ] 套真實版權 lbx 跑一畫面,觀察破版,回填 ADR
-- [ ] 多字級 (16/14) 與原版字高對齊;CJK 字型納入打包
+- [x] `font.go` 三條繪字路徑 (`doPrint` / `PrintOutline` / `MeasureTextWidth`) 加 CJK 分流;新增 `lib/font/cjk.go` (patch `patches/0001-cjk-font-injection.patch`)
+- [x] 套真實 lbx 在**真實引擎字型管線**跑一畫面 (`test/cjk-render`),CJK 三路徑全渲染 (`docs/img/phase1-engine-cjk.png`);發現並修正 `PrintOutline` 漏 patch
+- [x] 觀察破版:CJK 字級未對齊引擎字型高度 → 行距重疊 (Phase 2 首要精修)
+- [ ] (Phase 2) 多字級對齊原版字高 + CJK 字型納入打包
 - [ ] (選項 A) `build_cjk_font.py` 烘 24×24 atlas、`util/fontviewer` 擴充顯示 CJK
 
 ### Phase 2 — 字串翻譯與注入
