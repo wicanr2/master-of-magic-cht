@@ -1,0 +1,54 @@
+--- /tmp/mom-engine/game/magic/cityview/enchantment.go	2026-06-21 19:30:05.864026410 +0800
++++ /tmp/mom-cench/game/magic/cityview/enchantment.go	2026-06-22 04:16:29.043175027 +0800
+@@ -58,10 +58,13 @@
+ 
+             titleX, titleY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(7))
+ 
+-            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", city.GetSize(), city.Name))
++            // 城市標題:先翻城市規模名,再用中文格式樣板組句 (translateForDisplay 只翻整體, fmt.Sprintf 後已無法逐詞替換)
++            cityTitle := fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(city.GetSize().String()), city.Name)
++            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, cityTitle)
+ 
+             descriptionX, descriptionY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(background.Bounds().Dy() - fonts.CastFont.Height() - 2))
+-            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, fmt.Sprintf("You cast %v", name))
++            // 結界施放說明:模板先翻,法術名也過 TranslateFormat (走 spells.tsv 翻,如「火牆」)
++            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, fmt.Sprintf(font.TranslateFormat("You cast %v"), font.TranslateFormat(name)))
+ 
+             geom2 := geom
+             geom2.Translate(5, 27)
+@@ -142,10 +145,12 @@
+ 
+             titleX, titleY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(7))
+ 
+-            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", city.GetSize(), city.Name))
++            // 城市標題 (地震畫面同樣需要翻城市規模)
++            earthquakeCityTitle := fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(city.GetSize().String()), city.Name)
++            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, earthquakeCityTitle)
+ 
+             descriptionX, descriptionY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(background.Bounds().Dy() - fonts.CastFont.Height() - 2))
+-            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, "Earthquake!")
++            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, font.TranslateFormat("Earthquake!"))
+ 
+             geom2 := geom
+             geom2.Translate(5, 27)
+--- /tmp/mom-engine/test/city-enchantment/main.go	2026-06-21 19:30:05.887454662 +0800
++++ /tmp/mom-cench/test/city-enchantment/main.go	2026-06-22 04:20:56.842421298 +0800
+@@ -32,6 +32,10 @@
+     Cache *lbx.LbxCache
+ }
+ 
++// NoCityMapProvider maplib.CityProvider stub — 不含任何城市,讓 GetCatchmentArea 可正常執行
++type NoCityMapProvider struct{}
++func (p *NoCityMapProvider) ContainsCity(x int, y int, plane data.Plane) bool { return false }
++
+ type NoCityProvider struct {
+ }
+ 
+@@ -93,6 +97,7 @@
+         Data: terrainData,
+         Map: terrain.GenerateLandCellularAutomata(20, 20, terrainData, data.PlaneArcanus),
+         TileCache: make(map[int]*ebiten.Image),
++        CityProvider: &NoCityMapProvider{},
+     }
+ 
+     player := &playerlib.Player{

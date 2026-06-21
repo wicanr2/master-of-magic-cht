@@ -306,3 +306,29 @@ Settings	設定	按鈕 (load.lbx index 12)
 Empty	空	存槽為空時顯示
 Load Game	讀取進度	主選單選項
 Save Game	儲存進度	畫面副標題
+# 城市結界/新建築彈出畫面 (enchantment.go MakeNewBuildingView / MakeEarthquakeView)
+# 城市規模名 (city.GetSize().String()，走 font.TranslateFormat → 逐詞翻)
+Hamlet	村落	城市規模
+Village	村莊	城市規模
+Town	城鎮	城市規模
+City	城市	城市規模 (task: City=城市)
+Capital	首都	城市規模
+# 城市標題格式樣板 ("%v of %s" → "%v 的 %s",TranslateFormat 呼叫)
+%v of %s	%v 的 %s	城市標題格式:「村莊 的 Riverton」
+# 結界/新建築施放說明 (enchantment.go line 64,TranslateFormat 呼叫)
+You cast %v	您施放了 %v	城市結界彈出說明
+# Earthquake! 地震! 已存於第 25 行 (事件通用),此處不重複
+# 精通勝利畫面 (mastery.go ShowSpellOfMasteryScreen,TranslateFormat 呼叫)
+%v has started casting the Spell of Mastery	%v 正在施放精通魔法	mastery.go line 56
+# 精通勝利結局台詞 (mastery.go SpellOfMasteryEndScreen text slice,translateForDisplay 自動命中)
+Having conquered both the	佔領了兩個位面—	mastery.go win screen line 1
+world of Arcanus and Myrror	阿坎努斯與米羅	mastery.go win screen line 2
+I and only I remain the one	唯我獨尊,	mastery.go win screen line 3
+and true Master of Magic.	成為真正的魔法大帝。	mastery.go win screen line 4
+# 放逐巫師畫面 (banish.go ShowBanishAnimation,TranslateFormat 呼叫)
+%v banishes %v	%v 放逐了 %v	banish.go line 205
+# 雇用傭兵畫面 (game/magic/game/mercenaries.go MakeHireMercenariesScreenUI)
+# 按鈕 "Hire" / "Reject" 已在第 38 / 78 行用 ChtLabel 疊字 (NormalYellow);
+# 橫幅標題直接在 code 用 fmt.Sprintf 組中文,不走 tsv (含 %v 佔位)
+# 傭兵橫幅 count==1: "雇用傭兵: %v 金幣"  (mercenaries.go line 180)
+# 傭兵橫幅 count>1 : "%v 名傭兵待雇: %v 金幣" (mercenaries.go line 182)

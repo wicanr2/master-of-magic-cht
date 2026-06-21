@@ -1,0 +1,26 @@
+diff --git a/game/magic/mastery/mastery.go b/game/magic/mastery/mastery.go
+index d0e2f10..a1b3c4e 100644
+--- a/game/magic/mastery/mastery.go
++++ b/game/magic/mastery/mastery.go
+@@ -53,7 +53,7 @@ func ShowSpellOfMasteryScreen(cache *lbx.LbxCache, wizard string) (coroutine.Ac
+ 
+     font := MakeSpellOfMasteryFonts(cache)
+ 
+-    wrapped := font.Font.CreateWrappedText(200, 1, fmt.Sprintf("%v has started casting the Spell of Mastery", wizard))
++    wrapped := font.Font.CreateWrappedText(200, 1, fmt.Sprintf(fontlib.TranslateFormat("%v has started casting the Spell of Mastery"), wizard))
+ 
+     logic = func (yield coroutine.YieldFunc) error {
+         yield()
+diff --git a/game/magic/banish/banish.go b/game/magic/banish/banish.go
+index a0c3e18..b2d4f51 100644
+--- a/game/magic/banish/banish.go
++++ b/game/magic/banish/banish.go
+@@ -202,7 +202,7 @@ func ShowBanishAnimation(cache *lbx.LbxCache, attackingWizard *playerlib.Player
+             scale.DrawScaled(screen, sprite.Image, &options)
+         }
+ 
+-        fonts.Main.PrintOptions(screen, 160, 10, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v banishes %v", attackingWizard.Wizard.Name, defeatedWizard.Wizard.Name))
++        fonts.Main.PrintOptions(screen, 160, 10, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v banishes %v"), attackingWizard.Wizard.Name, defeatedWizard.Wizard.Name))
+     }
+ 
+     yellSound, err := audio.LoadSound(cache, 35)

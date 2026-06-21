@@ -86,6 +86,19 @@ index d9a0204..05a07b8 100644
          },
      })
  
+diff --git a/game/magic/banish/banish.go b/game/magic/banish/banish.go
+index 77232f2..60c5239 100644
+--- a/game/magic/banish/banish.go
++++ b/game/magic/banish/banish.go
+@@ -202,7 +202,7 @@ func ShowBanishAnimation(cache *lbx.LbxCache, attackingWizard *playerlib.Player,
+             scale.DrawScaled(screen, sprite.Image, &options)
+         }
+ 
+-        fonts.Main.PrintOptions(screen, 160, 10, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v banishes %v", attackingWizard.Wizard.Name, defeatedWizard.Wizard.Name))
++        fonts.Main.PrintOptions(screen, 160, 10, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v banishes %v"), attackingWizard.Wizard.Name, defeatedWizard.Wizard.Name))
+     }
+ 
+     yellSound, err := audio.LoadSound(cache, 35)
 diff --git a/game/magic/cartographer/cartographer.go b/game/magic/cartographer/cartographer.go
 index a87b038..9de3ab2 100644
 --- a/game/magic/cartographer/cartographer.go
@@ -218,6 +231,41 @@ index 199e9f0..2bee34a 100644
          }
  
          cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 318, 140, font.FontOptions{Justify: font.FontJustifyRight, Scale: scale.ScaleAmount}, turn)
+diff --git a/game/magic/cityview/enchantment.go b/game/magic/cityview/enchantment.go
+index 6d3cde2..e96cf75 100644
+--- a/game/magic/cityview/enchantment.go
++++ b/game/magic/cityview/enchantment.go
+@@ -58,10 +58,13 @@ func MakeNewBuildingView(cache *lbx.LbxCache, city *citylib.City, player *player
+ 
+             titleX, titleY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(7))
+ 
+-            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", city.GetSize(), city.Name))
++            // 城市標題:先翻城市規模名,再用中文格式樣板組句 (translateForDisplay 只翻整體, fmt.Sprintf 後已無法逐詞替換)
++            cityTitle := fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(city.GetSize().String()), city.Name)
++            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, cityTitle)
+ 
+             descriptionX, descriptionY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(background.Bounds().Dy() - fonts.CastFont.Height() - 2))
+-            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, fmt.Sprintf("You cast %v", name))
++            // 結界施放說明:模板先翻,法術名也過 TranslateFormat (走 spells.tsv 翻,如「火牆」)
++            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, fmt.Sprintf(font.TranslateFormat("You cast %v"), font.TranslateFormat(name)))
+ 
+             geom2 := geom
+             geom2.Translate(5, 27)
+@@ -142,10 +145,12 @@ func MakeEarthquakeView(cache *lbx.LbxCache, city *citylib.City, player *playerl
+ 
+             titleX, titleY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(7))
+ 
+-            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", city.GetSize(), city.Name))
++            // 城市標題 (地震畫面同樣需要翻城市規模)
++            earthquakeCityTitle := fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(city.GetSize().String()), city.Name)
++            fonts.BigFont.PrintOptions(screen, titleX, titleY, font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, earthquakeCityTitle)
+ 
+             descriptionX, descriptionY := options.GeoM.Apply(float64(background.Bounds().Dx()) / 2, float64(background.Bounds().Dy() - fonts.CastFont.Height() - 2))
+-            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, "Earthquake!")
++            fonts.CastFont.PrintOptions(screen, descriptionX, descriptionY, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, Options: &options}, font.TranslateFormat("Earthquake!"))
+ 
+             geom2 := geom
+             geom2.Translate(5, 27)
 diff --git a/game/magic/combat/combat-screen.go b/game/magic/combat/combat-screen.go
 index 6e8929e..c2fbd83 100644
 --- a/game/magic/combat/combat-screen.go
@@ -534,6 +582,65 @@ index 0a73645..913f371 100644
      }
  
      uiGroup := uilib.MakeGroup()
+diff --git a/game/magic/game/mercenaries.go b/game/magic/game/mercenaries.go
+index 35b59fc..fc2f8c3 100644
+--- a/game/magic/game/mercenaries.go
++++ b/game/magic/game/mercenaries.go
+@@ -21,6 +21,7 @@ type MercenariesFonts struct {
+     SmallFont *font.Font
+     MediumFont *font.Font
+     OkDismissFont *font.Font
++    ChtFont *font.Font // 中文化按鈕疊字用 NormalYellow
+ }
+ 
+ func MakeMercenariesFonts(cache *lbx.LbxCache) *MercenariesFonts {
+@@ -35,6 +36,7 @@ func MakeMercenariesFonts(cache *lbx.LbxCache) *MercenariesFonts {
+         SmallFont: loader(fontslib.SmallWhite),
+         MediumFont: loader(fontslib.MediumWhite2),
+         OkDismissFont: loader(fontslib.LightFont),
++        ChtFont:   loader(fontslib.NormalYellow),
+     }
+ }
+ 
+@@ -131,10 +133,8 @@ func MakeHireMercenariesScreenUI(cache *lbx.LbxCache, ui *uilib.UI, unit *units.
+             options.GeoM.Translate(float64(hireRect.Min.X), float64(hireRect.Min.Y))
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, buttonBackgrounds[hireIndex], &options)
+-
+-            x := float64(hireRect.Min.X + hireRect.Max.X) / 2
+-            y := float64(hireRect.Min.Y + hireRect.Max.Y) / 2
+-            fonts.OkDismissFont.PrintOptions(screen, x, y - float64(5), font.FontOptions{Options: &options, Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, "Hire")
++            // 中文化:Hire → 雇用 (ChtLabel 在 DrawScaled 後疊字)
++            util.ChtLabel(screen, hireRect, buttonBackgrounds[hireIndex], fonts.ChtFont, "雇用")
+         },
+     })
+ 
+@@ -161,10 +161,8 @@ func MakeHireMercenariesScreenUI(cache *lbx.LbxCache, ui *uilib.UI, unit *units.
+             options.GeoM.Translate(float64(rejectRect.Min.X), float64(rejectRect.Min.Y))
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, buttonBackgrounds[rejectIndex], &options)
+-
+-            x := float64(rejectRect.Min.X + rejectRect.Max.X) / 2
+-            y := float64(rejectRect.Min.Y + rejectRect.Max.Y) / 2
+-            fonts.OkDismissFont.PrintOptions(screen, x, y - float64(5), font.FontOptions{Options: &options, Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, "Reject")
++            // 中文化:Reject → 拒絕 (ChtLabel 在 DrawScaled 後疊字)
++            util.ChtLabel(screen, rejectRect, buttonBackgrounds[rejectIndex], fonts.ChtFont, "拒絕")
+         },
+     })
+ 
+@@ -178,9 +176,10 @@ func MakeHireMercenariesScreenUI(cache *lbx.LbxCache, ui *uilib.UI, unit *units.
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, banner, &options)
+ 
+-            message := fmt.Sprintf("Mercenaries for Hire: %v gold", goldToHire)
++            // 中文化:傭兵橫幅標題 (hire.lbx 烘字已蓋住;用 OkDismissFont 疊中文)
++            message := fmt.Sprintf("雇用傭兵: %v 金幣", goldToHire)
+             if count > 1 {
+-                message = fmt.Sprintf("%v Mercenaries for Hire: %v gold", count, goldToHire)
++                message = fmt.Sprintf("%v 名傭兵待雇: %v 金幣", count, goldToHire)
+             }
+             fonts.OkDismissFont.PrintOptions(screen, float64(135), float64(6), font.FontOptions{Options: &options, Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, message)
+         },
 diff --git a/game/magic/game/merchant.go b/game/magic/game/merchant.go
 index ce51df7..40ef521 100644
 --- a/game/magic/game/merchant.go
@@ -749,6 +856,19 @@ index 07d2243..9dd57ec 100644
          },
      })
  
+diff --git a/game/magic/mastery/mastery.go b/game/magic/mastery/mastery.go
+index 120f892..56732de 100644
+--- a/game/magic/mastery/mastery.go
++++ b/game/magic/mastery/mastery.go
+@@ -53,7 +53,7 @@ func ShowSpellOfMasteryScreen(cache *lbx.LbxCache, wizard string) (coroutine.Acc
+ 
+     font := MakeSpellOfMasteryFonts(cache)
+ 
+-    wrapped := font.Font.CreateWrappedText(200, 1, fmt.Sprintf("%v has started casting the Spell of Mastery", wizard))
++    wrapped := font.Font.CreateWrappedText(200, 1, fmt.Sprintf(fontlib.TranslateFormat("%v has started casting the Spell of Mastery"), wizard))
+ 
+     logic = func (yield coroutine.YieldFunc) error {
+         yield()
 diff --git a/game/magic/mirror/mirror.go b/game/magic/mirror/mirror.go
 index d6b0ef4..75a46e2 100644
 --- a/game/magic/mirror/mirror.go
@@ -1643,110 +1763,4 @@ index 0000000..fea5c71
 +// 比對失敗時回傳原模板,不影響英文顯示。
 +func TranslateFormat(template string) string {
 +	return translateForDisplay(template)
-+}
-diff --git a/test/cjk-render/main.go b/test/cjk-render/main.go
-new file mode 100644
-index 0000000..2d7f7ec
---- /dev/null
-+++ b/test/cjk-render/main.go
-@@ -0,0 +1,100 @@
-+package main
-+
-+// Phase 1 真實引擎 CJK 驗證:用引擎真正的字型管線 (VaultFonts + lib/font 的
-+// PrintDropShadow / Print / PrintOptions / PrintOutline) 畫中英混排,
-+// 觸發 lib/font/cjk.go 的 CJK glyph 注入,觀察:
-+//   1. 中文是否在真實引擎字型路徑渲染
-+//   2. drop shadow / outline 是否套用到 CJK glyph
-+//   3. 在 320×200 邏輯畫布、scale 後的版面是否破版 (overflow)
-+//
-+// 基於 test/font/main.go 改寫,僅替換繪製字串。按 Esc 結束。
-+
-+import (
-+	"image/color"
-+	"log"
-+
-+	"github.com/kazzmir/master-of-magic/game/magic/data"
-+	"github.com/kazzmir/master-of-magic/game/magic/fonts"
-+	"github.com/kazzmir/master-of-magic/game/magic/scale"
-+	"github.com/kazzmir/master-of-magic/game/magic/util"
-+	"github.com/kazzmir/master-of-magic/lib/font"
-+	"github.com/kazzmir/master-of-magic/lib/lbx"
-+
-+	"github.com/hajimehoshi/ebiten/v2"
-+	"github.com/hajimehoshi/ebiten/v2/inpututil"
-+)
-+
-+type Engine struct {
-+	LbxCache   *lbx.LbxCache
-+	ImageCache util.ImageCache
-+	VaultFonts *fonts.VaultFonts
-+}
-+
-+func NewEngine() (*Engine, error) {
-+	cache := lbx.AutoCache()
-+	return &Engine{
-+		LbxCache:   cache,
-+		ImageCache: util.MakeImageCache(cache),
-+		VaultFonts: fonts.MakeVaultFonts(cache),
-+	}, nil
-+}
-+
-+func (engine *Engine) Update() error {
-+	for _, key := range inpututil.AppendJustPressedKeys(nil) {
-+		if key == ebiten.KeyEscape || key == ebiten.KeyCapsLock {
-+			return ebiten.Termination
-+		}
-+	}
-+	return nil
-+}
-+
-+func (engine *Engine) Draw(screen *ebiten.Image) {
-+	screen.Fill(color.RGBA{R: 24, G: 18, B: 48, A: 255})
-+
-+	// 全部 scale 1,直接用螢幕座標排版 (PrintOptions 會把 y 乘 scale,混用會錯位)。
-+	// item power 名稱都餵入「引擎實際使用的英文字串」,由 lib/font 顯示層覆蓋層
-+	// (MOM_CHT_STRINGS 載 item-powers.tsv) 自動轉中文;引擎邏輯字串不動。
-+
-+	cs := ebiten.ColorScale{}
-+	IN := engine.VaultFonts.ItemName
-+	PW := engine.VaultFonts.PowerFont
-+
-+	// 標題 (literal CJK)
-+	IN.PrintDropShadow(screen, 6, 6, 1, cs, "工作魔法大帝")
-+	// 神器名:artifacts.tsv 尚未翻 → 保持英文 (證明覆蓋是選擇性的)
-+	IN.Print(screen, 6, 26, 1, cs, "Sword of Mallana")
-+	// 餵英文 → 覆蓋層自動轉中文
-+	IN.Print(screen, 6, 42, 1, cs, "Holy Avenger")
-+
-+	// 物品能力:每條餵真實英文 power 名,自動翻譯
-+	powers := []string{"Flaming", "Vampiric", "+3 Attack", "Magic Immunity", "Invisibility"}
-+	py := 64.0
-+	for _, p := range powers {
-+		PW.Print(screen, 6, py, 1, cs, p)
-+		py += 14
-+	}
-+
-+	// 散文 CJK 斷行示範:長中文描述自動逐字換行 (maxWidth 內);
-+	// 真實流程中這段由覆蓋層從英文整段翻好,再進 CreateWrappedText 斷行。
-+	IN.Print(screen, 6, 150, 1, cs, "── 描述 (CJK 逐字斷行) ──")
-+	desc := "烈焰之劍:每次攻擊都附帶火焰傷害,並使敵人陷入恐懼。持有者在戰場上所向披靡,無人能擋其鋒芒。"
-+	engine.VaultFonts.ItemName.PrintWrap(screen, 6, 166, 240, font.FontOptions{Scale: 1}, desc)
-+}
-+
-+func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
-+	return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
-+}
-+
-+func main() {
-+	log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
-+	ebiten.SetWindowSize(data.ScreenWidth*4, data.ScreenHeight*4)
-+	ebiten.SetWindowTitle("cjk-render")
-+	engine, err := NewEngine()
-+	if err != nil {
-+		log.Printf("engine load error: %v", err)
-+		return
-+	}
-+	if err := ebiten.RunGame(engine); err != nil && err != ebiten.Termination {
-+		log.Printf("run error: %v", err)
-+	}
 +}

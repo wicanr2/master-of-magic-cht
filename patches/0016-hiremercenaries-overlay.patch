@@ -1,0 +1,59 @@
+diff --git a/game/magic/game/mercenaries.go b/game/magic/game/mercenaries.go
+index XXXXXXX..XXXXXXX 100644
+--- a/game/magic/game/mercenaries.go
++++ b/game/magic/game/mercenaries.go
+@@ -21,6 +21,7 @@
+     SmallFont *font.Font
+     MediumFont *font.Font
+     OkDismissFont *font.Font
++    ChtFont *font.Font // 中文化按鈕疊字用 NormalYellow
+ }
+
+ func MakeMercenariesFonts(cache *lbx.LbxCache) *MercenariesFonts {
+@@ -35,6 +36,7 @@
+         SmallFont: loader(fontslib.SmallWhite),
+         MediumFont: loader(fontslib.MediumWhite2),
+         OkDismissFont: loader(fontslib.LightFont),
++        ChtFont:   loader(fontslib.NormalYellow),
+     }
+ }
+
+@@ -131,10 +133,8 @@
+             options.GeoM.Translate(float64(hireRect.Min.X), float64(hireRect.Min.Y))
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, buttonBackgrounds[hireIndex], &options)
+-
+-            x := float64(hireRect.Min.X + hireRect.Max.X) / 2
+-            y := float64(hireRect.Min.Y + hireRect.Max.Y) / 2
+-            fonts.OkDismissFont.PrintOptions(screen, x, y - float64(5), font.FontOptions{Options: &options, Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, "Hire")
++            // 中文化:Hire → 雇用 (ChtLabel 在 DrawScaled 後疊字)
++            util.ChtLabel(screen, hireRect, buttonBackgrounds[hireIndex], fonts.ChtFont, "雇用")
+         },
+     })
+
+@@ -161,10 +161,8 @@
+             options.GeoM.Translate(float64(rejectRect.Min.X), float64(rejectRect.Min.Y))
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, buttonBackgrounds[rejectIndex], &options)
+-
+-            x := float64(rejectRect.Min.X + rejectRect.Max.X) / 2
+-            y := float64(rejectRect.Min.Y + rejectRect.Max.Y) / 2
+-            fonts.OkDismissFont.PrintOptions(screen, x, y - float64(5), font.FontOptions{Options: &options, Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, "Reject")
++            // 中文化:Reject → 拒絕 (ChtLabel 在 DrawScaled 後疊字)
++            util.ChtLabel(screen, rejectRect, buttonBackgrounds[rejectIndex], fonts.ChtFont, "拒絕")
+         },
+     })
+
+@@ -178,9 +176,10 @@
+             options.ColorScale.ScaleAlpha(getAlpha())
+             scale.DrawScaled(screen, banner, &options)
+
+-            message := fmt.Sprintf("Mercenaries for Hire: %v gold", goldToHire)
++            // 中文化:傭兵橫幅標題 (hire.lbx 烘字已蓋住;用 OkDismissFont 疊中文)
++            message := fmt.Sprintf("雇用傭兵: %v 金幣", goldToHire)
+             if count > 1 {
+-                message = fmt.Sprintf("%v Mercenaries for Hire: %v gold", count, goldToHire)
++                message = fmt.Sprintf("%v 名傭兵待雇: %v 金幣", count, goldToHire)
+             }
+             fonts.OkDismissFont.PrintOptions(screen, float64(135), float64(6), font.FontOptions{Options: &options, Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, message)
+         },
