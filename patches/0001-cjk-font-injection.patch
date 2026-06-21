@@ -1,9 +1,9 @@
 diff --git a/lib/font/cjk.go b/lib/font/cjk.go
 new file mode 100644
-index 0000000..8f2d622
+index 0000000..85d2fc0
 --- /dev/null
 +++ b/lib/font/cjk.go
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,167 @@
 +package font
 +
 +// CJK (繁體中文) glyph 支線 —— 工作魔法大帝中文化注入。
@@ -115,9 +115,12 @@ index 0000000..8f2d622
 +	return f
 +}
 +
-+// cjkGlyphImage 回傳 rune 在指定字高 (px,通常為呼叫端字型的 GlyphHeight) 的預渲染 glyph
-+// 與前進寬度 (px,未乘 scale)。CJK glyph 被框在 height 高的 cell 內以對齊行高。
-+// 字型不可用或非 CJK 時回傳 (nil, 0),呼叫端應退回原 ASCII 處理。
++// cjkSupersample:CJK glyph 以 logical 字高的 SS 倍解析度 rasterize,呼叫端再用 scale/SS 畫,
++// 佔同樣 logical footprint 但有 SS 倍 source 細節 —— 避免「小字放大糊掉」(見規則 81)。
++const cjkSupersample = 4
++
++// cjkGlyphImage 回傳 rune 的高解析 glyph image (height*SS 高) 與 logical 前進寬度 (height 單位,未乘 scale)。
++// 呼叫端須以 GeoM.Scale(scale/cjkSupersample, ...) 繪製。字型不可用或非 CJK 時回傳 (nil, 0)。
 +func cjkGlyphImage(r rune, height int) (*ebiten.Image, int) {
 +	cjkOnce.Do(loadCJKFont)
 +	if cjkFont == nil || !isCJK(r) || height <= 0 {
@@ -132,7 +135,9 @@ index 0000000..8f2d622
 +		return img, cjkAdv[key]
 +	}
 +
-+	face := cjkFaceFor(height)
++	ss := cjkSupersample
++	hi := height * ss // supersample 渲染尺寸
++	face := cjkFaceFor(hi)
 +	if face == nil {
 +		return nil, 0
 +	}
@@ -141,14 +146,18 @@ index 0000000..8f2d622
 +	if !ok {
 +		return nil, 0
 +	}
-+	w := advance.Round()
-+	if w <= 0 {
-+		w = height
++	advPx := advance.Round() // SS 解析下的前進寬
++	if advPx <= 0 {
++		advPx = hi
++	}
++	wLogical := (advPx + ss/2) / ss // 換回 logical 前進寬
++	if wLogical <= 0 {
++		wLogical = height
 +	}
 +
-+	// cell 高度框在呼叫端字高,避免 CJG 行高溢出造成上下行重疊
-+	rgba := image.NewRGBA(image.Rect(0, 0, w, height))
-+	baseline := int(float64(height) * cjkBaselineRatio)
++	// cell:寬 = SS 解析前進寬,高 = height*SS;框在字高內對齊行高
++	rgba := image.NewRGBA(image.Rect(0, 0, advPx, hi))
++	baseline := int(float64(hi) * cjkBaselineRatio)
 +	d := &xfont.Drawer{
 +		Dst:  rgba,
 +		Src:  image.NewUniform(color.White),
@@ -159,11 +168,11 @@ index 0000000..8f2d622
 +
 +	img := ebiten.NewImageFromImage(rgba)
 +	cjkCache[key] = img
-+	cjkAdv[key] = w
-+	return img, w
++	cjkAdv[key] = wLogical
++	return img, wLogical
 +}
 diff --git a/lib/font/font.go b/lib/font/font.go
-index 7e84629..6fd0484 100644
+index 7e84629..a7820b3 100644
 --- a/lib/font/font.go
 +++ b/lib/font/font.go
 @@ -157,6 +157,8 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
@@ -182,7 +191,7 @@ index 7e84629..6fd0484 100644
 +            // CJK 支線:outline 路徑同樣需要中文 glyph (否則中文在 PrintOutline 被丟棄)
 +            if cjkImage, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkImage != nil {
 +                var options ebiten.DrawImageOptions
-+                options.GeoM.Scale(scale, scale)
++                options.GeoM.Scale(scale/cjkSupersample, scale/cjkSupersample)
 +                options.GeoM.Translate(useX, y)
 +                options.ColorScale = colorScale
 +                destination.DrawImage(cjkImage, &options)
@@ -212,7 +221,7 @@ index 7e84629..6fd0484 100644
 +            // CJK 支線:碼點超出 ASCII glyph 範圍時,改用 TTF rasterize 的中文 glyph
 +            if cjkImage, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkImage != nil {
 +                var options ebiten.DrawImageOptions
-+                options.GeoM.Scale(scale, scale)
++                options.GeoM.Scale(scale/cjkSupersample, scale/cjkSupersample)
 +                options.GeoM.Translate(useX, y)
 +                if dropShadow {
 +                    options.GeoM.Translate(scale*distance, scale*distance)
