@@ -153,10 +153,19 @@ index 0000000..f6924b6
 +	return img, w
 +}
 diff --git a/lib/font/font.go b/lib/font/font.go
-index 7e84629..31906bf 100644
+index 7e84629..304c59c 100644
 --- a/lib/font/font.go
 +++ b/lib/font/font.go
-@@ -166,6 +166,20 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
+@@ -157,6 +157,8 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
+     shaderOptions.Uniforms["Time"] = float32(0)
+     shaderOptions.ColorScale = colorScale
+ 
++    text = translateForDisplay(text)
++
+     for _, c := range text {
+         if c == '\n' {
+             y += float64(font.GlyphHeight + font.internalFont.VerticalSpacing)
+@@ -166,6 +168,20 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
@@ -177,7 +186,16 @@ index 7e84629..31906bf 100644
              continue
          }
  
-@@ -205,6 +219,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+@@ -196,6 +212,8 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+     // TODO: this shadow distance could be a parameter
+     distance := 3.0/4
+ 
++    text = translateForDisplay(text)
++
+     for _, c := range text {
+         if c == '\n' {
+             y += float64(font.GlyphHeight + font.internalFont.VerticalSpacing)
+@@ -205,6 +223,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
@@ -200,7 +218,15 @@ index 7e84629..31906bf 100644
              continue
          }
  
-@@ -254,6 +284,10 @@ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
+@@ -247,6 +281,7 @@ func (font *Font) Print(image *ebiten.Image, x float64, y float64, scale float64
+ 
+ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
+     width := 0
++    text = translateForDisplay(text)
+     for _, c := range text {
+         if c == '\n' {
+             continue
+@@ -254,6 +289,10 @@ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
@@ -211,12 +237,107 @@ index 7e84629..31906bf 100644
              continue
          }
  
+diff --git a/lib/font/override.go b/lib/font/override.go
+new file mode 100644
+index 0000000..02416a6
+--- /dev/null
++++ b/lib/font/override.go
+@@ -0,0 +1,89 @@
++package font
++
++// 字串覆蓋層 (顯示層翻譯) —— 工作魔法大帝中文化。
++//
++// 設計重點 (見 ADR 0003):翻譯**只在顯示層**做,不碰引擎邏輯字串。
++// 因為引擎把英文名稱當邏輯 key 比對 (例 artifact/create-artifact.go:198
++// `if string(name) == "+6 Defense"`),若在資料讀取層改成中文會破壞遊戲邏輯。
++// 因此在 lib/font 的繪字進入點 (doPrint / PrintOutline / MeasureTextWidth) 把
++// 顯示字串換成中文,引擎內部仍用英文。
++//
++// 比對採 **trim 後精確比對**:引擎讀 LBX 名稱時會 bytes.Trim 去前後空白
++// (create-artifact.go:149),故表的 key 與輸入都先 TrimSpace 再查。
++//
++// 翻譯表來源:環境變數 MOM_CHT_STRINGS 指向一個目錄,載入其中所有 *.tsv
++// (欄位 source<TAB>zh<TAB>note,# 開頭與 header 略過)。未設定或查無對應時回傳原字串,
++// 不影響英文顯示。
++
++import (
++	"bufio"
++	"os"
++	"path/filepath"
++	"strings"
++	"sync"
++)
++
++var (
++	overrideOnce  sync.Once
++	overrideTable = map[string]string{}
++)
++
++func loadOverrideTable() {
++	dir := os.Getenv("MOM_CHT_STRINGS")
++	if dir == "" {
++		return
++	}
++	entries, err := os.ReadDir(dir)
++	if err != nil {
++		return
++	}
++	for _, e := range entries {
++		if e.IsDir() || !strings.HasSuffix(strings.ToLower(e.Name()), ".tsv") {
++			continue
++		}
++		loadOverrideFile(filepath.Join(dir, e.Name()))
++	}
++}
++
++func loadOverrideFile(path string) {
++	f, err := os.Open(path)
++	if err != nil {
++		return
++	}
++	defer f.Close()
++
++	scanner := bufio.NewScanner(f)
++	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
++	for scanner.Scan() {
++		line := scanner.Text()
++		if line == "" || strings.HasPrefix(strings.TrimSpace(line), "#") {
++			continue
++		}
++		cols := strings.Split(line, "\t")
++		if len(cols) < 2 {
++			continue
++		}
++		src := strings.TrimSpace(cols[0])
++		zh := strings.TrimSpace(cols[1])
++		if src == "" || src == "source" || zh == "" {
++			continue // 略過 header 與空譯文
++		}
++		// 先到先得:不覆寫已存在的 key (讓較早載入的表優先;同義變體可並存)
++		if _, exists := overrideTable[src]; !exists {
++			overrideTable[src] = zh
++		}
++	}
++}
++
++// translateForDisplay 把要顯示的字串換成中文 (trim 後精確比對)。
++// 表為空或查無對應時回傳原字串。引擎邏輯字串不受影響 (本函式只在繪字時呼叫)。
++func translateForDisplay(text string) string {
++	overrideOnce.Do(loadOverrideTable)
++	if len(overrideTable) == 0 {
++		return text
++	}
++	if zh, ok := overrideTable[strings.TrimSpace(text)]; ok {
++		return zh
++	}
++	return text
++}
 diff --git a/test/cjk-render/main.go b/test/cjk-render/main.go
 new file mode 100644
-index 0000000..6cc89fd
+index 0000000..4bcbd92
 --- /dev/null
 +++ b/test/cjk-render/main.go
-@@ -0,0 +1,95 @@
+@@ -0,0 +1,92 @@
 +package main
 +
 +// Phase 1 真實引擎 CJK 驗證:用引擎真正的字型管線 (VaultFonts + lib/font 的
@@ -235,7 +356,6 @@ index 0000000..6cc89fd
 +	"github.com/kazzmir/master-of-magic/game/magic/data"
 +	"github.com/kazzmir/master-of-magic/game/magic/fonts"
 +	"github.com/kazzmir/master-of-magic/game/magic/scale"
-+	"github.com/kazzmir/master-of-magic/game/magic/shaders"
 +	"github.com/kazzmir/master-of-magic/game/magic/util"
 +	"github.com/kazzmir/master-of-magic/lib/lbx"
 +
@@ -270,29 +390,27 @@ index 0000000..6cc89fd
 +func (engine *Engine) Draw(screen *ebiten.Image) {
 +	screen.Fill(color.RGBA{R: 24, G: 18, B: 48, A: 255})
 +
-+	shader, _ := engine.ImageCache.GetShader(shaders.ShaderEdgeGlow)
++	// 以下所有 item power 名稱都餵入「引擎實際使用的英文字串」(trim 後形式),
++	// 由 lib/font 的顯示層覆蓋層 (MOM_CHT_STRINGS 載入 item-powers.tsv) 自動轉成中文。
++	// 引擎邏輯字串不動,只有顯示被換掉。
 +
 +	y := float64(6)
-+	// 標題 (大字 + drop shadow)
-+	engine.VaultFonts.ItemName.PrintDropShadow(screen, 6, y, 3, ebiten.ColorScale{}, "工作魔法大帝 Master of Magic")
-+	y += 28
-+	// 神器名 中英混排 (item name 字型,實際遊戲物品畫面用)
-+	engine.VaultFonts.ItemName.Print(screen, 6, y, 3, ebiten.ColorScale{}, "烈焰之劍 Sword of Mallana")
-+	y += 28
-+	// outline 套在中文上
-+	if shader != nil {
-+		engine.VaultFonts.ItemName.PrintOutline(screen, shader, 6, y, 3, ebiten.ColorScale{}, "神聖復仇者")
-+	}
++	// 直接中文標題 (literal,驗證 CJK)
++	engine.VaultFonts.ItemName.PrintDropShadow(screen, 6, y, 3, ebiten.ColorScale{}, "工作魔法大帝")
++	y += 26
++	// 神器名 (artifacts.tsv 尚未翻 → 保持英文,作對比:覆蓋層是選擇性的)
++	engine.VaultFonts.ItemName.Print(screen, 6, y, 3, ebiten.ColorScale{}, "Sword of Mallana")
++	y += 26
++	// item power:餵英文,覆蓋層自動轉中文
++	engine.VaultFonts.ItemName.Print(screen, 6, y, 3, ebiten.ColorScale{}, "Holy Avenger")
 +	y += 30
 +
-+	// 物品能力 (PowerFont,密集面板字型)
-+	engine.VaultFonts.PowerFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, "+3 攻擊  吸血  魔法免疫")
-+	y += 22
-+	engine.VaultFonts.PowerFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, "隱形 飛行 再生 加速")
-+	y += 24
-+
-+	// 英文基準行 (對照原本 ASCII 路徑沒被破壞)
-+	engine.VaultFonts.ResourceFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, "ABC abc 123 英文與中文並排 mixed")
++	// 物品能力 (PowerFont):每條餵真實英文 power 名,自動翻譯
++	powers := []string{"Flaming", "Vampiric", "+3 Attack", "Magic Immunity", "Invisibility", "Flight"}
++	for _, p := range powers {
++		engine.VaultFonts.PowerFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, p)
++		y += 18
++	}
 +}
 +
 +func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
