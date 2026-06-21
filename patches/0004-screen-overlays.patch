@@ -1,5 +1,5 @@
 diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
-index f0917fe..d234680 100644
+index f0917fe..d44cebc 100644
 --- a/game/magic/setup/new-game.go
 +++ b/game/magic/setup/new-game.go
 @@ -2,6 +2,8 @@ package setup
@@ -32,12 +32,12 @@ index f0917fe..d234680 100644
              scale.DrawScaled(screen, optionsImage, &options)
  
 +            // 中文化:疊面板標題與 4 列標籤 (烘在 newgame.lbx 1 的英文)
-+            tan := color.RGBA{R: 102, G: 72, B: 50, A: 255}
-+            util.ChtLabelRect(screen, image.Rect(180, 6, 312, 22), buttonFont, tan, "遊戲設定")
-+            util.ChtLabelRect(screen, image.Rect(168, 40, 248, 54), buttonFont, tan, "難度")
-+            util.ChtLabelRect(screen, image.Rect(168, 67, 248, 81), buttonFont, tan, "對手")
-+            util.ChtLabelRect(screen, image.Rect(168, 94, 248, 108), buttonFont, tan, "陸地大小")
-+            util.ChtLabelRect(screen, image.Rect(168, 121, 248, 135), buttonFont, tan, "魔法")
++            tan := color.RGBA{R: 80, G: 60, B: 48, A: 255}
++            util.ChtLabelRect(screen, image.Rect(176, 1, 314, 23), buttonFont, tan, "遊戲設定")
++            util.ChtLabelRect(screen, image.Rect(162, 37, 250, 55), buttonFont, tan, "難度")
++            util.ChtLabelRect(screen, image.Rect(162, 64, 250, 82), buttonFont, tan, "對手")
++            util.ChtLabelRect(screen, image.Rect(162, 91, 250, 109), buttonFont, tan, "陸地大小")
++            util.ChtLabelRect(screen, image.Rect(162, 118, 250, 136), buttonFont, tan, "魔法")
          },
          HandleKeys: func(keys []ebiten.Key){
              for _, key := range keys {
