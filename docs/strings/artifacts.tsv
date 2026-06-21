@@ -1,252 +1,251 @@
 source	zh	note
-# 預設神器名 (itemdata.lbx, 250 筆)。scaffold:zh 欄待翻譯。
-Black Asp		TODO
-Sword of Mallana		TODO
-Sword of Stealth		TODO
-Dragon Slayer		TODO
-Monster Masher		TODO
-Sword of Mephisto		TODO
-White Lightning		TODO
-Ultimate Defense		TODO
-Stoning Sword		TODO
-Living Sword		TODO
-Pummel Mace		TODO
-Mauler		TODO
-Skull Smasher		TODO
-Deathbringer		TODO
-Storm Mace		TODO
-Dracken Mace		TODO
-Fangs Avenger		TODO
-World Ender		TODO
-Morphains Friend		TODO
-Orc Smasher		TODO
-Flaming Axe		TODO
-Axe of the Caster		TODO
-Hacker		TODO
-Axe of Haste		TODO
-Power Axe		TODO
-Axe of Chaotic Death		TODO
-Phantastic Axe		TODO
-Axe of Stone		TODO
-The Beheader		TODO
-Axe of Light		TODO
-Living Bow		TODO
-The Regulator		TODO
-Mithril Longbow		TODO
-Silver Shortbow		TODO
-The Master Crossbow		TODO
-Bow of Magic Immunity		TODO
-Bow of Hazard		TODO
-The Undertaker		TODO
-Elvish Longbow		TODO
-Life Bow		TODO
-The Mangler		TODO
-Staff Of Magic Mastery		TODO
-Stick of the Mage		TODO
-Guardian Staff		TODO
-Flaming Staff		TODO
-Chaotic Staff of Fire		TODO
-The Destructor		TODO
-Staff of Pain		TODO
-Staff Of Confusion		TODO
-Staff of Superiority		TODO
-The Branch of Magic		TODO
-Wand of Immunity		TODO
-Wand of Arcanus		TODO
-Wand of Enhancement		TODO
-Wand of Fiery Death		TODO
-Wand of Elros		TODO
-White Lightning		TODO
-Wand of Balmoth		TODO
-Wand of the Guardian		TODO
-Wand of Doom		TODO
-Elven Ring of Health		TODO
-Amulet of Battle		TODO
-Ring of Power		TODO
-Amulet of Resistance		TODO
-Devils Eye of Fear		TODO
-Band of Chivalry		TODO
-Trinket of Strength		TODO
-Orb of Righteous Sight		TODO
-Cross of Blessed Death		TODO
-Magical Crystal of Power		TODO
-Shield of Demos		TODO
-Shield of Evasion		TODO
-Shield of Eros		TODO
-Blessed Shield of Defense		TODO
-Shield of Elements		TODO
-Shield of Guardian Defense		TODO
-Shield of Enduring Fear		TODO
-Shield of the Undead		TODO
-Shield of Transformation		TODO
-Supreme Shield of Death		TODO
-Chain Mail of Defense		TODO
-Chain Mail of Resistance		TODO
-Chain Mail of Movement		TODO
-Chain Mail of Balance		TODO
-Blessed Mail of Resistance		TODO
-Chain Mail of Endurance		TODO
-Chain Mail of Immunity		TODO
-Chain Mail of Absorbtion		TODO
-Chain of Super Resistance		TODO
-Mithril Mail of Talos		TODO
-Plate Mail of Defense		TODO
-Plate Mail of Resistance		TODO
-Plate Mail of Movement		TODO
-Plate Mail of Diversity		TODO
-Plate Mail of Blessed Fear		TODO
-Righteous Plate of Evasion		TODO
-Plate of Enduring Immunity		TODO
-Elemental Transformation		TODO
-Plate of Divine Protection		TODO
-Plate of Omnipotence		TODO
-Blade of Blood		TODO
-Bane Blade		TODO
-Sword of Immunity		TODO
-Sting		TODO
-Great Sword of Arkanna		TODO
-Right Hand 0f Justice		TODO
-Vlads Impaler		TODO
-Merlins Nails		TODO
-Intimidator		TODO
-Whirlwind		TODO
-Thors Hammer		TODO
-Hand of God		TODO
-Club of Chaos		TODO
-Fist of Destruction		TODO
-Edge of the Elements		TODO
-Double Axe of Pain		TODO
-Executioners Friend		TODO
-Knight Chopper		TODO
-Tree Tamer		TODO
-Inquisitor		TODO
-The Resistor		TODO
-Hells Bolt		TODO
-Bow of the Golden Horde		TODO
-Ray of Light		TODO
-Gideons Harp		TODO
-The Hartshone		TODO
-The Deathstorm		TODO
-The Devils Instrument		TODO
-The Enlightener		TODO
-The Traveller		TODO
-Staff of Horus		TODO
-The Pummeler		TODO
-Word of God		TODO
-The Protector		TODO
-The Ossifier		TODO
-Wand of Lesser Might		TODO
-Wand of Infinite Magic		TODO
-The Mighty Wand of Zod		TODO
-The Wand of Glenda		TODO
-Wand of Ultimate Might		TODO
-Amulet of Lesser Shielding		TODO
-Cloak of Armor		TODO
-Ring of Dasmiff		TODO
-Orb of Fear		TODO
-Helm of Trollish Might		TODO
-Shield of the Fool		TODO
-Shield of Thiron		TODO
-Shield of Quatis		TODO
-Shield of the Wraith		TODO
-Shield of the Gods		TODO
-Chain of Magical Health		TODO
-Morthogs Chainmail		TODO
-Mithril Chainmail		TODO
-Chainmail of Speed		TODO
-Chainmail of the Elements		TODO
-Champions Platemail		TODO
-Armor of the Warrior		TODO
-Bloodmail		TODO
-Silvermail		TODO
-Plate of Ultimax		TODO
-Sword of Cannae		TODO
-Flaming Sword of Death		TODO
-Joshuas Sword		TODO
-The Revenge of Orculs		TODO
-The Defender		TODO
-Cannes Mace		TODO
-Irons Mace		TODO
-Jans Hammer		TODO
-Axe of Severe Pain		TODO
-The Axe of Uncaring		TODO
-Axe of the Apostles		TODO
-The Peacemaker		TODO
-The Kick Axe		TODO
-The Archer		TODO
-The Telecaster		TODO
-Bow of The Dervish		TODO
-Elemental Staff of Nature		TODO
-Planar Staff		TODO
-Golden Staff of Sharee		TODO
-Purple Rain of Death		TODO
-The Conjurers Friend		TODO
-Wand of the Mind		TODO
-Wand of the Mage		TODO
-Wand of the Beast		TODO
-Pin of Health		TODO
-Jafars Orb of Sight		TODO
-Gauntlet of Eastwood		TODO
-Bracer of Invulnerability		TODO
-Helm of Everlasting		TODO
-Helm of the Tides		TODO
-Shield of Speed		TODO
-Vans Shield		TODO
-Shield of Brooke		TODO
-The Wind Shield		TODO
-Holy Shield		TODO
-Mail of Arcanus		TODO
-Chain of Tyrolia		TODO
-Giddeons Plate		TODO
-Plate of the Elements		TODO
-Plate of Immunity		TODO
-Golden Axe of Rath		TODO
-Suit of Power		TODO
-The Great Wand		TODO
-Elvish Scalemail		TODO
-Uhl Khakhaas		TODO
-Uhl Dover		TODO
-Idspispopd		TODO
-Ehr Rhee		TODO
-Mae Govannon		TODO
-Zir Daun		TODO
-Lor Goth		TODO
-Mail of Pobox		TODO
-Protection of Ramses		TODO
-Bird of Paradise		TODO
-Kraken Wand		TODO
-Theodores Liberator		TODO
-Crossbow of Power		TODO
-Laik Kenegul		TODO
-Peppermace of Gates		TODO
-Axe of Vivisection		TODO
-The Inquisition		TODO
-White Flicker		TODO
-Staff of the Constellation		TODO
-The Resistor		TODO
-Plate of Eandor		TODO
-Blood Plate of Lucifer		TODO
-Disc of Advancement		TODO
-Wand of the Grey Wizard		TODO
-Little Flicker		TODO
-Freyas Friend		TODO
-Vampiric Vanquisher		TODO
-Sword of Medusa		TODO
-Zlotakian Staff of Magic		TODO
-Orions Belt		TODO
-Bracer of Mrad		TODO
-Wraithe Shirt		TODO
-Ziggmunds Armor		TODO
-Ring of the Mad Mage		TODO
-Gabriels Axe		TODO
-Maul of Bathory		TODO
-Sword of Pendulum		TODO
-Shield of Ultimate Defense		TODO
-Tammas Staff of Negation		TODO
-Mace of Disintegration		TODO
-Sword of Renfield		TODO
-Staff of Odin		TODO
-Gem of the Aerie		TODO
-The Scarlet Bow		TODO
-Raindancer		TODO
-Light Mail Shirt		TODO
+# 預設神器名 (itemdata.lbx, 250 筆)。source 為引擎讀取的英文原名 (照原檔,含原始拼字)。
+# 覆蓋層以 TrimSpace 精確比對。1.31/1.60 此檔名稱 0 差異,兩版通用。
+Black Asp	黑蝰
+Sword of Mallana	瑪拉娜之劍
+Sword of Stealth	潛行之劍
+Dragon Slayer	屠龍者
+Monster Masher	碎獸者
+Sword of Mephisto	梅菲斯特之劍
+White Lightning	白色閃電
+Ultimate Defense	終極防禦
+Stoning Sword	石化之劍
+Living Sword	活劍
+Pummel Mace	重擊錘
+Mauler	蹂躪者
+Skull Smasher	碎顱者
+Deathbringer	死亡使者
+Storm Mace	風暴錘
+Dracken Mace	龍裔錘
+Fangs Avenger	獠牙復仇者
+World Ender	滅世者
+Morphains Friend	莫費恩之友
+Orc Smasher	碎獸人者
+Flaming Axe	烈焰斧
+Axe of the Caster	施法者之斧
+Hacker	劈砍者
+Axe of Haste	加速之斧
+Power Axe	力量之斧
+Axe of Chaotic Death	混沌死亡之斧
+Phantastic Axe	幻影斧
+Axe of Stone	石之斧
+The Beheader	斬首者
+Axe of Light	光明之斧
+Living Bow	活弓
+The Regulator	制裁者
+Mithril Longbow	秘銀長弓
+Silver Shortbow	白銀短弓
+The Master Crossbow	大師之弩
+Bow of Magic Immunity	魔法免疫之弓
+Bow of Hazard	危厄之弓
+The Undertaker	送葬者
+Elvish Longbow	精靈長弓
+Life Bow	生命之弓
+The Mangler	撕裂者
+Staff Of Magic Mastery	魔法精通法杖
+Stick of the Mage	法師之杖
+Guardian Staff	守護法杖
+Flaming Staff	烈焰法杖
+Chaotic Staff of Fire	混沌火焰法杖
+The Destructor	毀滅者
+Staff of Pain	痛苦法杖
+Staff Of Confusion	混亂法杖
+Staff of Superiority	至高法杖
+The Branch of Magic	魔法之枝
+Wand of Immunity	免疫魔杖
+Wand of Arcanus	阿坎納斯魔杖
+Wand of Enhancement	強化魔杖
+Wand of Fiery Death	烈火死亡魔杖
+Wand of Elros	埃爾洛斯魔杖
+Wand of Balmoth	巴爾莫斯魔杖
+Wand of the Guardian	守護者魔杖
+Wand of Doom	末日魔杖
+Elven Ring of Health	精靈生命戒指
+Amulet of Battle	戰鬥護身符
+Ring of Power	力量戒指
+Amulet of Resistance	抗性護身符
+Devils Eye of Fear	惡魔恐懼之眼
+Band of Chivalry	騎士指環
+Trinket of Strength	力量飾物
+Orb of Righteous Sight	正義之視寶珠
+Cross of Blessed Death	受祝死亡十字
+Magical Crystal of Power	力量魔法水晶
+Shield of Demos	德摩斯之盾
+Shield of Evasion	閃避之盾
+Shield of Eros	厄洛斯之盾
+Blessed Shield of Defense	受祝防禦之盾
+Shield of Elements	元素之盾
+Shield of Guardian Defense	守護防禦之盾
+Shield of Enduring Fear	持恆恐懼之盾
+Shield of the Undead	不死之盾
+Shield of Transformation	變形之盾
+Supreme Shield of Death	至尊死亡之盾
+Chain Mail of Defense	防禦鎖子甲
+Chain Mail of Resistance	抗性鎖子甲
+Chain Mail of Movement	移動鎖子甲
+Chain Mail of Balance	平衡鎖子甲
+Blessed Mail of Resistance	受祝抗性甲
+Chain Mail of Endurance	耐力鎖子甲
+Chain Mail of Immunity	免疫鎖子甲
+Chain Mail of Absorbtion	吸收鎖子甲
+Chain of Super Resistance	超抗性鎖鏈甲
+Mithril Mail of Talos	塔羅斯秘銀甲
+Plate Mail of Defense	防禦板甲
+Plate Mail of Resistance	抗性板甲
+Plate Mail of Movement	移動板甲
+Plate Mail of Diversity	多樣板甲
+Plate Mail of Blessed Fear	受祝恐懼板甲
+Righteous Plate of Evasion	正義閃避板甲
+Plate of Enduring Immunity	持恆免疫板甲
+Elemental Transformation	元素變形甲
+Plate of Divine Protection	神聖守護板甲
+Plate of Omnipotence	全能板甲
+Blade of Blood	鮮血之刃
+Bane Blade	剋星之刃
+Sword of Immunity	免疫之劍
+Sting	刺針
+Great Sword of Arkanna	阿坎娜巨劍
+Right Hand 0f Justice	正義右手
+Vlads Impaler	弗拉德穿刺者
+Merlins Nails	梅林之釘
+Intimidator	威嚇者
+Whirlwind	旋風
+Thors Hammer	索爾之錘
+Hand of God	神之手
+Club of Chaos	混沌之棍
+Fist of Destruction	毀滅之拳
+Edge of the Elements	元素之刃
+Double Axe of Pain	痛苦雙刃斧
+Executioners Friend	劊子手之友
+Knight Chopper	斬騎者
+Tree Tamer	馴木者
+Inquisitor	審判官
+The Resistor	抵抗者
+Hells Bolt	地獄弩矢
+Bow of the Golden Horde	黃金部族之弓
+Ray of Light	光芒
+Gideons Harp	基甸之豎琴
+The Hartshone	哈茨霍恩之弓
+The Deathstorm	死亡風暴
+The Devils Instrument	惡魔樂器
+The Enlightener	啟蒙者
+The Traveller	旅人
+Staff of Horus	荷魯斯法杖
+The Pummeler	重擊者
+Word of God	神諭
+The Protector	守護者
+The Ossifier	石化者
+Wand of Lesser Might	次級威能魔杖
+Wand of Infinite Magic	無盡魔法魔杖
+The Mighty Wand of Zod	佐德威能魔杖
+The Wand of Glenda	格蘭達魔杖
+Wand of Ultimate Might	終極威能魔杖
+Amulet of Lesser Shielding	次級護盾護身符
+Cloak of Armor	護甲斗篷
+Ring of Dasmiff	達斯米夫戒指
+Orb of Fear	恐懼寶珠
+Helm of Trollish Might	巨魔威能頭盔
+Shield of the Fool	愚者之盾
+Shield of Thiron	提隆之盾
+Shield of Quatis	夸提斯之盾
+Shield of the Wraith	幽魂之盾
+Shield of the Gods	諸神之盾
+Chain of Magical Health	魔法生命鎖鏈甲
+Morthogs Chainmail	莫索格鎖子甲
+Mithril Chainmail	秘銀鎖子甲
+Chainmail of Speed	迅捷鎖子甲
+Chainmail of the Elements	元素鎖子甲
+Champions Platemail	冠軍板甲
+Armor of the Warrior	戰士護甲
+Bloodmail	鮮血甲
+Silvermail	白銀甲
+Plate of Ultimax	至極板甲
+Sword of Cannae	坎尼之劍
+Flaming Sword of Death	烈焰死亡之劍
+Joshuas Sword	約書亞之劍
+The Revenge of Orculs	奧庫斯的復仇
+The Defender	守衛者
+Cannes Mace	坎內錘
+Irons Mace	鋼鐵之錘
+Jans Hammer	揚恩之錘
+Axe of Severe Pain	劇痛之斧
+The Axe of Uncaring	漠然之斧
+Axe of the Apostles	使徒之斧
+The Peacemaker	和平使者
+The Kick Axe	狠勁斧
+The Archer	弓手
+The Telecaster	遠擊者
+Bow of The Dervish	旋舞僧之弓
+Elemental Staff of Nature	自然元素法杖
+Planar Staff	位面法杖
+Golden Staff of Sharee	莎莉黃金法杖
+Purple Rain of Death	紫色死亡之雨
+The Conjurers Friend	召喚師之友
+Wand of the Mind	心靈魔杖
+Wand of the Mage	法師魔杖
+Wand of the Beast	野獸魔杖
+Pin of Health	生命別針
+Jafars Orb of Sight	賈方視覺寶珠
+Gauntlet of Eastwood	伊斯特伍德護手
+Bracer of Invulnerability	無敵護腕
+Helm of Everlasting	永恆頭盔
+Helm of the Tides	潮汐頭盔
+Shield of Speed	迅捷之盾
+Vans Shield	范恩之盾
+Shield of Brooke	布魯克之盾
+The Wind Shield	疾風之盾
+Holy Shield	神聖之盾
+Mail of Arcanus	阿坎納斯之甲
+Chain of Tyrolia	提洛利亞鎖鏈甲
+Giddeons Plate	基甸板甲
+Plate of the Elements	元素板甲
+Plate of Immunity	免疫板甲
+Golden Axe of Rath	拉斯黃金斧
+Suit of Power	力量套裝
+The Great Wand	偉大魔杖
+Elvish Scalemail	精靈鱗甲
+Uhl Khakhaas	烏爾·卡卡斯
+Uhl Dover	烏爾·多佛
+Idspispopd	伊德斯皮斯波普德
+Ehr Rhee	埃爾·瑞
+Mae Govannon	梅·戈瓦農
+Zir Daun	齊爾·當
+Lor Goth	洛爾·哥斯
+Mail of Pobox	波伯克斯之甲
+Protection of Ramses	拉美西斯守護
+Bird of Paradise	天堂鳥
+Kraken Wand	克拉肯魔杖
+Theodores Liberator	西奧多解放者
+Crossbow of Power	力量之弩
+Laik Kenegul	萊克·肯尼古爾
+Peppermace of Gates	蓋茨胡椒錘
+Axe of Vivisection	活體解剖之斧
+The Inquisition	宗教裁判
+White Flicker	白色微光
+Staff of the Constellation	星座法杖
+Plate of Eandor	埃安多板甲
+Blood Plate of Lucifer	路西法鮮血板甲
+Disc of Advancement	進階圓盤
+Wand of the Grey Wizard	灰袍巫師魔杖
+Little Flicker	微光
+Freyas Friend	芙蕾雅之友
+Vampiric Vanquisher	吸血征服者
+Sword of Medusa	美杜莎之劍
+Zlotakian Staff of Magic	茲洛塔克魔法法杖
+Orions Belt	獵戶座腰帶
+Bracer of Mrad	姆拉德護腕
+Wraithe Shirt	幽魂之衣
+Ziggmunds Armor	齊格蒙德護甲
+Ring of the Mad Mage	瘋法師戒指
+Gabriels Axe	加百列之斧
+Maul of Bathory	巴托里巨錘
+Sword of Pendulum	鐘擺之劍
+Shield of Ultimate Defense	終極防禦之盾
+Tammas Staff of Negation	塔瑪斯抵消法杖
+Mace of Disintegration	瓦解之錘
+Sword of Renfield	倫菲爾德之劍
+Staff of Odin	奧丁法杖
+Gem of the Aerie	鷹巢寶石
+The Scarlet Bow	緋紅之弓
+Raindancer	舞雨者
+Light Mail Shirt	輕便鎧衣

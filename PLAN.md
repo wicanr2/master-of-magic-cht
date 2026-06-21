@@ -93,7 +93,7 @@
 - [x] **字串覆蓋層 (顯示層)** — 第一個 slice 完成:在 `lib/font` 三繪字點翻譯,不碰邏輯字串 (對照 `create-artifact.go:198` 英文當 key,決定走顯示層,見 [ADR 0003](docs/adr/0003-string-override-layer.md));TSV 從 `MOM_CHT_STRINGS` 載入、TrimSpace 精確比對。真實引擎驗證英文 power 名自動轉中文 (`docs/img/phase2-override.png`)
 - [x] **版本對齊** (見 [ADR 0002](docs/adr/0002-target-game-version.md)):已升 1.60 並 diff,名稱類 0 差異
 - [x] **散文類覆蓋 + CJK 逐字斷行**:`CreateWrappedText` 進入點整段翻譯 + 重寫 `splitText` 支援中文逐字斷行。基於 **CP 1.60** 資料驗證長中文描述自動換行 (`docs/img/phase2-prose-wrap-1.60.png`)
-- [ ] 翻譯表逐類完成:item powers ✅ → 神器名 → 法術 → 建築 → help → 單位名
+- [ ] 翻譯表逐類完成:item powers ✅ → 神器名 ✅ (250 筆,`artifacts.tsv`,真實引擎驗證) → 法術 → 建築 → help → 單位名
 - [ ] 單位名 hardcode (`units/unit.go`) 改查表
 
 ### Phase 3 — 版面與打包
