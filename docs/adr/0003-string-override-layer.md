@@ -37,10 +37,22 @@
 `Vampiric→吸血`、`+3 Attack→+3 攻擊`、`Magic Immunity→魔法免疫`、`Invisibility→隱形`、
 `Flight→飛行`;未翻的 `Sword of Mallana` 保持英文。引擎邏輯字串未動。
 
+## 散文換行 (已完成)
+
+`PrintWrap` → `CreateWrappedText` → `splitText`。兩處改動讓散文也能正確中文化換行:
+
+1. **整段翻譯**:`CreateWrappedText` 進入點呼叫 `translateForDisplay(text)`,整段英文先翻成中文
+   再斷行 (逐段翻譯無法命中整句譯文)。
+2. **CJK 逐字斷行**:重寫 `splitText` — 英文仍在空白處斷行;中文 (無空白) 可在任意字之間逐字斷,
+   並保證至少切一個 rune (原版對無空白長串回傳空字串,會讓整段中文被 `CreateWrappedText` 的
+   `if show==""{break}` 丟棄)。
+
+驗證 (基於 **Community Patch 1.60** 資料,截圖 `docs/img/phase2-prose-wrap-1.60.png`):
+長中文描述「烈焰之劍:每次攻擊都附帶火焰傷害…無人能擋其鋒芒。」自動逐字換成多行;
+同畫面 power 名英→中覆蓋、未翻的 `Sword of Mallana` 保持英文。
+
 ## 已知限制 / 待辦
 
-- **換行散文 (help/描述)**:`PrintWrap` 先以空白切英文再逐段繪製,顯示層逐段翻譯無法命中
-  整句譯文,且中文無空白需逐字斷行。→ 散文類要在**進 wrap 前整段翻譯** + `splitText` 加
-  CJK 逐字斷行 (Phase 2 後續)。本 slice 先覆蓋**原子標籤**(名稱/按鈕),散文後做。
-- **組合字串**(英文片段 + 數值串接後才 Print)同樣無法整串命中 → 視情況在組裝前翻譯或拆詞。
+- **help.lbx 的格式碼**:help 條目含 0x14 等控制碼,整段 key 比對需連控制碼一起存或先剝離 — 待接 help.tsv 時定。
+- **組合字串**(英文片段 + 數值串接後才 Print)無法整串命中 → 視情況在組裝前翻譯或拆詞。
 - 翻譯表目前以英文原文為唯一 key;1.31/1.60 同義變體並存策略見 ADR 0002。

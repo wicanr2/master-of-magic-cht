@@ -153,7 +153,7 @@ index 0000000..f6924b6
 +	return img, w
 +}
 diff --git a/lib/font/font.go b/lib/font/font.go
-index 7e84629..304c59c 100644
+index 7e84629..6fd0484 100644
 --- a/lib/font/font.go
 +++ b/lib/font/font.go
 @@ -157,6 +157,8 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
@@ -181,7 +181,7 @@ index 7e84629..304c59c 100644
 +                shaderOptions.Images[0] = cjkImage
 +                destination.DrawRectShader(cjkImage.Bounds().Dx(), cjkImage.Bounds().Dy(), edgeShader, &shaderOptions)
 +
-+                useX += float64(cjkAdv+font.internalFont.HorizontalSpacing) * scale
++                useX += float64(cjkAdv + font.internalFont.HorizontalSpacing) * scale
 +            }
              continue
          }
@@ -213,7 +213,7 @@ index 7e84629..304c59c 100644
 +                }
 +                options.ColorScale = colorScale
 +                destination.DrawImage(cjkImage, &options)
-+                useX += float64(cjkAdv+font.internalFont.HorizontalSpacing) * scale
++                useX += float64(cjkAdv + font.internalFont.HorizontalSpacing) * scale
 +            }
              continue
          }
@@ -237,6 +237,74 @@ index 7e84629..304c59c 100644
              continue
          }
  
+@@ -344,23 +383,47 @@ func (font *Font) PrintOptions(image *ebiten.Image, x float64, y float64, option
+     }
+ }
+ 
+-/* split the input text ABCD into two substrings AB and CD such that the pixel width of AB is less than maxWidth */
++/* split the input text ABCD into two substrings AB and CD such that the pixel width of AB is less than maxWidth.
++   CJK 感知:英文在空白處斷行;中文 (無空白) 可在任意字之間逐字斷行,避免整段中文無法換行被丟棄。 */
+ func (font *Font) splitText(text string, maxWidth float64, scale float64) (string, string) {
+-    size := font.MeasureTextWidth(text, scale)
+-    if size < maxWidth {
++    if font.MeasureTextWidth(text, scale) < maxWidth {
+         return text, ""
+     }
+ 
+-    parts := strings.Split(text, " ")
+-    // FIXME: use binary search for this
+-    for i := len(parts) - 1; i >= 0; i-- {
+-        sofar := strings.Join(parts[0:i], " ")
+-        if font.MeasureTextWidth(sofar, scale) < maxWidth {
+-            return sofar, strings.Join(parts[i:len(parts)], " ")
++    runes := []rune(text)
++    lastBreak := -1 // rest 由此 index 起算的最後一個可斷點
++    breakAfterSpace := false
++
++    for i := 1; i <= len(runes); i++ {
++        if font.MeasureTextWidth(string(runes[:i]), scale) >= maxWidth {
++            if lastBreak > 0 {
++                if breakAfterSpace {
++                    return strings.TrimRight(string(runes[:lastBreak]), " "), string(runes[lastBreak:])
++                }
++                return string(runes[:lastBreak]), string(runes[lastBreak:])
++            }
++            // 無可斷點 (單一過長的英文字):至少切一個 rune,保證有進展、不回傳空字串
++            cut := i - 1
++            if cut < 1 {
++                cut = 1
++            }
++            return string(runes[:cut]), string(runes[cut:])
++        }
++        // 記錄可斷點 (rest 將從 runes[i] 起):空白之後,或中日韓字邊界
++        if i < len(runes) {
++            prev := runes[i-1]
++            next := runes[i]
++            if prev == ' ' {
++                lastBreak = i
++                breakAfterSpace = true
++            } else if isCJK(prev) || isCJK(next) {
++                lastBreak = i
++                breakAfterSpace = false
++            }
+         }
+     }
+ 
+-    return "", text
++    return text, ""
+ }
+ 
+ func (font *Font) PrintWrap(image *ebiten.Image, x float64, y float64, maxWidth float64, options FontOptions, text string) {
+@@ -405,6 +468,9 @@ func (font *Font) CreateWrappedText(maxWidth float64, scale float64, text string
+     var lines []string
+     var yPos float64 = 0
+ 
++    // 散文整段先翻譯,再斷行 (逐段翻譯無法命中整句譯文;中文需整段譯好再 CJK 斷行)
++    text = translateForDisplay(text)
++
+     text = string(bytes.ReplaceAll([]byte(text), []byte{'\n'}, []byte{NewLine}))
+ 
+     textLines := bytes.Split([]byte(text), []byte{NewLine})
 diff --git a/lib/font/override.go b/lib/font/override.go
 new file mode 100644
 index 0000000..02416a6
@@ -334,10 +402,10 @@ index 0000000..02416a6
 +}
 diff --git a/test/cjk-render/main.go b/test/cjk-render/main.go
 new file mode 100644
-index 0000000..4bcbd92
+index 0000000..2d7f7ec
 --- /dev/null
 +++ b/test/cjk-render/main.go
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,100 @@
 +package main
 +
 +// Phase 1 真實引擎 CJK 驗證:用引擎真正的字型管線 (VaultFonts + lib/font 的
@@ -357,6 +425,7 @@ index 0000000..4bcbd92
 +	"github.com/kazzmir/master-of-magic/game/magic/fonts"
 +	"github.com/kazzmir/master-of-magic/game/magic/scale"
 +	"github.com/kazzmir/master-of-magic/game/magic/util"
++	"github.com/kazzmir/master-of-magic/lib/font"
 +	"github.com/kazzmir/master-of-magic/lib/lbx"
 +
 +	"github.com/hajimehoshi/ebiten/v2"
@@ -390,27 +459,34 @@ index 0000000..4bcbd92
 +func (engine *Engine) Draw(screen *ebiten.Image) {
 +	screen.Fill(color.RGBA{R: 24, G: 18, B: 48, A: 255})
 +
-+	// 以下所有 item power 名稱都餵入「引擎實際使用的英文字串」(trim 後形式),
-+	// 由 lib/font 的顯示層覆蓋層 (MOM_CHT_STRINGS 載入 item-powers.tsv) 自動轉成中文。
-+	// 引擎邏輯字串不動,只有顯示被換掉。
++	// 全部 scale 1,直接用螢幕座標排版 (PrintOptions 會把 y 乘 scale,混用會錯位)。
++	// item power 名稱都餵入「引擎實際使用的英文字串」,由 lib/font 顯示層覆蓋層
++	// (MOM_CHT_STRINGS 載 item-powers.tsv) 自動轉中文;引擎邏輯字串不動。
 +
-+	y := float64(6)
-+	// 直接中文標題 (literal,驗證 CJK)
-+	engine.VaultFonts.ItemName.PrintDropShadow(screen, 6, y, 3, ebiten.ColorScale{}, "工作魔法大帝")
-+	y += 26
-+	// 神器名 (artifacts.tsv 尚未翻 → 保持英文,作對比:覆蓋層是選擇性的)
-+	engine.VaultFonts.ItemName.Print(screen, 6, y, 3, ebiten.ColorScale{}, "Sword of Mallana")
-+	y += 26
-+	// item power:餵英文,覆蓋層自動轉中文
-+	engine.VaultFonts.ItemName.Print(screen, 6, y, 3, ebiten.ColorScale{}, "Holy Avenger")
-+	y += 30
++	cs := ebiten.ColorScale{}
++	IN := engine.VaultFonts.ItemName
++	PW := engine.VaultFonts.PowerFont
 +
-+	// 物品能力 (PowerFont):每條餵真實英文 power 名,自動翻譯
-+	powers := []string{"Flaming", "Vampiric", "+3 Attack", "Magic Immunity", "Invisibility", "Flight"}
++	// 標題 (literal CJK)
++	IN.PrintDropShadow(screen, 6, 6, 1, cs, "工作魔法大帝")
++	// 神器名:artifacts.tsv 尚未翻 → 保持英文 (證明覆蓋是選擇性的)
++	IN.Print(screen, 6, 26, 1, cs, "Sword of Mallana")
++	// 餵英文 → 覆蓋層自動轉中文
++	IN.Print(screen, 6, 42, 1, cs, "Holy Avenger")
++
++	// 物品能力:每條餵真實英文 power 名,自動翻譯
++	powers := []string{"Flaming", "Vampiric", "+3 Attack", "Magic Immunity", "Invisibility"}
++	py := 64.0
 +	for _, p := range powers {
-+		engine.VaultFonts.PowerFont.Print(screen, 6, y, 3, ebiten.ColorScale{}, p)
-+		y += 18
++		PW.Print(screen, 6, py, 1, cs, p)
++		py += 14
 +	}
++
++	// 散文 CJK 斷行示範:長中文描述自動逐字換行 (maxWidth 內);
++	// 真實流程中這段由覆蓋層從英文整段翻好,再進 CreateWrappedText 斷行。
++	IN.Print(screen, 6, 150, 1, cs, "── 描述 (CJK 逐字斷行) ──")
++	desc := "烈焰之劍:每次攻擊都附帶火焰傷害,並使敵人陷入恐懼。持有者在戰場上所向披靡,無人能擋其鋒芒。"
++	engine.VaultFonts.ItemName.PrintWrap(screen, 6, 166, 240, font.FontOptions{Scale: 1}, desc)
 +}
 +
 +func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
