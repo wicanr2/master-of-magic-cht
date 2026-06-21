@@ -1,5 +1,5 @@
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..db2a7c4 100644
+index 44c64b8..832a2e3 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -35,7 +35,7 @@ index 44c64b8..db2a7c4 100644
 +    vector.DrawFilledRect(screen,
 +        float32((float64(rect.Min.X)+2)*S), float32((float64(rect.Min.Y)+1)*S),
 +        float32((bw-4)*S), float32((bh-2)*S),
-+        color.RGBA{R: 40, G: 26, B: 12, A: 255}, false)
++        color.RGBA{R: 58, G: 44, B: 30, A: 255}, false)
 +    fnt.PrintOptions(screen,
 +        float64(rect.Min.X)+bw/2, float64(rect.Min.Y)+float64(bh)/2-float64(fnt.Height())/2,
 +        font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
