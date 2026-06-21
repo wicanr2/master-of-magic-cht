@@ -1,0 +1,63 @@
+name: macOS build (CHT)
+
+# 在 macos-14 (Apple Silicon) runner 編譯內嵌中文化的 magic.app。
+# 不含版權遊戲檔;下載 artifact 後本地加入 1.60 LBX 組完整包。
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout CHT repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.0'
+
+      - name: Fetch engine + apply patches + embed assets
+        run: |
+          set -e
+          ./scripts/fetch-engine.sh engine
+          git -C engine apply --whitespace=nowarn "$GITHUB_WORKSPACE/patches/0001-cjk-font-injection.patch"
+          git -C engine apply --whitespace=nowarn "$GITHUB_WORKSPACE/patches/0002-image-override.patch"
+          ./scripts/prepare-embed.sh engine
+
+      - name: Build arm64 binary
+        working-directory: engine
+        run: |
+          CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
+            go build -buildvcs=false -ldflags="-s -w" -o magic-arm64 ./game/magic
+          file magic-arm64
+
+      - name: Assemble .app
+        run: |
+          set -e
+          APP="Master of Magic CHT.app"
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+          cp engine/magic-arm64 "$APP/Contents/MacOS/magic"
+          chmod +x "$APP/Contents/MacOS/magic"
+          cat > "$APP/Contents/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleName</key><string>Master of Magic CHT</string>
+            <key>CFBundleIdentifier</key><string>cht.masterofmagic.app</string>
+            <key>CFBundleExecutable</key><string>magic</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>0.1</string>
+            <key>LSMinimumSystemVersion</key><string>11.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict></plist>
+          PLIST
+          # 注意:此 .app 不含遊戲資料;啟動需在含 LBX 的目錄,或自行加入後改 AppRun 帶 -data。
+          zip -q -r "MasterOfMagic-CHT-macOS-arm64.zip" "$APP"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MasterOfMagic-CHT-macOS-arm64
+          path: MasterOfMagic-CHT-macOS-arm64.zip
+          if-no-files-found: error
