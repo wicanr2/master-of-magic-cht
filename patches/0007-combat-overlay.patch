@@ -1,0 +1,79 @@
+--- /tmp/mom-engine/game/magic/combat/combat-screen.go	2026-06-21 19:30:05.864537468 +0800
++++ /tmp/mom-combat/game/magic/combat/combat-screen.go	2026-06-22 02:13:06.289737915 +0800
+@@ -1601,7 +1601,7 @@
+     buttonX := float64(144)
+     buttonY := float64(168)
+ 
+-    makeButton2 := func(lbxIndex int, buttonDisabledIndex, x int, y int, action func(), alterColor func(*colorm.ColorM)) *uilib.UIElement {
++    makeButton2 := func(lbxIndex int, buttonDisabledIndex, x int, y int, label string, action func(), alterColor func(*colorm.ColorM)) *uilib.UIElement {
+         buttons, _ := combat.ImageCache.GetImages("compix.lbx", lbxIndex)
+         buttonDisabled, _ := combat.ImageCache.GetImage("compix.lbx", buttonDisabledIndex, 0)
+         rect := image.Rect(0, 0, buttons[0].Bounds().Dx(), buttons[0].Bounds().Dy()).Add(image.Point{int(buttonX) + buttons[0].Bounds().Dx() * x, int(buttonY) + buttons[0].Bounds().Dy() * y})
+@@ -1631,20 +1631,22 @@
+                 alterColor(&extraColor)
+                 if combat.ButtonsDisabled {
+                     colorm.DrawImage(screen, buttonDisabled, extraColor, &options)
++                    util.ChtLabel(screen, rect, buttonDisabled, combat.Fonts.HudFont, label)
+                 } else {
+                     colorm.DrawImage(screen, buttons[index], extraColor, &options)
++                    util.ChtLabel(screen, rect, buttons[index], combat.Fonts.HudFont, label)
+                 }
+             },
+         }
+     }
+ 
+-    makeButton := func(lbxIndex int, buttonDisabledIndex, x int, y int, action func()) *uilib.UIElement {
+-        return makeButton2(lbxIndex, buttonDisabledIndex, x, y, action, func(_ *colorm.ColorM){})
++    makeButton := func(lbxIndex int, buttonDisabledIndex, x int, y int, label string, action func()) *uilib.UIElement {
++        return makeButton2(lbxIndex, buttonDisabledIndex, x, y, label, action, func(_ *colorm.ColorM){})
+     }
+ 
+     // spell
+     spellPage := 0
+-    elements = append(elements, makeButton(1, 23, 0, 0, func(){
++    elements = append(elements, makeButton(1, 23, 0, 0, "法術", func(){
+         // cannot cast if the player is selecting a unit/tile
+         if combat.IsSelectingSpell() {
+             return
+@@ -1770,12 +1772,12 @@
+     }))
+ 
+     // wait
+-    elements = append(elements, makeButton(2, 24, 1, 0, func(){
++    elements = append(elements, makeButton(2, 24, 1, 0, "等待", func(){
+         combat.Model.NextUnit()
+     }))
+ 
+     // info
+-    elements = append(elements, makeButton(20, 25, 0, 1, func(){
++    elements = append(elements, makeButton(20, 25, 0, 1, "資訊", func(){
+         var group *uilib.UIElementGroup
+         remove := func(){
+             ui.RemoveGroup(group)
+@@ -1785,7 +1787,7 @@
+     }))
+ 
+     // auto
+-    elements = append(elements, makeButton2(4, 26, 1, 1, func(){
++    elements = append(elements, makeButton2(4, 26, 1, 1, "自動", func(){
+         if combat.ExtraControl {
+             combat.Events <- &CombatDoSingleAuto{}
+             return
+@@ -1804,7 +1806,7 @@
+     }))
+ 
+     // flee
+-    elements = append(elements, makeButton(21, 27, 0, 2, func(){
++    elements = append(elements, makeButton(21, 27, 0, 2, "逃跑", func(){
+ 
+         doFlee := func() {
+             if combat.Model.AttackingArmy.Player == player {
+@@ -1819,7 +1821,7 @@
+     }))
+ 
+     // done
+-    elements = append(elements, makeButton(3, 28, 1, 2, func(){
++    elements = append(elements, makeButton(3, 28, 1, 2, "完成", func(){
+         combat.Model.DoneTurn()
+     }))
+ 
