@@ -79,11 +79,13 @@
 - [x] 抽出物品字串,翻譯第一批 (item powers 64 筆)
 - [ ] `scripts/fetch-engine.sh` 固定引擎 commit
 
-### Phase 1 — 渲染管線 (CJK glyph)
-- [ ] ADR 0001 定案 (A vs B),prototype 驗證一行中文上畫面
-- [ ] `build_cjk_font.py` 烘 24×24 atlas (若走 A)
-- [ ] `font.go` / `read.go` 加 CJK 分流 + 寬度量測 + 斷行
-- [ ] `util/fontviewer` 擴充顯示 CJK 驗證
+### Phase 1 — 渲染管線 (CJK glyph) — 核心已完成
+- [x] ADR 0001 定案:採路線 B (TTF) 為主線,A 降為美術升級選項
+- [x] prototype 驗證「一行中文上畫面」(`prototype/cjk-hello/`,docker+Xvfb 截圖 `docs/img/phase1-cjk-hello.png`)
+- [x] `font.go` `doPrint` / `MeasureTextWidth` 加 CJK 分流 + 寬度量測;新增 `lib/font/cjk.go` (patch `patches/0001-cjk-font-injection.patch`,`go build ./lib/font` 通過)
+- [ ] 套真實版權 lbx 跑一畫面,觀察破版,回填 ADR
+- [ ] 多字級 (16/14) 與原版字高對齊;CJK 字型納入打包
+- [ ] (選項 A) `build_cjk_font.py` 烘 24×24 atlas、`util/fontviewer` 擴充顯示 CJK
 
 ### Phase 2 — 字串翻譯與注入
 - [ ] LBX 字串覆蓋機制 (載入後 override,**不改版權 LBX**)
