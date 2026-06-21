@@ -1,7 +1,7 @@
 # ADR 0002 — 目標遊戲版本與 Community Patch
 
-- 狀態:**Proposed**(建議主目標 CP 1.60,保留 1.31 相容)
-- 日期:2026-06-21
+- 狀態:**Accepted**(主目標 CP 1.60,1.31 相容;已實測版本差異)
+- 日期:2026-06-21(2026-06-21 更新:完成 1.31→1.60 升級與字串 diff)
 - 相關:[ADR 0001](0001-cjk-rendering.md)、`docs/strings/*.tsv`
 
 ## 背景
@@ -38,9 +38,35 @@ Master of Magic 有多個版本:官方最終 DOS 版 **v1.31**(Simtex/MicroProse
 3. **現有 1.31 萃取為 baseline**(`item-powers.tsv` 64、`artifacts.tsv` 250);取得 1.60 資料後
    做 string diff,補上 delta(改名/新增的 item power、法術、help 等)。
 
+## 實測版本差異 (1.31 → 1.60)
+
+用 MOMDIFFP (DOSBox in docker) 將正版 1.31 升級到 v1.60 (`MAGIC.EXE` 內 `Seravy, Drake178, 2021 v1.60`),
+對升級前後字串做 diff。**升級結果另存本地 `original_game/msdos_mom_cp160.zip` 供比對 (版權資料,不入庫)。**
+
+CP 1.60 改寫了這些字串相關 LBX (DOSBox 重寫成大寫 8.3 檔名):
+`BUILDESC HELP HLPENTRY SPELLDAT DIPLOMSG MESSAGE NEWGAME UNITVIEW MAGIC ARMYLIST ITEMPOW FONTS …`
+
+關鍵 diff 結果:
+
+| 類別 | 檔案 | 名稱字串 1.31→1.60 | 結論 |
+|---|---|---|---|
+| 物品能力名 | `itempow.lbx` | 66→66,**0 差異** (md5 變=只改數值) | `item-powers.tsv` 兩版通用 ✅ |
+| 神器名 | `itemdata.lbx` | 250→250,**0 差異** (檔未被 patch) | `artifacts.tsv` 兩版通用 ✅ |
+| 法術名 | `spelldat.lbx` | 214→214,**0 差異** (data 改、名稱不變) | 法術名表兩版通用 ✅ |
+| Help 文字 | `HELP/HLPENTRY.LBX` | **大幅改寫** (散文) | 須從 1.60 萃取 |
+| 建築描述 | `BUILDESC.LBX` | 改寫 (散文) | 須從 1.60 萃取 |
+| 訊息/外交 | `MESSAGE/DIPLOMSG.LBX` | 改寫 (散文,含動態 token) | 須從 1.60 萃取 |
+| 字型 | `FONTS.LBX` | CP 改了 ASCII 字型 | CJK 注入在 ASCII 之上獨立,不受影響 |
+
+**核心結論**:CP 1.60 維持所有**名稱**字串不變 (改的是數值/平衡 + 重寫散文)。
+→ 名稱類譯文表 (神器/物品能力/法術) **版本無關,一份通殼兩版,現有萃取不必重做**;
+須以 1.60 為準萃取的只有**散文類** (help / 建築描述 / 訊息)。
+
 ## 待辦 / 風險
 
-- [ ] 取得實際 1.60 LBX(跑 MOMDIFFP 或他法),重新萃取 item/spell/help 字串,對 1.31 做 diff。
-- [ ] 量化 1.31↔1.60 字串差異規模(目前未知,需實測;勿假設「差異很小」)。
-- [ ] 引擎 commit 已釘選(`0c7669b`);CP 版本同樣釘選 1.60,避免雙邊漂移。
-- 風險:CP 與引擎皆持續演進;若引擎日後改變對某 LBX 結構的假設,需重驗。
+- [x] 取得實際 1.60 LBX、升級、對 1.31 做字串 diff (見上)。
+- [x] 量化差異:名稱不變,散文 (help/desc/message) 改寫。
+- [ ] 散文類譯文表 (help / buildings / messages) 以 1.60 為來源萃取。
+- [ ] **檔名大小寫**:DOSBox 把 patch 過的檔寫成大寫 (`HELP.LBX`),未變的維持小寫;
+      Linux 檔案系統大小寫敏感,實際拿 1.60 資料餵引擎時需統一檔名大小寫 (engine 載入測試時處理)。
+- 引擎 commit 已釘選 (`0c7669b`);CP 釘選 1.60。風險:雙邊持續演進,日後需重驗。
