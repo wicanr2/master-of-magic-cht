@@ -1,0 +1,58 @@
+diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
+index f0917fe..1b8c1b9 100644
+--- a/game/magic/setup/new-game.go
++++ b/game/magic/setup/new-game.go
+@@ -151,6 +151,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
+             scale.DrawScaled(screen, okButtons[okIndex], &options)
++            util.ChtLabel(screen, this.Rect, okButtons[okIndex], buttonFont, "確定")
+         },
+     })
+ 
+@@ -172,6 +173,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
+             scale.DrawScaled(screen, cancelButtons[cancelIndex], &options)
++            util.ChtLabel(screen, this.Rect, cancelButtons[cancelIndex], buttonFont, "取消")
+         },
+     })
+ 
+diff --git a/game/magic/util/cht_label.go b/game/magic/util/cht_label.go
+new file mode 100644
+index 0000000..eabeebe
+--- /dev/null
++++ b/game/magic/util/cht_label.go
+@@ -0,0 +1,32 @@
++package util
++
++// 中文化共用疊字:在烘進 LBX 的英文按鈕/標籤圖上,先填深色擦掉英文 (保留外框),
++// 再用傳入的 font 疊銳利中文 (rule 81:CJK 用 font 畫在高解析緩衝)。各畫面共用。
++
++import (
++	"image"
++	"image/color"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	"github.com/hajimehoshi/ebiten/v2/vector"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/kazzmir/master-of-magic/lib/font"
++)
++
++// ChtLabel 在 rect 位置的烘字圖上疊中文 label。fnt 為要用的字型 (通常黃/白)。
++// label 為空、fnt 或 img 為 nil 時不動作。
++func ChtLabel(screen *ebiten.Image, rect image.Rectangle, img *ebiten.Image, fnt *font.Font, label string) {
++	if label == "" || fnt == nil || img == nil {
++		return
++	}
++	S := scale.ScaleAmount
++	bw := float64(img.Bounds().Dx())
++	bh := float64(img.Bounds().Dy())
++	vector.DrawFilledRect(screen,
++		float32((float64(rect.Min.X)+3)*S), float32((float64(rect.Min.Y)+2)*S),
++		float32((bw-6)*S), float32((bh-4)*S),
++		color.RGBA{R: 40, G: 26, B: 12, A: 255}, false)
++	fnt.PrintOptions(screen,
++		float64(rect.Min.X)+bw/2, float64(rect.Min.Y)+2,
++		font.FontOptions{Justify: font.FontJustifyCenter, Scale: S, DropShadow: true}, label)
++}
