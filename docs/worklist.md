@@ -47,9 +47,17 @@
   - `%v of %s` 城市標題的 size 引數補翻;headless 驗證:「村落 的 Xanten」「Lo Pan 的城市」「獸人 農民 4」。
   - 全引擎 build 通過(45 檔變更),字型子集 1659 字,AppImage 重建驗證。
 
+- [x] **#7 專有名詞 中文(英文) + A 顯示缺口 + B 位圖按鈕** (2026-06-22)
+  - **專有名詞**:names.tsv 49 條(巫師 14 + 英雄 35)走「中文(英文)」格式,原文與中文並存;
+    直接列印處(mirror/overworld)自動生效,Sprintf 引數處(軍隊/城市標題、diplomacy、hero 全名)補 wrap。
+    headless 驗證「羅潘(Lo Pan) 的軍隊」。英雄名 names.tsv 因字母序先載入勝過 units.tsv 舊純中文。
+  - **A 顯示缺口**:misc-ui.tsv 28 條(節點/結界 enum、神器鍛造/巫師建立/戰鬥/復活對話、施法目標提示);
+    undead/road 2 模板補 wrap。56 個 enum(Bless/Haste…)早已被 spells.tsv 覆蓋。
+  - **B 位圖按鈕**:armyview Items/Ok → 疊「物品」「確定」(util.ChtLabel);headless 驗證。
+  - 字型子集 1670 字,全引擎 build 通過(47 檔),AppImage 重建驗證。
+
 ## 待修
 
-- [ ] **少數動態 enum 引數未翻** — 個別模板的 `%v` 引數是列舉 `.String()`(非城市標題那種已修),
-  若顯示英文再個案補 `TranslateFormat(arg.String())`。屬邊角,主要畫面已涵蓋。
-- [ ] **純字串常數型 UI**(無 %v、非 Sprintf)散落各畫面者,若實測發現英文再補 TSV。
-- [ ] **baked LBX bitmap 按鈕**(如軍隊 Items/Ok)需圖片疊字,非資料翻譯。
+- [ ] **城市名 中文(英文)** — runtime 名稱池(大、版面風險),暫緩;巫師/英雄已做。
+- [ ] **英文小字** — 目前「中文(英文)」同字級;英文縮小需逐顯示點改雙重渲染,屬美術強化。
+- [ ] **零星 enum 引數/純字串** — 次要畫面若實測見英文再個案補(主要畫面已涵蓋)。

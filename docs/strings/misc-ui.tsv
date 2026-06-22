@@ -1,0 +1,34 @@
+source	zh	note
+# === 魔法節點 (MagicNode.String,地圖節點/守護) ===
+Chaos Node	混沌節點	節點
+Nature Node	自然節點	節點
+Sorcery Node	祕法節點	節點
+# === 城市結界守護 (CityEnchantment.String) ===
+Chaos Ward	混沌結界	結界
+Nature Ward	自然結界	結界
+Sorcery Ward	祕法結界	結界
+Life Ward	生命結界	結界
+Death Ward	死亡結界	結界
+# === 單位能力 (UnitEnchantment.String) ===
+Demon Skin	惡魔之皮	單位結界
+Demon Wings	惡魔之翼	單位結界
+Fire Breath	火焰吐息	單位結界
+# === 對話 / 驗證訊息 ===
+An item must have a name	物品必須有名稱	神器鍛造
+Only four powers may be enchanted into an item	一件物品最多只能附魔四種能力	神器鍛造
+Not enough mana to teleport item	法力不足,無法傳送物品	神器
+Item Teleport	物品傳送	神器
+Do you wish to flee?	你要撤退嗎?	戰鬥
+Select hero to resurrect	選擇要復活的英雄	復活
+You cannot cancel another wizard's enchantment.	你無法取消其他巫師的結界。	結界
+You can not select both Life and Death magic	你不能同時選擇生命與死亡魔法	巫師建立
+You have already made all your picks	你已用完所有選點	巫師建立
+You need to make all your picks before you can continue	你必須用完所有選點才能繼續	巫師建立
+You can only sell back one building per turn.	每回合只能賣回一棟建築。	城市
+History Of Wizards Power	巫師勢力史	圖表標題
+Same Location	同一地點	提示
+# === 施法目標提示 + 事件模板 (A2) ===
+Choose target for a Spell Blast spell	選擇法術衝擊的目標	施法提示
+Choose target for a Subversion spell	選擇顛覆的目標	施法提示
+%d units rise from the dead to serve their creator.	%d 個單位從死亡中復起,聽命於其創造者。	不死事件
+It will take %d turns to complete the construction of this road.	完成這條道路需要 %d 回合。	築路

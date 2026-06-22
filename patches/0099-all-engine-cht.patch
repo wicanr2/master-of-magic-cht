@@ -1,5 +1,5 @@
 diff --git a/game/magic/armyview/view.go b/game/magic/armyview/view.go
-index 70ca4ff..bd3d9a2 100644
+index 70ca4ff..0cafa7f 100644
 --- a/game/magic/armyview/view.go
 +++ b/game/magic/armyview/view.go
 @@ -102,11 +102,16 @@ func (view *ArmyScreen) MakeUI() *uilib.UI {
@@ -7,7 +7,7 @@ index 70ca4ff..bd3d9a2 100644
              scale.DrawScaled(screen, background, &options)
  
 -            fonts.BigFont.PrintOptions(screen, float64(160), float64(8), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("The Armies Of %v", view.Player.Wizard.Name))
-+            fonts.BigFont.PrintOptions(screen, float64(160), float64(8), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("The Armies Of %v"), view.Player.Wizard.Name))
++            fonts.BigFont.PrintOptions(screen, float64(160), float64(8), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("The Armies Of %v"), font.TranslateFormat(view.Player.Wizard.Name)))
  
              if highlightedUnit != nil {
 -                raceName := highlightedUnit.GetRace().String()
@@ -22,6 +22,21 @@ index 70ca4ff..bd3d9a2 100644
  
              }
  
+@@ -128,6 +133,14 @@ func (view *ArmyScreen) MakeUI() *uilib.UI {
+ 
+             this.StandardDraw(screen)
+ 
++            // 中文化:疊掉 armylist.lbx 烘進的英文按鈕 "Items" / "Ok"
++            if itemBtns, err := view.ImageCache.GetImages("armylist.lbx", 3); err == nil && len(itemBtns) > 0 {
++                util.ChtLabel(screen, util.ImageRect(273, 163, itemBtns[0]), itemBtns[0], fonts.NormalFont, "物品")
++            }
++            if okBtns, err := view.ImageCache.GetImages("armylist.lbx", 4); err == nil && len(okBtns) > 0 {
++                util.ChtLabel(screen, util.ImageRect(273, 183, okBtns[0]), okBtns[0], fonts.NormalFont, "確定")
++            }
++
+             // vector.DrawFilledRect(minimapArea, float32(minimapRect.Min.X), float32(minimapRect.Min.Y), float32(minimapRect.Bounds().Dx()), float32(minimapRect.Bounds().Dy()), util.PremultiplyAlpha(color.RGBA{R: 0xff, G: 0, B: 0, A: 128}), false)
+         },
+     }
 diff --git a/game/magic/artifact/create-artifact.go b/game/magic/artifact/create-artifact.go
 index d9a0204..2a18dff 100644
 --- a/game/magic/artifact/create-artifact.go
@@ -266,7 +281,7 @@ index a87b038..9de3ab2 100644
      }
  
 diff --git a/game/magic/citylistview/view.go b/game/magic/citylistview/view.go
-index 8ffae1b..71c4edf 100644
+index 8ffae1b..b0843fd 100644
 --- a/game/magic/citylistview/view.go
 +++ b/game/magic/citylistview/view.go
 @@ -101,7 +101,7 @@ func (view *CityListScreen) MakeUI() *uilib.UI {
@@ -274,7 +289,7 @@ index 8ffae1b..71c4edf 100644
              ui.StandardDraw(screen)
  
 -            bigFont.PrintCenter(screen, float64(160), float64(5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("The Cities Of %v", view.Player.Wizard.Name))
-+            bigFont.PrintCenter(screen, float64(160), float64(5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("The Cities Of %v"), view.Player.Wizard.Name))
++            bigFont.PrintCenter(screen, float64(160), float64(5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("The Cities Of %v"), font.TranslateFormat(view.Player.Wizard.Name)))
  
              y := float64(17)
              x := float64(31)
@@ -907,7 +922,7 @@ index fefc1a9..d084285 100644
          case AbilityConstitution: return plusValue("Constitution")
          case AbilitySuperConstitution: return plusValue("Super Constitution")
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
-index a2dd539..9fe14ba 100644
+index a2dd539..1ca091b 100644
 --- a/game/magic/diplomacy/diplomacy.go
 +++ b/game/magic/diplomacy/diplomacy.go
 @@ -353,7 +353,7 @@ func ShowDiplomacyScreen(cache *lbx.LbxCache, player *playerlib.Player, enemy *p
@@ -924,7 +939,7 @@ index a2dd539..9fe14ba 100644
          doTalk = true
          talk.Clear()
 -        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into a wizard pact.", gameYear, player.Wizard.Name))
-+        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結巫師協定。", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結巫師協定。", gameYear, font.TranslateFormat(player.Wizard.Name)))
          ui.AddDelay(140, talkMain)
      }
  
@@ -932,7 +947,7 @@ index a2dd539..9fe14ba 100644
          doTalk = true
          talk.Clear()
 -        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into an alliance.", gameYear, player.Wizard.Name))
-+        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結同盟。", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結同盟。", gameYear, font.TranslateFormat(player.Wizard.Name)))
          ui.AddDelay(140, talkMain)
      }
  
@@ -940,7 +955,7 @@ index a2dd539..9fe14ba 100644
          doTalk = true
          talk.Clear()
 -        talk.SetTitle(fmt.Sprintf("Let it be known that in the year %v, %v and I have entered into a peace treaty.", gameYear, player.Wizard.Name))
-+        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結和平條約。", gameYear, player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("謹此昭告天下:西元 %v 年,%v 與吾已締結和平條約。", gameYear, font.TranslateFormat(player.Wizard.Name)))
          ui.AddDelay(140, talkMain)
      }
  
@@ -949,7 +964,7 @@ index a2dd539..9fe14ba 100644
          doTalk = true
          talk.Clear()
 -        talk.SetTitle(fmt.Sprintf("I thank you, glorius %v, for your tribute.", player.Wizard.Name))
-+        talk.SetTitle(fmt.Sprintf("感謝偉大的 %v 慷慨進貢。", player.Wizard.Name))
++        talk.SetTitle(fmt.Sprintf("感謝偉大的 %v 慷慨進貢。", font.TranslateFormat(player.Wizard.Name)))
          enemy.AdjustDiplomaticRelation(player, 5)
          player.AdjustDiplomaticRelation(enemy, 5)
          ui.AddDelay(140, talkMain)
@@ -967,7 +982,7 @@ index a2dd539..9fe14ba 100644
  
      talk.Clear()
 -    talk.SetTitle(fmt.Sprintf("Hail, mighty %v. I bear greetings and words of wisdom.", player.Wizard.Name))
-+    talk.SetTitle(fmt.Sprintf("致敬,偉大的 %v。吾帶來問候與智慧之言。", player.Wizard.Name))
++    talk.SetTitle(fmt.Sprintf("致敬,偉大的 %v。吾帶來問候與智慧之言。", font.TranslateFormat(player.Wizard.Name)))
  
      fadeOut := 0.0
  
@@ -1688,6 +1703,19 @@ index ce51df7..40ef521 100644
          },
      })
  
+diff --git a/game/magic/game/road.go b/game/magic/game/road.go
+index f5ef5e5..fb024b3 100644
+--- a/game/magic/game/road.go
++++ b/game/magic/game/road.go
+@@ -376,7 +376,7 @@ func (game *Game) ShowRoadBuilder(yield coroutine.YieldFunc, engineerStack *play
+             fonts.SurveyorFont.PrintCenter(screen, float64(280), float64(81), scale.ScaleAmount, ebiten.ColorScale{}, "Road")
+             fonts.SurveyorFont.PrintCenter(screen, float64(280), float64(81 + fonts.SurveyorFont.Height()), scale.ScaleAmount, ebiten.ColorScale{}, "Building")
+ 
+-            fonts.YellowFont.PrintWrap(screen, float64(249), float64(110), 68, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("It will take %d turns to complete the construction of this road.", roadTurns))
++            fonts.YellowFont.PrintWrap(screen, float64(249), float64(110), 68, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("It will take %d turns to complete the construction of this road."), roadTurns))
+         },
+     }
+ 
 diff --git a/game/magic/game/surveyor.go b/game/magic/game/surveyor.go
 index fda86fd..d917acd 100644
 --- a/game/magic/game/surveyor.go
@@ -1850,6 +1878,19 @@ index 1c79f7d..f670f64 100644
      return out
  }
  
+diff --git a/game/magic/game/undead.go b/game/magic/game/undead.go
+index 563373a..9815c8a 100644
+--- a/game/magic/game/undead.go
++++ b/game/magic/game/undead.go
+@@ -71,7 +71,7 @@ func MakeUndeadUI(cache *lbx.LbxCache, imageCache *util.ImageCache, zombie bool,
+     if units == 1 {
+         text = "1 unit rises from the dead to serve its creator."
+     } else {
+-        text = fmt.Sprintf("%d units rise from the dead to serve their creator.", units)
++        text = fmt.Sprintf(font.TranslateFormat("%d units rise from the dead to serve their creator."), units)
+     }
+     wrapped := showFont.CreateWrappedText(float64(buffer.Bounds().Dx() - 10), 1, text)
+ 
 diff --git a/game/magic/game/vault.go b/game/magic/game/vault.go
 index 8bf2618..8d15100 100644
 --- a/game/magic/game/vault.go
@@ -1989,7 +2030,7 @@ index aedfead..5001992 100644
          group.AddDelay(7, func(){
              cancel()
 diff --git a/game/magic/hero/hero.go b/game/magic/hero/hero.go
-index f429e7b..5b7a516 100644
+index f429e7b..0153ead 100644
 --- a/game/magic/hero/hero.go
 +++ b/game/magic/hero/hero.go
 @@ -12,6 +12,7 @@ import (
@@ -2005,7 +2046,7 @@ index f429e7b..5b7a516 100644
  
  func (hero *Hero) GetFullName() string {
 -    return fmt.Sprintf("%v the %v", hero.GetName(), hero.GetTitle())
-+    return fmt.Sprintf(font.TranslateFormat("%v the %v"), hero.GetName(), hero.GetTitle())
++    return fmt.Sprintf(font.TranslateFormat("%v the %v"), font.TranslateFormat(hero.GetName()), hero.GetTitle())
  }
  
  func (hero *Hero) GetPortraitLbxInfo() (string, int) {
