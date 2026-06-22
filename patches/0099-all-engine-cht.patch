@@ -1,8 +1,8 @@
 diff --git a/game/magic/armyview/view.go b/game/magic/armyview/view.go
-index 70ca4ff..ae5609a 100644
+index 70ca4ff..bd3d9a2 100644
 --- a/game/magic/armyview/view.go
 +++ b/game/magic/armyview/view.go
-@@ -102,11 +102,12 @@ func (view *ArmyScreen) MakeUI() *uilib.UI {
+@@ -102,11 +102,16 @@ func (view *ArmyScreen) MakeUI() *uilib.UI {
              var options ebiten.DrawImageOptions
              scale.DrawScaled(screen, background, &options)
  
@@ -13,7 +13,11 @@ index 70ca4ff..ae5609a 100644
 -                raceName := highlightedUnit.GetRace().String()
 -                fonts.NormalFont.PrintOptions(screen, float64(190), float64(162), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v %v", raceName, highlightedUnit.GetName()))
 +                // 種族名與單位名各自過顯示層翻譯後再合成 (中文不需空格);避免合成英文整串無對應 key
-+                raceName := font.TranslateFormat(highlightedUnit.GetRace().String())
++                // 英雄略過種族前綴 (其名稱本身已足夠,且避開 "Hero" 與「召回英雄」同 key 衝突)
++                raceName := ""
++                if highlightedUnit.GetRace() != data.RaceHero {
++                    raceName = font.TranslateFormat(highlightedUnit.GetRace().String())
++                }
 +                fonts.NormalFont.PrintOptions(screen, float64(190), float64(162), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v%v", raceName, font.TranslateFormat(highlightedUnit.GetName())))
  
              }
@@ -171,7 +175,7 @@ index 7675f86..b283afc 100644
          })
      }
 diff --git a/game/magic/cityview/city-screen.go b/game/magic/cityview/city-screen.go
-index 199e9f0..2bee34a 100644
+index 199e9f0..70c83c0 100644
 --- a/game/magic/cityview/city-screen.go
 +++ b/game/magic/cityview/city-screen.go
 @@ -889,6 +889,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
@@ -198,6 +202,71 @@ index 199e9f0..2bee34a 100644
              },
          })
      }
+@@ -1872,7 +1875,7 @@ func (cityScreen *CityScreen) MakeResourceDialog(title string, smallIcon *ebiten
+ 
+             titleX := infoX + infoLeftMargin + maxInfoWidth / 2
+ 
+-            fonts.HelpTitleFont.PrintOptions(window, float64(titleX), float64(infoY + infoTopMargin), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, title)
++            fonts.HelpTitleFont.PrintOptions(window, float64(titleX), float64(infoY + infoTopMargin), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, font.TranslateFormat(title))
+ 
+             yPos := infoY + (infoTopMargin + fonts.HelpTitleFont.Height() + 1)
+             xPos := (infoX + infoLeftMargin)
+@@ -2093,7 +2096,7 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
+         foodRequired = int(max(0, min(foodRequired, foodRequired + foodSurplus)))
+         foodRect := image.Rect(6, 52, 6 + 9 * bigFood.Bounds().Dx(), 52 + bigFood.Bounds().Dy())
+ 
+-        foodSurplusString := fmt.Sprintf("Food Surplus %v", foodSurplus)
++        foodSurplusString := fmt.Sprintf(font.TranslateFormat("Food Surplus %v"), foodSurplus)
+ 
+         // draws and returns the right most x position after drawing the icons
+         doDraw := func(screen *ebiten.Image, offset int) int {
+@@ -2144,7 +2147,7 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
+         workRect := image.Rect(6, 60, 6 + 9 * bigHammer.Bounds().Dx(), 60 + bigHammer.Bounds().Dy())
+         var options ebiten.DrawImageOptions
+         options.GeoM.Translate(float64(workRect.Min.X), float64(workRect.Min.Y))
+-        productionString := fmt.Sprintf("Production %v", production)
++        productionString := fmt.Sprintf(font.TranslateFormat("Production %v"), production)
+ 
+         for offset := range min(smallHammer.Bounds().Dx() - 1, bigHammer.Bounds().Dx() - 1) {
+             element := &uilib.UIElement{
+@@ -2179,8 +2182,8 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
+         upKeep := cityScreen.City.ComputeUpkeep()
+         var goldUpkeepOptions ebiten.DrawImageOptions
+ 
+-        maintenanceString := fmt.Sprintf("Gold Upkeep %v", upKeep)
+-        surplusString := fmt.Sprintf("Gold Surplus %v", goldSurplus)
++        maintenanceString := fmt.Sprintf(font.TranslateFormat("Gold Upkeep %v"), upKeep)
++        surplusString := fmt.Sprintf(font.TranslateFormat("Gold Surplus %v"), goldSurplus)
+ 
+         // determine what offset will make the icons fit into the bounding box
+         for goldOffset := range min(smallCoin.Bounds().Dx() - 1, bigCoin.Bounds().Dx() - 1) {
+@@ -2242,7 +2245,7 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
+         var options ebiten.DrawImageOptions
+         options.GeoM.Translate(float64(powerRect.Min.X), float64(powerRect.Min.Y))
+         power := cityScreen.City.ComputePower()
+-        powerString := fmt.Sprintf("Power %v", power)
++        powerString := fmt.Sprintf(font.TranslateFormat("Power %v"), power)
+         for offset := range min(smallMagic.Bounds().Dx() - 1, bigMagic.Bounds().Dx() - 1) {
+             element := &uilib.UIElement{
+                 Rect: powerRect,
+@@ -2251,7 +2254,7 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
+                 },
+                 LeftClick: func(element *uilib.UIElement) {
+                     power := cityScreen.PowerProducers()
+-                    ui.AddElements(cityScreen.MakeResourceDialog("Power", smallMagic, bigMagic, ui, power))
++                    ui.AddElements(cityScreen.MakeResourceDialog("Magic Power", smallMagic, bigMagic, ui, power))
+                 },
+                 Draw: func(element *uilib.UIElement, screen *ebiten.Image) {
+                     cityScreen.drawIcons(power, smallMagic, bigMagic, options, offset, screen)
+@@ -2275,7 +2278,7 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
+         var options ebiten.DrawImageOptions
+         options.GeoM.Translate(float64(researchRect.Min.X), float64(researchRect.Min.Y))
+         research := cityScreen.City.ResearchProduction()
+-        researchString := fmt.Sprintf("Research %v", research)
++        researchString := fmt.Sprintf(font.TranslateFormat("Research %v"), research)
+ 
+         for offset := range min(smallResearch.Bounds().Dx() - 1, bigResearch.Bounds().Dx() - 1) {
+             element := &uilib.UIElement{
 @@ -2340,6 +2343,12 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
      if err == nil {
          var options ebiten.DrawImageOptions

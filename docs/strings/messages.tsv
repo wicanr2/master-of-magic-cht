@@ -39,3 +39,11 @@ Adamantium Ore	精金礦	礦物
 Gem	寶石	礦物
 Quork Crystal	闊克水晶	礦物
 Crysx Crystal	克里斯水晶	礦物
+# === 城市資源 tooltip / 對話框標題 (cityview) ===
+Food Surplus %v	食物盈餘 %v	資源tooltip
+Production %v	生產 %v	資源tooltip
+Gold Upkeep %v	金幣維護 %v	資源tooltip
+Gold Surplus %v	金幣盈餘 %v	資源tooltip
+Power %v	魔力 %v	資源tooltip
+Research %v	研究 %v	資源tooltip
+Magic Power	魔力	資源對話框標題

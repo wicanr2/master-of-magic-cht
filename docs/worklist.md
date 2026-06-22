@@ -28,10 +28,15 @@
   - ui.tsv 新增 3 模板;headless 驗證軍隊清單:標題「Oberic 的軍隊」+ 合成名「蜥蜴人劍士」全中文。
   - 已知殘留:單位名 "Hero" 與既有 "Hero→召回英雄" 同 key 衝突(英雄單位 highlight 罕見,暫不處理)。
 
+- [x] **#5 help 彈窗標題 + 資源 tooltip + Hero 衝突** (2026-06-22)
+  - **help 標題**:help.lbx 的 headline 全大寫(HOUSING/BUILDER'S HALL),原 TSV key 是混合大小寫故配不上。
+    正規化(小寫去標點)自動回填 346 條,4 個 agent 新譯 410 條 → headlines.tsv 753 條。
+    HelpTitleFont 走 translateForDisplay 且能渲染 CJK,headless 確認 help scroll 標題「建築選項」中文。
+  - **資源 tooltip**:city-screen.go 6 個 `Sprintf("X %v")` 包 TranslateFormat;headless 確認「金幣盈餘 2/食物盈餘 4」。
+    資源對話框標題在繪製點翻譯;`Power` 與既有「力量戒指」衝突 → 該 call site 改獨立 key `Magic Power`→魔力。
+  - **Hero 衝突**:armyview 對英雄略過種族前綴(避開 `Hero`→「召回英雄」同 key 衝突)。
+  - 字型子集 1657 字,AppImage 重建驗證。
+
 ## 待修
 
-- [ ] **help 彈窗標題仍英文**(如 help scroll 頂端 "BUILDER'S HALL")
-  - 標題走引擎華麗哥德標題字(LBX baked bitmap font),非 TTF/CJK 路徑,translateForDisplay 接不到。
-  - 需走圖片疊字技術(util.ChtLabel)或把標題改走 CJK font;屬美術疊字範疇,非純資料翻譯。
-- [ ] **部分動態 tooltip 英文**(如資源 hover "Power 10")
-  - 屬 "Power %d" 類合成字串,需 TranslateFormat 模板翻譯 + 數值代入。
+(目前無)
