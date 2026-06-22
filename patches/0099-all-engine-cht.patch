@@ -23,9 +23,38 @@ index 70ca4ff..bd3d9a2 100644
              }
  
 diff --git a/game/magic/artifact/create-artifact.go b/game/magic/artifact/create-artifact.go
-index d9a0204..05a07b8 100644
+index d9a0204..2a18dff 100644
 --- a/game/magic/artifact/create-artifact.go
 +++ b/game/magic/artifact/create-artifact.go
+@@ -296,16 +296,16 @@ func getName(artifact *Artifact, customName string) string {
+         attack = artifact.MagicAttackBonus()
+     }
+     if attack != 0 {
+-        prefix = fmt.Sprintf("+%v ", attack)
++        prefix = fmt.Sprintf(font.TranslateFormat("+%v "), attack)
+     }
+ 
+     // other powers are added as "of X" postfix (only one)
+     postfix := ""
+     switch {
+-        case artifact.HasAbilities(): postfix = fmt.Sprintf(" of %v", artifact.LastAbility().Name())
++        case artifact.HasAbilities(): postfix = fmt.Sprintf(font.TranslateFormat(" of %v"), artifact.LastAbility().Name())
+         case artifact.HasSpellCharges():
+             spell, charges := artifact.GetSpellCharge()
+-            postfix = fmt.Sprintf(" of %v x%v", spell.Name, charges)
++            postfix = fmt.Sprintf(font.TranslateFormat(" of %v x%v"), spell.Name, charges)
+         case artifact.HasSpellSavePower(): postfix = " of Power"
+         case artifact.HasSpellSkillPower(): postfix = " of Wizardry"
+         case artifact.HasResistancePower(): postfix = " of Protection"
+@@ -953,7 +953,7 @@ func makeAbilityElements(ui *uilib.UI, cache *lbx.LbxCache, imageCache *util.Ima
+                             Type: PowerTypeSpellCharges,
+                             Spell: spell,
+                             Amount: charges,
+-                            Name: fmt.Sprintf("%v x%v", spell.Name, charges),
++                            Name: fmt.Sprintf(font.TranslateFormat("%v x%v"), spell.Name, charges),
+                         }
+                         artifact.AddPower(addedPower)
+                         artifact.Name = getName(artifact, *customName)
 @@ -1129,6 +1129,13 @@ func ShowCreateArtifactScreen(yield coroutine.YieldFunc, cache *lbx.LbxCache, cr
  
      imageCache := util.MakeImageCache(cache)
@@ -93,7 +122,7 @@ index d9a0204..05a07b8 100644
      ui.AddElement(&uilib.UIElement{
          Draw: func(element *uilib.UIElement, screen *ebiten.Image){
 -            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Cost: %v", artifactCost(currentArtifact.Cost)))
-+            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("花費: %v", artifactCost(currentArtifact.Cost)))
++            fonts.PowerFontWhite.PrintOptions(screen, 198, 185, font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("花費: %v"), artifactCost(currentArtifact.Cost)))
          },
      })
  
@@ -109,6 +138,90 @@ index d9a0204..05a07b8 100644
 +            util.ChtLabel(screen, okRect, img, fonts.PowerFont, "確定")
          },
      })
+ 
+diff --git a/game/magic/artifact/item.go b/game/magic/artifact/item.go
+index 2d2251c..3fc5493 100644
+--- a/game/magic/artifact/item.go
++++ b/game/magic/artifact/item.go
+@@ -10,6 +10,7 @@ import (
+     _ "log"
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
++    "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+     "github.com/kazzmir/master-of-magic/game/magic/spellbook"
+ )
+@@ -592,7 +593,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if attack != 0 {
+-            powers = append(powers, Power{Type: PowerTypeAttack, Amount: int(attack), Name: fmt.Sprintf("+%v Attack", attack)})
++            powers = append(powers, Power{Type: PowerTypeAttack, Amount: int(attack), Name: fmt.Sprintf(font.TranslateFormat("+%v Attack"), attack)})
+         }
+ 
+         toHit, err := lbx.ReadByte(reader)
+@@ -600,7 +601,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if toHit != 0 {
+-            powers = append(powers, Power{Type: PowerTypeToHit, Amount: int(toHit), Name: fmt.Sprintf("+%v To Hit", toHit)})
++            powers = append(powers, Power{Type: PowerTypeToHit, Amount: int(toHit), Name: fmt.Sprintf(font.TranslateFormat("+%v To Hit"), toHit)})
+         }
+ 
+         defense, err := lbx.ReadByte(reader)
+@@ -608,7 +609,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if defense != 0 {
+-            powers = append(powers, Power{Type: PowerTypeDefense, Amount: int(defense), Name: fmt.Sprintf("+%v Defense", defense)})
++            powers = append(powers, Power{Type: PowerTypeDefense, Amount: int(defense), Name: fmt.Sprintf(font.TranslateFormat("+%v Defense"), defense)})
+         }
+ 
+         movement, err := lbx.ReadByte(reader)
+@@ -616,7 +617,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if movement != 0 {
+-            powers = append(powers, Power{Type: PowerTypeMovement, Amount: int(movement), Name: fmt.Sprintf("+%v Movement", movement)})
++            powers = append(powers, Power{Type: PowerTypeMovement, Amount: int(movement), Name: fmt.Sprintf(font.TranslateFormat("+%v Movement"), movement)})
+         }
+ 
+         resistance, err := lbx.ReadByte(reader)
+@@ -624,7 +625,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if resistance != 0 {
+-            powers = append(powers, Power{Type: PowerTypeResistance, Amount: int(resistance), Name: fmt.Sprintf("+%v Resistance", resistance)})
++            powers = append(powers, Power{Type: PowerTypeResistance, Amount: int(resistance), Name: fmt.Sprintf(font.TranslateFormat("+%v Resistance"), resistance)})
+         }
+ 
+         spellSkill, err := lbx.ReadByte(reader)
+@@ -632,7 +633,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if spellSkill != 0 {
+-            powers = append(powers, Power{Type: PowerTypeSpellSkill, Amount: int(spellSkill), Name: fmt.Sprintf("+%v Spell Skill", spellSkill)})
++            powers = append(powers, Power{Type: PowerTypeSpellSkill, Amount: int(spellSkill), Name: fmt.Sprintf(font.TranslateFormat("+%v Spell Skill"), spellSkill)})
+         }
+ 
+         spellSave, err := lbx.ReadByte(reader)
+@@ -640,7 +641,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+             return nil, fmt.Errorf("read error: %v", err)
+         }
+         if spellSave != 0 {
+-            powers = append(powers, Power{Type: PowerTypeSpellSave, Amount: int(spellSave), Name: fmt.Sprintf("-%v Spell Save", spellSave)})
++            powers = append(powers, Power{Type: PowerTypeSpellSave, Amount: int(spellSave), Name: fmt.Sprintf(font.TranslateFormat("-%v Spell Save"), spellSave)})
+         }
+ 
+         // Spells
+@@ -659,7 +660,7 @@ func ReadArtifacts(cache *lbx.LbxCache) ([]Artifact, error) {
+                 Amount: int(charges),
+                 Spell: useSpell,
+                 SpellCharges: int(charges),
+-                Name: fmt.Sprintf("%v Charges of %v", charges, useSpell.Name),
++                Name: fmt.Sprintf(font.TranslateFormat("%v Charges of %v"), charges, useSpell.Name),
+             })
+         }
  
 diff --git a/game/magic/banish/banish.go b/game/magic/banish/banish.go
 index 77232f2..60c5239 100644
@@ -152,6 +265,30 @@ index a87b038..9de3ab2 100644
          },
      }
  
+diff --git a/game/magic/citylistview/view.go b/game/magic/citylistview/view.go
+index 8ffae1b..71c4edf 100644
+--- a/game/magic/citylistview/view.go
++++ b/game/magic/citylistview/view.go
+@@ -101,7 +101,7 @@ func (view *CityListScreen) MakeUI() *uilib.UI {
+ 
+             ui.StandardDraw(screen)
+ 
+-            bigFont.PrintCenter(screen, float64(160), float64(5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("The Cities Of %v", view.Player.Wizard.Name))
++            bigFont.PrintCenter(screen, float64(160), float64(5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("The Cities Of %v"), view.Player.Wizard.Name))
+ 
+             y := float64(17)
+             x := float64(31)
+@@ -113,8 +113,8 @@ func (view *CityListScreen) MakeUI() *uilib.UI {
+             normalFont.Print(screen, x + float64(165), y, scale.ScaleAmount, ebiten.ColorScale{}, "Producing")
+             normalFont.PrintRight(screen, x + float64(258), y, scale.ScaleAmount, ebiten.ColorScale{}, "Time")
+ 
+-            normalFont.Print(screen, 232, 173, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%vGP", view.Player.Gold))
+-            normalFont.Print(screen, 267, 173, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%vMP", view.Player.Mana))
++            normalFont.Print(screen, 232, 173, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%vGP"), view.Player.Gold))
++            normalFont.Print(screen, 267, 173, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%vMP"), view.Player.Mana))
+ 
+             if highlightedCity != nil {
+                 normalFont.Print(screen, float64(99), float64(158), scale.ScaleAmount, ebiten.ColorScale{}, highlightedCity.Name)
 diff --git a/game/magic/cityview/build-screen.go b/game/magic/cityview/build-screen.go
 index 7675f86..b283afc 100644
 --- a/game/magic/cityview/build-screen.go
@@ -175,9 +312,54 @@ index 7675f86..b283afc 100644
          })
      }
 diff --git a/game/magic/cityview/city-screen.go b/game/magic/cityview/city-screen.go
-index 199e9f0..70c83c0 100644
+index 199e9f0..3286661 100644
 --- a/game/magic/cityview/city-screen.go
 +++ b/game/magic/cityview/city-screen.go
+@@ -612,7 +612,7 @@ func (cityScreen *CityScreen) CreateCitizenIcons(offset1 int, offset2 int, setup
+ 
+     // if group1Space * farmer.Bounds().Dx() + groupGap + 
+ 
+-    farmerToolTip := fmt.Sprintf("Farmers %d", cityScreen.City.Farmers)
++    farmerToolTip := fmt.Sprintf(font.TranslateFormat("Farmers %d"), cityScreen.City.Farmers)
+ 
+     for range subsistenceFarmers {
+         posX := citizenX
+@@ -665,7 +665,7 @@ func (cityScreen *CityScreen) CreateCitizenIcons(offset1 int, offset2 int, setup
+ 
+     worker, err := cityScreen.ImageCache.GetImage("backgrnd.lbx", getRaceWorkerIndex(cityScreen.City.Race), 0)
+     if err == nil {
+-        workerToolTip := fmt.Sprintf("Workers %d", cityScreen.City.Workers)
++        workerToolTip := fmt.Sprintf(font.TranslateFormat("Workers %d"), cityScreen.City.Workers)
+         for i := range cityScreen.City.Workers {
+             posX := citizenX
+             var options ebiten.DrawImageOptions
+@@ -694,7 +694,7 @@ func (cityScreen *CityScreen) CreateCitizenIcons(offset1 int, offset2 int, setup
+     rebel, err := cityScreen.ImageCache.GetImage("backgrnd.lbx", getRaceRebelIndex(cityScreen.City.Race), 0)
+     if err == nil {
+         citizenX += 3
+-        rebelToolTip := fmt.Sprintf("Rebels %d", cityScreen.City.Rebels)
++        rebelToolTip := fmt.Sprintf(font.TranslateFormat("Rebels %d"), cityScreen.City.Rebels)
+         for range cityScreen.City.Rebels {
+             posX := citizenX
+             var options ebiten.DrawImageOptions
+@@ -774,7 +774,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+                 ui.RemoveGroup(group)
+             }
+ 
+-            confirmElements = uilib.MakeConfirmDialog(group, cityScreen.LbxCache, &cityScreen.ImageCache, fmt.Sprintf("Are you sure you want to sell back the %v for %v gold?", cityScreen.City.BuildingInfo.Name(toSell), sellAmount(cityScreen.City, toSell)), true, yes, no)
++            confirmElements = uilib.MakeConfirmDialog(group, cityScreen.LbxCache, &cityScreen.ImageCache, fmt.Sprintf(font.TranslateFormat("Are you sure you want to sell back the %v for %v gold?"), cityScreen.City.BuildingInfo.Name(toSell), sellAmount(cityScreen.City, toSell)), true, yes, no)
+             group.AddElements(confirmElements)
+             ui.AddGroup(group)
+         }
+@@ -867,7 +867,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+             } else {
+                 name = cityScreen.City.ProducingUnit.Name
+             }
+-            message := fmt.Sprintf("Do you wish to spend %v by purchasing a %v?", buyAmount, name)
++            message := fmt.Sprintf(font.TranslateFormat("Do you wish to spend %v by purchasing a %v?"), buyAmount, name)
+             elements := uilib.MakeConfirmDialog(group, cityScreen.LbxCache, &cityScreen.ImageCache, message, false, yes, no)
+             group.AddElements(elements)
+             ui.AddGroup(group)
 @@ -889,6 +889,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
              }
  
@@ -202,6 +384,24 @@ index 199e9f0..70c83c0 100644
              },
          })
      }
+@@ -1000,7 +1003,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+                         ui.RemoveGroup(group)
+                     }
+ 
+-                    confirmElements := uilib.MakeConfirmDialog(group, cityScreen.LbxCache, &cityScreen.ImageCache, fmt.Sprintf("Do you wish to turn off the %v spell?", enchantment.Enchantment.Name()), true, yes, no)
++                    confirmElements := uilib.MakeConfirmDialog(group, cityScreen.LbxCache, &cityScreen.ImageCache, fmt.Sprintf(font.TranslateFormat("Do you wish to turn off the %v spell?"), enchantment.Enchantment.Name()), true, yes, no)
+                     group.AddElements(confirmElements)
+                     ui.AddGroup(group)
+                 } else {
+@@ -1612,7 +1615,7 @@ func drawCityScape(screen *ebiten.Image, city *citylib.City, buildings []Buildin
+                     }
+ 
+                     if building.Building == buildinglib.BuildingFortress {
+-                        text = fmt.Sprintf("%v's Fortress", player.Wizard.Name)
++                        text = fmt.Sprintf(font.TranslateFormat("%v's Fortress"), player.Wizard.Name)
+                     }
+ 
+                     printX, printY := baseGeoM.Apply(float64(x + use.Bounds().Dx() / 2) + roadX, float64(y + 1) + roadY)
 @@ -1872,7 +1875,7 @@ func (cityScreen *CityScreen) MakeResourceDialog(title string, smallIcon *ebiten
  
              titleX := infoX + infoLeftMargin + maxInfoWidth / 2
@@ -211,6 +411,15 @@ index 199e9f0..70c83c0 100644
  
              yPos := infoY + (infoTopMargin + fonts.HelpTitleFont.Height() + 1)
              xPos := (infoX + infoLeftMargin)
+@@ -1892,7 +1895,7 @@ func (cityScreen *CityScreen) MakeResourceDialog(title string, smallIcon *ebiten
+ 
+                 text := usage.Name
+                 if usage.Replaced {
+-                    text = fmt.Sprintf("%v (Replaced)", usage.Name)
++                    text = fmt.Sprintf(font.TranslateFormat("%v (Replaced)"), usage.Name)
+                 }
+                 text += fmt.Sprintf(" (%v)", usage.Count)
+                 fonts.HelpFont.PrintOptions(window, x, y, font.FontOptions{Options: &options, Scale: scale.ScaleAmount}, text)
 @@ -2093,7 +2096,7 @@ func (cityScreen *CityScreen) CreateResourceIcons(maxPosition int, ui *uilib.UI)
          foodRequired = int(max(0, min(foodRequired, foodRequired + foodSurplus)))
          foodRect := image.Rect(6, 52, 6 + 9 * bigFood.Bounds().Dx(), 52 + bigFood.Bounds().Dy())
@@ -267,7 +476,7 @@ index 199e9f0..70c83c0 100644
  
          for offset := range min(smallResearch.Bounds().Dx() - 1, bigResearch.Bounds().Dx() - 1) {
              element := &uilib.UIElement{
-@@ -2340,6 +2343,12 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
+@@ -2340,9 +2343,15 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
      if err == nil {
          var options ebiten.DrawImageOptions
          scale.DrawScaled(screen, ui, &options)
@@ -279,7 +488,20 @@ index 199e9f0..70c83c0 100644
 +        util.ChtLabelRect(screen, image.Rect(212, 138, 320, 146), cityScreen.Fonts.SmallFont, color.RGBA{R: 58, G: 46, B: 29, A: 255}, "生產中")
      }
  
-     cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", cityScreen.City.GetSize(), cityScreen.City.Name))
+-    cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", cityScreen.City.GetSize(), cityScreen.City.Name))
++    cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(cityScreen.City.GetSize().String()), cityScreen.City.Name))
+     cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 6, 19, font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("%v", cityScreen.City.Race))
+ 
+     deltaNumber := func(n int) string {
+@@ -2355,7 +2364,7 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
+         }
+     }
+ 
+-    cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 210, 19, font.FontOptions{Justify: font.FontJustifyRight, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("Population: %v (%v)", numberWithComma(cityScreen.City.Population), deltaNumber(cityScreen.City.PopulationGrowthRate())))
++    cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 210, 19, font.FontOptions{Justify: font.FontJustifyRight, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf(font.TranslateFormat("Population: %v (%v)"), numberWithComma(cityScreen.City.Population), deltaNumber(cityScreen.City.PopulationGrowthRate())))
+ 
+     showWork := false
+     workRequired := 0
 @@ -2380,8 +2389,15 @@ func (cityScreen *CityScreen) Draw(screen *ebiten.Image, mapView func (screen *e
              scale.DrawScaled(screen, producingPics[index], &options)
          }
@@ -320,6 +542,30 @@ index 199e9f0..70c83c0 100644
          }
  
          cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 318, 140, font.FontOptions{Justify: font.FontJustifyRight, Scale: scale.ScaleAmount}, turn)
+@@ -2574,12 +2590,12 @@ func SimplifiedView(cache *lbx.LbxCache, city *citylib.City, player *playerlib.P
+             fontOptions := font.FontOptions{Options: &useOptions, Scale: scale.ScaleAmount}
+ 
+             titleX, titleY := options.GeoM.Apply(float64(20), float64(3))
+-            fonts.BigFont.PrintOptions(screen, titleX, titleY, fontOptions, fmt.Sprintf("%v of %s", city.GetSize(), city.Name))
++            fonts.BigFont.PrintOptions(screen, titleX, titleY, fontOptions, fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(city.GetSize().String()), city.Name))
+             raceX, raceY := options.GeoM.Apply(float64(6), float64(19))
+             fonts.DescriptionFont.PrintOptions(screen, raceX, raceY, fontOptions, fmt.Sprintf("%v", city.Race))
+ 
+             unitsX, unitsY := options.GeoM.Apply(float64(6), float64(43))
+-            fonts.DescriptionFont.PrintOptions(screen, unitsX, unitsY, fontOptions, fmt.Sprintf("Units   %v", currentUnitName))
++            fonts.DescriptionFont.PrintOptions(screen, unitsX, unitsY, fontOptions, fmt.Sprintf(font.TranslateFormat("Units   %v"), currentUnitName))
+ 
+             ui.StandardDraw(screen)
+         },
+@@ -2703,7 +2719,7 @@ func SimplifiedView(cache *lbx.LbxCache, city *citylib.City, player *playerlib.P
+                         no := func(){
+                         }
+ 
+-                        confirmElements := uilib.MakeConfirmDialog(group, cache, &imageCache, fmt.Sprintf("Do you wish to turn off the %v spell?", enchantment.Enchantment.Name()), true, yes, no)
++                        confirmElements := uilib.MakeConfirmDialog(group, cache, &imageCache, fmt.Sprintf(font.TranslateFormat("Do you wish to turn off the %v spell?"), enchantment.Enchantment.Name()), true, yes, no)
+                         group.AddElements(confirmElements)
+                     }
+                 },
 diff --git a/game/magic/cityview/enchantment.go b/game/magic/cityview/enchantment.go
 index 6d3cde2..e96cf75 100644
 --- a/game/magic/cityview/enchantment.go
@@ -356,9 +602,27 @@ index 6d3cde2..e96cf75 100644
              geom2 := geom
              geom2.Translate(5, 27)
 diff --git a/game/magic/combat/combat-screen.go b/game/magic/combat/combat-screen.go
-index 6e8929e..c2fbd83 100644
+index 6e8929e..849b368 100644
 --- a/game/magic/combat/combat-screen.go
 +++ b/game/magic/combat/combat-screen.go
+@@ -1423,7 +1423,7 @@ func (combat *CombatScreen) MakeInfoUI(remove func()) *uilib.UIElementGroup {
+             x += dispelImage.Bounds().Dx() + 2
+         }
+ 
+-        combat.Fonts.InfoUIFont.PrintOptions(background, float64(x), float64(y + 3), font.FontOptions{DropShadow: true}, fmt.Sprintf("Dispells Non-%v", combat.Model.Zone.GetMagic()))
++        combat.Fonts.InfoUIFont.PrintOptions(background, float64(x), float64(y + 3), font.FontOptions{DropShadow: true}, fmt.Sprintf(font.TranslateFormat("Dispells Non-%v"), combat.Model.Zone.GetMagic()))
+ 
+         x = 120
+         auraImage, err := combat.ImageCache.GetImage("compix.lbx", auraIndex, 0)
+@@ -1434,7 +1434,7 @@ func (combat *CombatScreen) MakeInfoUI(remove func()) *uilib.UIElementGroup {
+             x += auraImage.Bounds().Dx() + 2
+         }
+ 
+-        combat.Fonts.InfoUIFont.PrintOptions(background, float64(x), float64(y + 3), font.FontOptions{DropShadow: true}, fmt.Sprintf("%v Node Aura", combat.Model.Zone.GetMagic()))
++        combat.Fonts.InfoUIFont.PrintOptions(background, float64(x), float64(y + 3), font.FontOptions{DropShadow: true}, fmt.Sprintf(font.TranslateFormat("%v Node Aura"), combat.Model.Zone.GetMagic()))
+ 
+         row += 1
+     }
 @@ -1601,7 +1601,7 @@ func (combat *CombatScreen) MakeUI(player ArmyPlayer) *uilib.UI {
      buttonX := float64(144)
      buttonY := float64(168)
@@ -454,25 +718,191 @@ index 6e8929e..c2fbd83 100644
          },
      }
  
+@@ -2289,7 +2291,7 @@ func (combat *CombatScreen) doCastEnchantment(yield coroutine.YieldFunc, caster
+ 
+     maxAlpha := 150
+ 
+-    castDescription := fmt.Sprintf("%v cast %v", caster.GetWizard().Name, spellName)
++    castDescription := fmt.Sprintf(font.TranslateFormat("%v cast %v"), caster.GetWizard().Name, spellName)
+ 
+     text := combat.Fonts.EnchantmentFont.MeasureTextWidth(castDescription, 1)
+ 
+@@ -3242,10 +3244,10 @@ func (combat *CombatScreen) ShowUnitInfo(screen *ebiten.Image, unit *ArmyUnit){
+     options.GeoM.Translate(0, 10)
+     if unit.GetRangedAttacks() > 0 {
+         ax, ay := options.GeoM.Apply(-5, 0)
+-        combat.Fonts.InfoFont.PrintOptions(screen, ax, ay, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v ammo", unit.GetRangedAttacks()))
++        combat.Fonts.InfoFont.PrintOptions(screen, ax, ay, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v ammo"), unit.GetRangedAttacks()))
+     } else if unit.GetCastingSkill() > 0 {
+         ax, ay := options.GeoM.Apply(-5, 0)
+-        combat.Fonts.InfoFont.PrintOptions(screen, ax, ay, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v mp", int(unit.GetCastingSkill())))
++        combat.Fonts.InfoFont.PrintOptions(screen, ax, ay, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v mp"), int(unit.GetCastingSkill())))
+     }
+ 
+     combat.Fonts.InfoFont.PrintOptions(screen, float64(x1 + 14), float64(y1 + 37), font.FontOptions{Justify: font.FontJustifyCenter, DropShadow: true, Scale: scale.ScaleAmount}, "Hits")
+@@ -3729,7 +3731,7 @@ func (combat *CombatScreen) ShowCombatInfo(screen *ebiten.Image) {
+ 
+             unitFont.PrintOptions(subScreen, float64(unitX), float64(unitY), font.FontOptions{Scale: scale.ScaleAmount, Options: &fontOptions}, unit.Unit.GetName())
+             unitY += unitFont.Height()
+-            unitFont.PrintOptions(subScreen, float64(unitX), float64(unitY), font.FontOptions{Scale: scale.ScaleAmount, Options: &fontOptions}, fmt.Sprintf("%v/%v HP", unit.GetHealth(), unit.GetMaxHealth()))
++            unitFont.PrintOptions(subScreen, float64(unitX), float64(unitY), font.FontOptions{Scale: scale.ScaleAmount, Options: &fontOptions}, fmt.Sprintf(font.TranslateFormat("%v/%v HP"), unit.GetHealth(), unit.GetMaxHealth()))
+             unitY += unitFont.Height()
+             unitImage, err := unitview.GetUnitOverworldImage(&combat.ImageCache, unit.Unit)
+             if err == nil {
+diff --git a/game/magic/combat/end-screen.go b/game/magic/combat/end-screen.go
+index 0237487..31fc195 100644
+--- a/game/magic/combat/end-screen.go
++++ b/game/magic/combat/end-screen.go
+@@ -101,11 +101,11 @@ func (end *CombatEndScreen) MakeUI() *uilib.UI {
+     if end.PopulationLost > 0 || end.BuildingsLost > 0 {
+         switch {
+             case end.PopulationLost > 0 && end.BuildingsLost > 0:
+-                extraText2 = fmt.Sprintf("%v citizens were lost and %v buildings were destroyed.", end.PopulationLost, end.BuildingsLost)
++                extraText2 = fmt.Sprintf(font.TranslateFormat("%v citizens were lost and %v buildings were destroyed."), end.PopulationLost, end.BuildingsLost)
+             case end.PopulationLost > 0:
+-                extraText2 = fmt.Sprintf("%v citizens were lost.", end.PopulationLost)
++                extraText2 = fmt.Sprintf(font.TranslateFormat("%v citizens were lost."), end.PopulationLost)
+             case end.BuildingsLost > 0:
+-                extraText2 = fmt.Sprintf("%v buildings were destroyed.", end.BuildingsLost)
++                extraText2 = fmt.Sprintf(font.TranslateFormat("%v buildings were destroyed."), end.BuildingsLost)
+         }
+     }
+ 
+@@ -113,20 +113,20 @@ func (end *CombatEndScreen) MakeUI() *uilib.UI {
+     switch {
+         case end.Result == CombatEndScreenResultWin:
+             if end.Fame > 0 {
+-                extraText = fmt.Sprintf("You gained %v fame", end.Fame)
++                extraText = fmt.Sprintf(font.TranslateFormat("You gained %v fame"), end.Fame)
+             } else if end.Fame < 0 {
+-                extraText = fmt.Sprintf("You lost %v fame", -end.Fame)
++                extraText = fmt.Sprintf(font.TranslateFormat("You lost %v fame"), -end.Fame)
+             }
+         case end.Result == CombatEndScreenResultLose && end.Fame > 0:
+-            extraText = fmt.Sprintf("You lost %v fame", end.Fame)
++            extraText = fmt.Sprintf(font.TranslateFormat("You lost %v fame"), end.Fame)
+         case end.Result == CombatEndScreenResultRetreat && end.UnitsLost == 1 && end.Fame == 0:
+-            extraText = "You lost 1 unit while fleeing"
++            extraText = font.TranslateFormat("You lost 1 unit while fleeing")
+         case end.Result == CombatEndScreenResultRetreat && end.UnitsLost > 1 && end.Fame == 0:
+-            extraText = fmt.Sprintf("You lost %v units while fleeing.", end.UnitsLost)
++            extraText = fmt.Sprintf(font.TranslateFormat("You lost %v units while fleeing."), end.UnitsLost)
+         case end.Result == CombatEndScreenResultRetreat && end.UnitsLost == 1 && end.Fame > 0:
+-            extraText = fmt.Sprintf("You lost %v fame and 1 unit while fleeing.", end.Fame)
++            extraText = fmt.Sprintf(font.TranslateFormat("You lost %v fame and 1 unit while fleeing."), end.Fame)
+         case end.Result == CombatEndScreenResultRetreat && end.UnitsLost > 1 && end.Fame > 0:
+-            extraText = fmt.Sprintf("You lost %v fame and %v units while fleeing", end.Fame, end.UnitsLost)
++            extraText = fmt.Sprintf(font.TranslateFormat("You lost %v fame and %v units while fleeing"), end.Fame, end.UnitsLost)
+     }
+ 
+     black := color.RGBA{R: 0, G: 0, B: 0, A: 0xff}
+diff --git a/game/magic/combat/model.go b/game/magic/combat/model.go
+index ae3dbde..16fb9fd 100644
+--- a/game/magic/combat/model.go
++++ b/game/magic/combat/model.go
+@@ -11,6 +11,7 @@ import (
+     "github.com/kazzmir/master-of-magic/lib/fraction"
+     "github.com/kazzmir/master-of-magic/lib/set"
+     "github.com/kazzmir/master-of-magic/lib/log"
++    "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/lib/functional"
+     "github.com/kazzmir/master-of-magic/game/magic/pathfinding"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+@@ -4734,7 +4735,7 @@ func (model *CombatModel) InvokeSpell(spellSystem SpellSystem, army *Army, unitC
+     if model.CheckDispel(spell, army.Player) {
+         if !army.IsAI() {
+             model.Events <- &CombatEventMessage{
+-                Message: fmt.Sprintf("%v fizzled", spell.Name),
++                Message: fmt.Sprintf(font.TranslateFormat("%v fizzled"), spell.Name),
+             }
+         }
+         castedCallback(false)
 diff --git a/game/magic/data/abilities.go b/game/magic/data/abilities.go
-index fefc1a9..e9f3d72 100644
+index fefc1a9..d084285 100644
 --- a/game/magic/data/abilities.go
 +++ b/game/magic/data/abilities.go
-@@ -392,7 +392,7 @@ func (ability Ability) Name() string {
+@@ -2,6 +2,8 @@ package data
+ 
+ import (
+     "fmt"
++
++    "github.com/kazzmir/master-of-magic/lib/font"
+ )
+ 
+ type AbilityType int
+@@ -334,7 +336,7 @@ func (ability Ability) String() string {
+ func (ability Ability) Name() string {
+     plusValue := func(name string) string {
+         if ability.Value > 0 {
+-            return fmt.Sprintf("%v +%v", name, int(ability.Value))
++            return fmt.Sprintf(font.TranslateFormat("%v +%v"), name, int(ability.Value))
+         } else {
+             return name
+         }
+@@ -343,7 +345,7 @@ func (ability Ability) Name() string {
+     // for blademaster, 30% -> +3
+     plusValue10 := func(name string) string {
+         if ability.Value > 0 {
+-            return fmt.Sprintf("%v +%v", name, int(ability.Value/10))
++            return fmt.Sprintf(font.TranslateFormat("%v +%v"), name, int(ability.Value/10))
+         } else {
+             return name
+         }
+@@ -356,14 +358,14 @@ func (ability Ability) Name() string {
+         case AbilityConstruction: return "Construction"
+         case AbilityCreateOutpost: return "Create Outpost"
+         case AbilityCreateUndead: return "Create Undead"
+-        case AbilityDeathGaze: return fmt.Sprintf("Death Gaze %v", int(ability.Value))
++        case AbilityDeathGaze: return fmt.Sprintf(font.TranslateFormat("Death Gaze %v"), int(ability.Value))
+         case AbilityDeathImmunity: return "Death Immunity"
+         case AbilityDispelEvil: return "Dispel Evil"
+         case AbilityDoomBoltSpell: return "Doom Bolt Spell"
+         case AbilityDoomGaze: return "Doom Gaze"
+         case AbilityDeathTouch: return "Death Touch"
+-        case AbilityFireballSpell: return fmt.Sprintf("Fireball Spell x%v", int(ability.Value))
+-        case AbilityFireBreath: return fmt.Sprintf("Fire Breath %v", int(ability.Value))
++        case AbilityFireballSpell: return fmt.Sprintf(font.TranslateFormat("Fireball Spell x%v"), int(ability.Value))
++        case AbilityFireBreath: return fmt.Sprintf(font.TranslateFormat("Fire Breath %v"), int(ability.Value))
+         case AbilityFireImmunity: return "Fire Immunity"
+         case AbilityFirstStrike: return "First Strike"
+         case AbilityForester: return "Forester"
+@@ -375,8 +377,8 @@ func (ability Ability) Name() string {
+         case AbilityImmolation: return "Immolation"
+         case AbilityInvisibility: return "Invisibility"
+         case AbilityLargeShield: return "Large Shield"
+-        case AbilityLifeSteal: return fmt.Sprintf("Life Steal %v", int(ability.Value))
+-        case AbilityLightningBreath: return fmt.Sprintf("Lightning Breath %v", int(ability.Value))
++        case AbilityLifeSteal: return fmt.Sprintf(font.TranslateFormat("Life Steal %v"), int(ability.Value))
++        case AbilityLightningBreath: return fmt.Sprintf(font.TranslateFormat("Lightning Breath %v"), int(ability.Value))
+         case AbilityLongRange: return "Long Range"
+         case AbilityMagicImmunity: return "Magic Immunity"
+         case AbilityMeld: return "Meld"
+@@ -392,14 +394,14 @@ func (ability Ability) Name() string {
          case AbilityPurify: return "Purify"
          case AbilityRegeneration: return "Regeneration"
          case AbilityResistanceToAll: return "Resistance to all"
 -        case AbilityScouting: return fmt.Sprintf("Scouting %v", romanNumeral(int(ability.Value)))
-+        case AbilityScouting: return fmt.Sprintf("偵察%v", romanNumeral(int(ability.Value)))
-         case AbilityStoningGaze: return fmt.Sprintf("Stoning Gaze %v", int(ability.Value))
+-        case AbilityStoningGaze: return fmt.Sprintf("Stoning Gaze %v", int(ability.Value))
++        case AbilityScouting: return fmt.Sprintf(font.TranslateFormat("偵察%v"), romanNumeral(int(ability.Value)))
++        case AbilityStoningGaze: return fmt.Sprintf(font.TranslateFormat("Stoning Gaze %v"), int(ability.Value))
          case AbilityStoningImmunity: return "Stoning Immunity"
-         case AbilityStoningTouch: return fmt.Sprintf("Stoning Touch %v", int(ability.Value))
-@@ -414,7 +414,7 @@ func (ability Ability) Name() string {
+-        case AbilityStoningTouch: return fmt.Sprintf("Stoning Touch %v", int(ability.Value))
++        case AbilityStoningTouch: return fmt.Sprintf(font.TranslateFormat("Stoning Touch %v"), int(ability.Value))
+         case AbilitySummonDemons: return "Summon Demons"
+         case AbilityTeleporting: return "Teleporting"
+-        case AbilityThrown: return fmt.Sprintf("Thrown %v", int(ability.Value))
+-        case AbilityToHit: return fmt.Sprintf("+%v To Hit", ability.Value/10)
++        case AbilityThrown: return fmt.Sprintf(font.TranslateFormat("Thrown %v"), int(ability.Value))
++        case AbilityToHit: return fmt.Sprintf(font.TranslateFormat("+%v To Hit"), ability.Value/10)
+         case AbilityTransport: return "Transport"
+         case AbilityWallCrusher: return "Wall Crusher"
+         case AbilityWeaponImmunity: return "Weapon Immunity"
+@@ -414,7 +416,7 @@ func (ability Ability) Name() string {
          case AbilitySuperArmsmaster: return plusValue("Super Armsmaster")
          case AbilityBlademaster: return plusValue10("Blademaster")
          case AbilitySuperBlademaster: return plusValue10("Super Blademaster")
 -        case AbilityCaster: return fmt.Sprintf("Caster %v mp", ability.Value)
-+        case AbilityCaster: return fmt.Sprintf("施法 %v", ability.Value)
++        case AbilityCaster: return fmt.Sprintf(font.TranslateFormat("施法 %v"), ability.Value)
          case AbilityCharmed: return "Charmed"
          case AbilityConstitution: return plusValue("Constitution")
          case AbilitySuperConstitution: return plusValue("Super Constitution")
@@ -549,6 +979,154 @@ index a2dd539..9fe14ba 100644
              if counter % 7 == 0 {
                  if animating && wizardAnimation.Done() {
                      // 0 = happy, 1 = angry, 2 = neutral
+diff --git a/game/magic/game/cast-select-wizard.go b/game/magic/game/cast-select-wizard.go
+index e264af3..b4eb973 100644
+--- a/game/magic/game/cast-select-wizard.go
++++ b/game/magic/game/cast-select-wizard.go
+@@ -12,6 +12,7 @@ import (
+ 	"github.com/kazzmir/master-of-magic/game/magic/scale"
+ 	"github.com/kazzmir/master-of-magic/game/magic/mirror"
+ 	"github.com/kazzmir/master-of-magic/game/magic/util"
++	"github.com/kazzmir/master-of-magic/lib/font"
+ 	"github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/hajimehoshi/ebiten/v2"
+ )
+@@ -91,7 +92,7 @@ func makeSelectSpellBlastTargetUI(finish context.CancelFunc, cache *lbx.LbxCache
+                         sound.Play()
+                     }
+                     group.AddDelay(60, func(){
+-                        header = fmt.Sprintf("%s has been spell blasted", target.Wizard.Name)
++                        header = fmt.Sprintf(font.TranslateFormat("%s has been spell blasted"), target.Wizard.Name)
+                         group.AddDelay(113, func(){
+                             getAlpha = group.MakeFadeOut(fadeSpeed)
+                             group.AddDelay(7, func(){
+diff --git a/game/magic/game/cast.go b/game/magic/game/cast.go
+index 92ed88e..0484cad 100644
+--- a/game/magic/game/cast.go
++++ b/game/magic/game/cast.go
+@@ -1081,7 +1081,7 @@ func (game *Game) MakeSpellBindingUI(caster *playerlib.Player, spell spellbook.S
+ 
+         group.AddDelay(60, func(){
+             if success {
+-                *uiTitle = fmt.Sprintf("%s has been stolen", enchantment.String())
++                *uiTitle = fmt.Sprintf(font.TranslateFormat("%s has been stolen"), enchantment.String())
+             } else {
+                 *uiTitle = "Spell binding failed"
+             }
+@@ -1155,7 +1155,7 @@ func (game *Game) MakeDisjunctionUI(caster *playerlib.Player, spell spellbook.Sp
+ 
+         group.AddDelay(60, func(){
+             if success {
+-                *uiTitle = fmt.Sprintf("%s has been disjuncted", enchantment.String())
++                *uiTitle = fmt.Sprintf(font.TranslateFormat("%s has been disjuncted"), enchantment.String())
+             } else {
+                 *uiTitle = "Disjunction failed"
+             }
+@@ -1414,7 +1414,7 @@ func (game *Game) MakeSubversionUI(caster *playerlib.Player, spell spellbook.Spe
+             player.AdjustDiplomaticRelation(targetPlayer, -25)
+         }
+ 
+-        return true, fmt.Sprintf("%s has been subverted", targetPlayer.Wizard.Name)
++        return true, fmt.Sprintf(font.TranslateFormat("%s has been subverted"), targetPlayer.Wizard.Name)
+     }
+ 
+     playersInGame := len(game.Model.Players)
+@@ -1650,7 +1650,7 @@ func (game *Game) doCastOnUnit(player *playerlib.Player, spell spellbook.Spell,
+ func (game *Game) doCastUnitEnchantmentFull(player *playerlib.Player, spell spellbook.Spell, enchantment data.UnitEnchantment, customBefore UnitEnchantmentCallback, customAfter UnitEnchantmentCallback) {
+     before := func (unit units.StackUnit) bool {
+         if unit.HasEnchantment(enchantment) {
+-            game.Events <- &GameEventNotice{Message: fmt.Sprintf("That unit already has %v cast on it", spell.Name)}
++            game.Events <- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("That unit already has %v cast on it"), spell.Name)}
+             return false
+         }
+ 
+@@ -1689,7 +1689,7 @@ func (game *Game) doSelectUnit(yield coroutine.YieldFunc, player *playerlib.Play
+         viewUnits = append(viewUnits, unit)
+     }
+ 
+-    viewElements := unitview.MakeSmallListView(game.Cache, &ui, viewUnits, fmt.Sprintf("%v Units", player.Wizard.Name), func(unit unitview.UnitView){
++    viewElements := unitview.MakeSmallListView(game.Cache, &ui, viewUnits, fmt.Sprintf(font.TranslateFormat("%v Units"), player.Wizard.Name), func(unit unitview.UnitView){
+         quit = true
+ 
+         if unit != nil {
+@@ -1927,17 +1927,17 @@ func (game *Game) selectLocationForSpell(yield coroutine.YieldFunc, spell spellb
+     switch locationType {
+         case LocationTypeAny, LocationTypeLand, LocationTypeEmptyWater, LocationTypeChangeTerrain,
+              LocationTypeTransmute, LocationTypeRaiseVolcano, LocationTypeDisenchant:
+-            selectMessage = fmt.Sprintf("Select a space as the target for an %v spell.", spell.Name)
++            selectMessage = fmt.Sprintf(font.TranslateFormat("Select a space as the target for an %v spell."), spell.Name)
+         case LocationTypeFriendlyCity:
+-            selectMessage = fmt.Sprintf("Select a friendly city to cast %v on.", spell.Name)
++            selectMessage = fmt.Sprintf(font.TranslateFormat("Select a friendly city to cast %v on."), spell.Name)
+         case LocationTypeEnemyMeldedNode:
+-            selectMessage = fmt.Sprintf("Select a magic node as the target for a %v spell.", spell.Name)
++            selectMessage = fmt.Sprintf(font.TranslateFormat("Select a magic node as the target for a %v spell."), spell.Name)
+         case LocationTypeEnemyCity:
+-            selectMessage = fmt.Sprintf("Select an enemy city as the target for a %v spell.", spell.Name)
++            selectMessage = fmt.Sprintf(font.TranslateFormat("Select an enemy city as the target for a %v spell."), spell.Name)
+         case LocationTypeFriendlyUnit:
+-            selectMessage = fmt.Sprintf("Select a friendly unit as the target for a %v spell.", spell.Name)
++            selectMessage = fmt.Sprintf(font.TranslateFormat("Select a friendly unit as the target for a %v spell."), spell.Name)
+         case LocationTypeEnemyUnit:
+-            selectMessage = fmt.Sprintf("Select an enemy unit as the target for a %v spell.", spell.Name)
++            selectMessage = fmt.Sprintf(font.TranslateFormat("Select an enemy unit as the target for a %v spell."), spell.Name)
+         default:
+             selectMessage = fmt.Sprintf("unhandled location type %v", locationType)
+     }
+@@ -2178,7 +2178,7 @@ func (game *Game) selectLocationForSpell(yield coroutine.YieldFunc, spell spellb
+                             city := enemy.FindCity(tileX, tileY, game.Model.Plane)
+                             if city != nil {
+                                 if !city.CanTarget(spell) {
+-                                    game.doNotice(yield, ui, fmt.Sprintf("You cannot cast %v on this city", spell.Name))
++                                    game.doNotice(yield, ui, fmt.Sprintf(font.TranslateFormat("You cannot cast %v on this city"), spell.Name))
+                                     break
+                                 } else {
+                                     return tileX, tileY, false
+@@ -2199,7 +2199,7 @@ func (game *Game) selectLocationForSpell(yield coroutine.YieldFunc, spell spellb
+                                 city := entityInfo.FindCity(tileX, tileY, game.Model.Plane)
+ 
+                                 if city != nil && !city.CanTarget(spell) {
+-                                    game.doNotice(yield, ui, fmt.Sprintf("You cannot cast %v on this unit", spell.Name))
++                                    game.doNotice(yield, ui, fmt.Sprintf(font.TranslateFormat("You cannot cast %v on this unit"), spell.Name))
+                                     break
+                                 } else {
+                                     return tileX, tileY, false
+@@ -2249,7 +2249,7 @@ func (game *Game) doCastCityEnchantmentFull(spell spellbook.Spell, player *playe
+         }
+ 
+         if chosenCity.HasEnchantment(enchantment) {
+-            game.Events <- &GameEventNotice{Message: fmt.Sprintf("This city already has a %v cast on it", spell.Name)}
++            game.Events <- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("This city already has a %v cast on it"), spell.Name)}
+             game.Events <- &GameEventSelectLocationForSpell{Spell: spell, Player: player, LocationType: locationType, SelectedFunc: selected}
+             return
+         }
+@@ -2496,7 +2496,7 @@ func (game *Game) doCastCruelUnminding(player *playerlib.Player, spell spellbook
+         reductionRandomSpread := max(maxReduction - minReduction, 1) // It should never be zero, or rand.N will crash
+         reduction := minReduction + rand.N(reductionRandomSpread)
+         actuallyReduced := targetPlayer.ReduceCastingSkill(reduction)
+-        return true, fmt.Sprintf("%s loses %d points of casting ability", targetPlayer.Wizard.Name, actuallyReduced)
++        return true, fmt.Sprintf(font.TranslateFormat("%s loses %d points of casting ability"), targetPlayer.Wizard.Name, actuallyReduced)
+     }
+     playersInGame := len(game.Model.Players)
+     quit, cancel := context.WithCancel(context.Background())
+@@ -2514,7 +2514,7 @@ func (game *Game) doCastDrainPower(player *playerlib.Player, spell spellbook.Spe
+         }
+         drainAmount := min(targetPlayer.Mana, 50 + rand.N(101)) // random 50-150, but don't drain more than the target has
+         targetPlayer.Mana -= drainAmount
+-        return true, fmt.Sprintf("%s loses %d points of mana", targetPlayer.Wizard.Name, drainAmount)
++        return true, fmt.Sprintf(font.TranslateFormat("%s loses %d points of mana"), targetPlayer.Wizard.Name, drainAmount)
+     }
+     playersInGame := len(game.Model.Players)
+     quit, cancel := context.WithCancel(context.Background())
+@@ -2668,7 +2668,7 @@ func (game *Game) doCastGlobalEnchantment(yield coroutine.YieldFunc, player *pla
+ 
+             text := "You have finished casting"
+             if !player.IsHuman() {
+-                text = fmt.Sprintf("%v has cast", player.Wizard.Name)
++                text = fmt.Sprintf(font.TranslateFormat("%v has cast"), player.Wizard.Name)
+             }
+ 
+             fonts.InfoFont.PrintCenter(screen, float64(data.ScreenWidth / 2 + offset), float64(data.ScreenHeight / 2 + frame.Bounds().Dy() / 2), scale.ScaleAmount, options.ColorScale, text)
 diff --git a/game/magic/game/events.go b/game/magic/game/events.go
 index a350e17..efefdd8 100644
 --- a/game/magic/game/events.go
@@ -665,7 +1243,7 @@ index a350e17..efefdd8 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..832a2e3 100644
+index 44c64b8..a24e6b2 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -684,6 +1262,101 @@ index 44c64b8..832a2e3 100644
      }
  }
  
+@@ -815,7 +817,7 @@ func chooseCityName(allNames []string, choices []string) string {
+ 
+ func (game *Game) SuggestCityName(race data.Race) (string) {
+     allCities := game.Model.AllCities()
+-    fallback := fmt.Sprintf("City %d", len(allCities)+1)
++    fallback := fmt.Sprintf(font.TranslateFormat("City %d"), len(allCities)+1)
+ 
+     predefinedNames, err := citylib.ReadCityNames(game.Cache)
+     if err != nil {
+@@ -1172,7 +1174,7 @@ func (game *Game) showNewBuilding(yield coroutine.YieldFunc, city *citylib.City,
+ 
+     animal := game.GetWizardAnimal(player.Wizard)
+ 
+-    wrappedText := fonts.BigFont.CreateWrappedText(float64(175), 1, fmt.Sprintf("The %s of %s has completed the construction of a %s.", city.GetSize(), city.Name, game.Model.BuildingInfo.Name(building)))
++    wrappedText := fonts.BigFont.CreateWrappedText(float64(175), 1, fmt.Sprintf(font.TranslateFormat("The %s of %s has completed the construction of a %s."), city.GetSize(), city.Name, game.Model.BuildingInfo.Name(building)))
+ 
+     rightSide, _ := game.ImageCache.GetImage("resource.lbx", 41, 0)
+ 
+@@ -1472,7 +1474,7 @@ func (game *Game) showOutpost(yield coroutine.YieldFunc, city *citylib.City, sta
+             if rename {
+                 fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, "New Outpost Founded")
+             } else {
+-                fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, fmt.Sprintf("Outpost Of %v", city.Name))
++                fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, fmt.Sprintf(font.TranslateFormat("Outpost Of %v"), city.Name))
+             }
+ 
+             cityScapeOptions := uiOptions
+@@ -2112,7 +2114,7 @@ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Playe
+     if caster.IsHuman() {
+         game.Events <- &GameEventNotice{
+             // FIXME: align this message with how dos mom does it
+-            Message: fmt.Sprintf("The spell %v has fizzled.", spell.Name),
++            Message: fmt.Sprintf(font.TranslateFormat("The spell %v has fizzled."), spell.Name),
+         }
+     }
+ }
+@@ -3426,7 +3428,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
+             for _, unit := range stack.ActiveUnits() {
+                 if !city.CanEnter(unit) {
+                     stopMoving = true
+-                    game.Events <- &GameEventNotice{Message: fmt.Sprintf("%v can not enter the city of %v", unit.GetRawUnit().Name, city.Name)}
++                    game.Events <- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("%v can not enter the city of %v"), unit.GetRawUnit().Name, city.Name)}
+                     break quitMoving
+                 }
+             }
+@@ -3660,7 +3662,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
+                             for _, unit := range stack.ActiveUnits() {
+                                 if !newCity.CanEnter(unit) {
+                                     canMove = false
+-                                    game.Events <- &GameEventNotice{Message: fmt.Sprintf("%v can not enter the city of %v", unit.GetRawUnit().Name, newCity.Name)}
++                                    game.Events <- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("%v can not enter the city of %v"), unit.GetRawUnit().Name, newCity.Name)}
+                                     break
+                                 }
+                             }
+@@ -3921,7 +3923,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
+ 
+             options.ColorScale = ebiten.ColorScale{}
+             options.ColorScale.ScaleAlpha(getAlpha())
+-            game.Fonts.WhiteFont.PrintOptions(screen, 40, 30, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount, Options: &options}, fmt.Sprintf("AI thinking %v...", thinkingCounter / 60))
++            game.Fonts.WhiteFont.PrintOptions(screen, 40, 30, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount, Options: &options}, fmt.Sprintf(font.TranslateFormat("AI thinking %v..."), thinkingCounter / 60))
+         })
+ 
+         for !done {
+@@ -4294,11 +4296,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
+     defer game.Music.PopSong()
+ 
+     if len(encounter.Units) == 0 {
+-        game.showEncounter(yield, fmt.Sprintf("You have found %v %v.", article, encounter.Type.Name()), animation)
++        game.showEncounter(yield, fmt.Sprintf(font.TranslateFormat("You have found %v %v."), article, encounter.Type.Name()), animation)
+         return true
+     }
+ 
+-    return game.confirmEncounter(yield, fmt.Sprintf("You have found %v %v. Scouts have spotted %v within the %v. Do you wish to enter?", article, encounter.Type.Name(), guardianName, encounter.Type.Name()), animation)
++    return game.confirmEncounter(yield, fmt.Sprintf(font.TranslateFormat("You have found %v %v. Scouts have spotted %v within the %v. Do you wish to enter?"), article, encounter.Type.Name(), guardianName, encounter.Type.Name()), animation)
+ }
+ 
+ func (game *Game) doEncounter(yield coroutine.YieldFunc, player *playerlib.Player, stack *playerlib.UnitStack, encounter *maplib.ExtraEncounter, mapUse *maplib.Map, x int, y int) combat.CombatState {
+@@ -5084,7 +5086,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+ 
+     textOffset := 70
+ 
+-    wrappedText := fonts.Font.CreateWrappedText(float64(left.Bounds().Dx() - textOffset), 1, fmt.Sprintf("%v Tranquility spell has caused %v's %v spell to fizzle.", owner, caster.Wizard.Name, spell.Name))
++    wrappedText := fonts.Font.CreateWrappedText(float64(left.Bounds().Dx() - textOffset), 1, fmt.Sprintf(font.TranslateFormat("%v Tranquility spell has caused %v's %v spell to fizzle."), owner, caster.Wizard.Name, spell.Name))
+ 
+     rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
+     group.AddElement(&uilib.UIElement{
+@@ -5644,7 +5646,7 @@ func (game *Game) doPlanarTraval() {
+                 err := game.PlaneShift(activeStack, player)
+                 if err != nil {
+                     select {
+-                        case game.Events<- &GameEventNotice{Message: fmt.Sprintf("The selected units cannot planar travel at this location.")}:
++                        case game.Events<- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("The selected units cannot planar travel at this location."))}:
+                         default:
+                     }
+                 } else {
 @@ -5705,6 +5707,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
@@ -769,8 +1442,107 @@ index 44c64b8..832a2e3 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
+@@ -6364,7 +6402,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+         elements = append(elements, &uilib.UIElement{
+             Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+                 if !minMoves.IsZero() {
+-                    game.Fonts.WhiteFont.PrintOptions(screen, 246, 167, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("Moves:%v", minMoves.ToFloat()))
++                    game.Fonts.WhiteFont.PrintOptions(screen, 246, 167, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Moves:%v"), minMoves.ToFloat()))
+ 
+                     sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
+                     swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
+@@ -6474,21 +6512,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+                     normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
+ 
+                     if goldPerTurn < 0 {
+-                        game.Fonts.InfoFontRed.PrintOptions(screen, 278, 103, negativeOptions, fmt.Sprintf("%v Gold", goldPerTurn))
++                        game.Fonts.InfoFontRed.PrintOptions(screen, 278, 103, negativeOptions, fmt.Sprintf(font.TranslateFormat("%v Gold"), goldPerTurn))
+                     } else {
+-                        game.Fonts.InfoFontYellow.PrintOptions(screen, 278, 103, normalOptions, fmt.Sprintf("%v Gold", goldPerTurn))
++                        game.Fonts.InfoFontYellow.PrintOptions(screen, 278, 103, normalOptions, fmt.Sprintf(font.TranslateFormat("%v Gold"), goldPerTurn))
+                     }
+ 
+                     if foodPerTurn < 0 {
+-                        game.Fonts.InfoFontRed.PrintOptions(screen, 278, 135, negativeOptions, fmt.Sprintf("%v Food", foodPerTurn))
++                        game.Fonts.InfoFontRed.PrintOptions(screen, 278, 135, negativeOptions, fmt.Sprintf(font.TranslateFormat("%v Food"), foodPerTurn))
+                     } else {
+-                        game.Fonts.InfoFontYellow.PrintOptions(screen, 278, 135, normalOptions, fmt.Sprintf("%v Food", foodPerTurn))
++                        game.Fonts.InfoFontYellow.PrintOptions(screen, 278, 135, normalOptions, fmt.Sprintf(font.TranslateFormat("%v Food"), foodPerTurn))
+                     }
+ 
+                     if manaPerTurn < 0 {
+-                        game.Fonts.InfoFontRed.PrintOptions(screen, 278, 167, negativeOptions, fmt.Sprintf("%v Mana", manaPerTurn))
++                        game.Fonts.InfoFontRed.PrintOptions(screen, 278, 167, negativeOptions, fmt.Sprintf(font.TranslateFormat("%v Mana"), manaPerTurn))
+                     } else {
+-                        game.Fonts.InfoFontYellow.PrintOptions(screen, 278, 167, normalOptions, fmt.Sprintf("%v Mana", manaPerTurn))
++                        game.Fonts.InfoFontYellow.PrintOptions(screen, 278, 167, normalOptions, fmt.Sprintf(font.TranslateFormat("%v Mana"), manaPerTurn))
+                     }
+ 
+                     if conjunction != "" {
+@@ -6738,7 +6776,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+                 // disband the unit for the right reason
+                 if goldIssue && unit.GetUpkeepGold() > 0 {
+                     log.Printf("Disband %v due to lack of gold", unit)
+-                    disbandedMessages = append(disbandedMessages, fmt.Sprintf("%v disbanded due to lack of gold", unit.GetName()))
++                    disbandedMessages = append(disbandedMessages, fmt.Sprintf(font.TranslateFormat("%v disbanded due to lack of gold"), unit.GetName()))
+                     player.RemoveUnit(unit)
+                     disbanded = true
+                     break
+@@ -6746,7 +6784,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+ 
+                 if foodIssue && unit.GetUpkeepFood() > 0 {
+                     log.Printf("Disband %v due to lack of food", unit)
+-                    disbandedMessages = append(disbandedMessages, fmt.Sprintf("%v disbanded due to lack of food", unit.GetName()))
++                    disbandedMessages = append(disbandedMessages, fmt.Sprintf(font.TranslateFormat("%v disbanded due to lack of food"), unit.GetName()))
+                     player.RemoveUnit(unit)
+                     disbanded = true
+                     break
+@@ -6754,7 +6792,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+ 
+                 if manaIssue && unit.GetUpkeepMana() > 0 {
+                     log.Printf("Disband %v due to lack of mana", unit)
+-                    disbandedMessages = append(disbandedMessages, fmt.Sprintf("%v disbanded due to lack of mana", unit.GetName()))
++                    disbandedMessages = append(disbandedMessages, fmt.Sprintf(font.TranslateFormat("%v disbanded due to lack of mana"), unit.GetName()))
+                     player.RemoveUnit(unit)
+                     disbanded = true
+                     break
+@@ -7020,7 +7058,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+ 
+                         scrollEvent := GameEventScroll{
+                             Title: "CITY GROWTH",
+-                            Text: fmt.Sprintf("%v has %v to a population of %v.", city.Name, verb, city.Citizens()),
++                            Text: fmt.Sprintf(font.TranslateFormat("%v has %v to a population of %v."), city.Name, verb, city.Citizens()),
+                         }
+ 
+                         select {
+@@ -7032,7 +7070,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+                     removeCities = append(removeCities, city)
+                     if player.IsHuman() {
+                         select {
+-                            case game.Events<- &GameEventNotice{Message: fmt.Sprintf("The city of %v has been abandoned.", city.Name)}:
++                            case game.Events<- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("The city of %v has been abandoned."), city.Name)}:
+                             default:
+                         }
+                     }
+@@ -7051,14 +7089,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+                     removeCities = append(removeCities, city)
+                     if player.IsHuman() {
+                         select {
+-                            case game.Events<- &GameEventNotice{Message: fmt.Sprintf("The outpost of %v has been deserted.", city.Name)}:
++                            case game.Events<- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("The outpost of %v has been deserted."), city.Name)}:
+                             default:
+                         }
+                     }
+                 case *citylib.CityEventOutpostHamlet:
+                     if player.IsHuman() {
+                         select {
+-                            case game.Events<- &GameEventNotice{Message: fmt.Sprintf("The outpost of %v has grown into a hamlet.", city.Name)}:
++                            case game.Events<- &GameEventNotice{Message: fmt.Sprintf(font.TranslateFormat("The outpost of %v has grown into a hamlet."), city.Name)}:
+                             default:
+                         }
+                     }
 diff --git a/game/magic/game/hero.go b/game/magic/game/hero.go
-index 0a73645..913f371 100644
+index 0a73645..be15591 100644
 --- a/game/magic/game/hero.go
 +++ b/game/magic/game/hero.go
 @@ -59,10 +59,10 @@ func MakeHireHeroScreenUI(cache *lbx.LbxCache, ui *uilib.UI, hero *herolib.Hero,
@@ -786,6 +1558,15 @@ index 0a73645..913f371 100644
      }
  
      uiGroup := uilib.MakeGroup()
+@@ -334,7 +334,7 @@ func (game *Game) showHeroLevelUpPopup(yield coroutine.YieldFunc, hero *herolib.
+         scale.DrawScaled(screen, portrait, &options)
+ 
+         // text
+-        fonts.TitleFont.PrintOptions(screen, left + float64(48), top + float64(10), font.FontOptions{Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v has made a level.", hero.Name))
++        fonts.TitleFont.PrintOptions(screen, left + float64(48), top + float64(10), font.FontOptions{Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v has made a level."), hero.Name))
+ 
+         // stats progression
+         for index, progression := range hero.GetBaseProgression() {
 diff --git a/game/magic/game/mercenaries.go b/game/magic/game/mercenaries.go
 index 35b59fc..fc2f8c3 100644
 --- a/game/magic/game/mercenaries.go
@@ -907,6 +1688,201 @@ index ce51df7..40ef521 100644
          },
      })
  
+diff --git a/game/magic/game/surveyor.go b/game/magic/game/surveyor.go
+index fda86fd..d917acd 100644
+--- a/game/magic/game/surveyor.go
++++ b/game/magic/game/surveyor.go
+@@ -110,8 +110,8 @@ func (game *Game) doSurveyor(yield coroutine.YieldFunc) {
+ 
+             player := game.Model.GetHumanPlayer()
+ 
+-            game.Fonts.WhiteFont.PrintRight(screen, float64(276), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%v GP", player.Gold))
+-            game.Fonts.WhiteFont.PrintRight(screen, float64(313), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%v MP", player.Mana))
++            game.Fonts.WhiteFont.PrintRight(screen, float64(276), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%v GP"), player.Gold))
++            game.Fonts.WhiteFont.PrintRight(screen, float64(313), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%v MP"), player.Mana))
+ 
+             fonts.SurveyorFont.PrintCenter(screen, float64(280), float64(81), scale.ScaleAmount, ebiten.ColorScale{}, "Surveyor")
+ 
+@@ -143,19 +143,19 @@ func (game *Game) doSurveyor(yield coroutine.YieldFunc) {
+ 
+                     foodBonus := tile.FoodBonus()
+                     if !foodBonus.IsZero() {
+-                        fonts.WhiteFont.PrintCenter(screen, float64(280), y, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%v food", foodBonus.NormalString()))
++                        fonts.WhiteFont.PrintCenter(screen, float64(280), y, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%v food"), foodBonus.NormalString()))
+                         y += float64(fonts.WhiteFont.Height())
+                     }
+ 
+                     productionBonus := tile.ProductionBonus(false)
+                     if productionBonus != 0 {
+-                        fonts.WhiteFont.PrintCenter(screen, float64(280), y, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("+%v%% production", productionBonus))
++                        fonts.WhiteFont.PrintCenter(screen, float64(280), y, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("+%v%% production"), productionBonus))
+                         y += float64(fonts.WhiteFont.Height())
+                     }
+ 
+                     goldBonus := tile.GoldBonus(mapObject)
+                     if goldBonus != 0 {
+-                        fonts.WhiteFont.PrintCenter(screen, float64(280), y, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("+%v%% gold", goldBonus))
++                        fonts.WhiteFont.PrintCenter(screen, float64(280), y, scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("+%v%% gold"), goldBonus))
+                         y += float64(fonts.WhiteFont.Height())
+                     }
+ 
+@@ -169,25 +169,25 @@ func (game *Game) doSurveyor(yield coroutine.YieldFunc) {
+ 
+                         food := bonus.FoodBonus()
+                         if food != 0 {
+-                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("+%v food", food))
++                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("+%v food"), food))
+                             y += float64(fonts.WhiteFont.Height())
+                         }
+ 
+                         gold := bonus.GoldBonus()
+                         if gold != 0 {
+-                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("+%v gold", gold))
++                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("+%v gold"), gold))
+                             y += float64(fonts.WhiteFont.Height())
+                         }
+ 
+                         power := bonus.PowerBonus()
+                         if power != 0 {
+-                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("+%v power", power))
++                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("+%v power"), power))
+                             y += float64(fonts.WhiteFont.Height())
+                         }
+ 
+                         reduction := bonus.UnitReductionBonus()
+                         if reduction != 0 {
+-                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("Reduces normal unit cost by %v%%", reduction))
++                            fonts.WhiteFont.PrintWrapCenter(screen, float64(280), y, float64(cancelBackground.Bounds().Dx() - 5), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("Reduces normal unit cost by %v%%"), reduction))
+                             y += float64(fonts.WhiteFont.Height())
+                         }
+                     }
+diff --git a/game/magic/game/treasure.go b/game/magic/game/treasure.go
+index 1c79f7d..f670f64 100644
+--- a/game/magic/game/treasure.go
++++ b/game/magic/game/treasure.go
+@@ -11,6 +11,7 @@ import (
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+     "github.com/kazzmir/master-of-magic/game/magic/maplib"
+     herolib "github.com/kazzmir/master-of-magic/game/magic/hero"
++    "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+ )
+ 
+@@ -23,7 +24,7 @@ type TreasureGold struct {
+ }
+ 
+ func (gold *TreasureGold) String() string {
+-    return fmt.Sprintf("%v gold coins", gold.Amount)
++    return fmt.Sprintf(font.TranslateFormat("%v gold coins"), gold.Amount)
+ }
+ 
+ type TreasureMana struct {
+@@ -31,7 +32,7 @@ type TreasureMana struct {
+ }
+ 
+ func (mana *TreasureMana) String() string {
+-    return fmt.Sprintf("%v mana crystals", mana.Amount)
++    return fmt.Sprintf(font.TranslateFormat("%v mana crystals"), mana.Amount)
+ }
+ 
+ type TreasureMagicalItem struct {
+@@ -39,7 +40,7 @@ type TreasureMagicalItem struct {
+ }
+ 
+ func (item *TreasureMagicalItem) String() string {
+-    return fmt.Sprintf("a %v", item.Artifact.Name)
++    return fmt.Sprintf(font.TranslateFormat("a %v"), item.Artifact.Name)
+ }
+ 
+ type TreasurePrisonerHero struct {
+@@ -47,7 +48,7 @@ type TreasurePrisonerHero struct {
+ }
+ 
+ func (prisoner *TreasurePrisonerHero) String() string {
+-    return fmt.Sprintf("%v, a prisoner hero", prisoner.Hero.Name)
++    return fmt.Sprintf(font.TranslateFormat("%v, a prisoner hero"), prisoner.Hero.Name)
+ }
+ 
+ type TreasureSpell struct {
+@@ -55,7 +56,7 @@ type TreasureSpell struct {
+ }
+ 
+ func (spell *TreasureSpell) String() string {
+-    return fmt.Sprintf("the spell %v", spell.Spell.Name)
++    return fmt.Sprintf(font.TranslateFormat("the spell %v"), spell.Spell.Name)
+ }
+ 
+ // always gives one spellbook of the specified magic type
+@@ -65,7 +66,7 @@ type TreasureSpellbook struct {
+ }
+ 
+ func (spellbook *TreasureSpellbook) String() string {
+-    return fmt.Sprintf("a spellbook of %v magic", spellbook.Magic)
++    return fmt.Sprintf(font.TranslateFormat("a spellbook of %v magic"), spellbook.Magic)
+ }
+ 
+ type TreasureRetort struct {
+@@ -73,7 +74,7 @@ type TreasureRetort struct {
+ }
+ 
+ func (retort *TreasureRetort) String() string {
+-    return fmt.Sprintf("the retort %v", retort.Retort)
++    return fmt.Sprintf(font.TranslateFormat("the retort %v"), retort.Retort)
+ }
+ 
+ type Treasure struct {
+@@ -97,15 +98,15 @@ func combineAnd[T fmt.Stringer](pieces []T) string {
+ 
+     // x and y
+     if len(pieces) == 2 {
+-        return fmt.Sprintf("%v and %v", pieces[0], pieces[1])
++        return fmt.Sprintf(font.TranslateFormat("%v and %v"), pieces[0], pieces[1])
+     }
+ 
+     // x, y, and z
+     out := ""
+     for i := range len(pieces) - 2 {
+-        out += fmt.Sprintf("%v, ", pieces[i])
++        out += fmt.Sprintf(font.TranslateFormat("%v, "), pieces[i])
+     }
+-    out += fmt.Sprintf("%v and %v", pieces[len(pieces) - 2], pieces[len(pieces) - 1])
++    out += fmt.Sprintf(font.TranslateFormat("%v and %v"), pieces[len(pieces) - 2], pieces[len(pieces) - 1])
+     return out
+ }
+ 
+diff --git a/game/magic/game/vault.go b/game/magic/game/vault.go
+index 8bf2618..8d15100 100644
+--- a/game/magic/game/vault.go
++++ b/game/magic/game/vault.go
+@@ -114,8 +114,8 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+             scale.DrawScaled(screen, background, &options)
+ 
+             fontOptions := font.FontOptions{Justify: font.FontJustifyRight, DropShadow: true, Options: &options, Scale: scale.ScaleAmount}
+-            fonts.ResourceFont.PrintOptions(screen, 190, 166, fontOptions, fmt.Sprintf("%v GP", player.Gold))
+-            fonts.ResourceFont.PrintOptions(screen, 233, 166, fontOptions, fmt.Sprintf("%v MP", player.Mana))
++            fonts.ResourceFont.PrintOptions(screen, 190, 166, fontOptions, fmt.Sprintf(font.TranslateFormat("%v GP"), player.Gold))
++            fonts.ResourceFont.PrintOptions(screen, 233, 166, fontOptions, fmt.Sprintf(font.TranslateFormat("%v MP"), player.Mana))
+ 
+             ui.StandardDraw(screen)
+         },
+@@ -214,7 +214,7 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+                         ui.RemoveGroup(group)
+                     }
+ 
+-                    group.AddElements(uilib.MakeConfirmDialog(group, game.Cache, &imageCache, fmt.Sprintf("Do you want to destroy your %v and gain %v mana crystals?", selectedItem.Item.Name, gainedMana), true, yes, no))
++                    group.AddElements(uilib.MakeConfirmDialog(group, game.Cache, &imageCache, fmt.Sprintf(font.TranslateFormat("Do you want to destroy your %v and gain %v mana crystals?"), selectedItem.Item.Name, gainedMana), true, yes, no))
+                     ui.AddGroup(group)
+                 }
+             },
+@@ -340,7 +340,7 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+                                 no := func(){}
+ 
+                                 group := uilib.MakeGroup()
+-                                group.AddElements(uilib.MakeConfirmDialog(group, game.Cache, &imageCache, fmt.Sprintf("Do you wish to make this transfer at a cost of %v mana crystals?", teleportCost), true, yes, no))
++                                group.AddElements(uilib.MakeConfirmDialog(group, game.Cache, &imageCache, fmt.Sprintf(font.TranslateFormat("Do you wish to make this transfer at a cost of %v mana crystals?"), teleportCost), true, yes, no))
+                                 ui.AddGroup(group)
+                             }
+                         }
 diff --git a/game/magic/gamemenu/menu.go b/game/magic/gamemenu/menu.go
 index aedfead..5001992 100644
 --- a/game/magic/gamemenu/menu.go
@@ -1012,8 +1988,57 @@ index aedfead..5001992 100644
          getAlpha = group.MakeFadeOut(7)
          group.AddDelay(7, func(){
              cancel()
+diff --git a/game/magic/hero/hero.go b/game/magic/hero/hero.go
+index f429e7b..5b7a516 100644
+--- a/game/magic/hero/hero.go
++++ b/game/magic/hero/hero.go
+@@ -12,6 +12,7 @@ import (
+     "github.com/kazzmir/master-of-magic/game/magic/artifact"
+     "github.com/kazzmir/master-of-magic/game/magic/spellbook"
+     "github.com/kazzmir/master-of-magic/lib/fraction"
++    "github.com/kazzmir/master-of-magic/lib/font"
+ )
+ 
+ type HeroStatus int
+@@ -463,7 +464,7 @@ func (hero *Hero) SetName(name string) {
+ }
+ 
+ func (hero *Hero) GetFullName() string {
+-    return fmt.Sprintf("%v the %v", hero.GetName(), hero.GetTitle())
++    return fmt.Sprintf(font.TranslateFormat("%v the %v"), hero.GetName(), hero.GetTitle())
+ }
+ 
+ func (hero *Hero) GetPortraitLbxInfo() (string, int) {
+@@ -1353,23 +1354,23 @@ func (hero *Hero) GetBaseProgression() []string {
+ 
+     hitPoints := hero.getBaseHitPointsProgression(level) - hero.getBaseHitPointsProgression(level - 1)
+     if hitPoints > 0 {
+-        improvements = append(improvements, fmt.Sprintf("+%v Hit Points", hitPoints))
++        improvements = append(improvements, fmt.Sprintf(font.TranslateFormat("+%v Hit Points"), hitPoints))
+     }
+ 
+     resistance := hero.getBaseResistanceProgression(level) - hero.getBaseResistanceProgression(level - 1)
+     if resistance > 0 {
+-        improvements = append(improvements, fmt.Sprintf("+%v Resistance", resistance))
++        improvements = append(improvements, fmt.Sprintf(font.TranslateFormat("+%v Resistance"), resistance))
+     }
+ 
+     meleeAttack := hero.getBaseMeleeAttackPowerProgression(level) - hero.getBaseMeleeAttackPowerProgression(level - 1)
+     rangedAttack := hero.getBaseRangedAttackPowerProgression(level) - hero.getBaseRangedAttackPowerProgression(level - 1)
+     if meleeAttack > 0 || rangedAttack > 0{
+-        improvements = append(improvements, fmt.Sprintf("+%v Attack", min(meleeAttack, rangedAttack)))
++        improvements = append(improvements, fmt.Sprintf(font.TranslateFormat("+%v Attack"), min(meleeAttack, rangedAttack)))
+     }
+ 
+     defense := hero.getBaseDefenseProgression(level) - hero.getBaseDefenseProgression(level - 1)
+     if defense > 0 {
+-        improvements = append(improvements, fmt.Sprintf("+%v Defense", defense))
++        improvements = append(improvements, fmt.Sprintf(font.TranslateFormat("+%v Defense"), defense))
+     }
+ 
+     return improvements
 diff --git a/game/magic/magicview/view.go b/game/magic/magicview/view.go
-index 07d2243..9dd57ec 100644
+index 07d2243..009cc90 100644
 --- a/game/magic/magicview/view.go
 +++ b/game/magic/magicview/view.go
 @@ -8,6 +8,8 @@ import (
@@ -1025,7 +2050,23 @@ index 07d2243..9dd57ec 100644
      "github.com/kazzmir/master-of-magic/lib/lbx"
      "github.com/kazzmir/master-of-magic/lib/font"
      "github.com/kazzmir/master-of-magic/game/magic/data"
-@@ -371,6 +373,14 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+@@ -178,11 +180,11 @@ func MakeTransmuteElements(ui *uilib.UI, smallFont *font.Font, player *playerlib
+             leftSide := float64(122)
+             rightSide := float64(224)
+             if isRight {
+-                smallFont.PrintOptions(screen, leftSide, float64(86), fontOptions, fmt.Sprintf("%v GP", int(float64(totalMana) * changePercent * alchemyConversion)))
+-                smallFont.PrintOptions(screen, rightSide, float64(86), fontOptions, fmt.Sprintf("%v PP", int(float64(totalMana) * changePercent)))
++                smallFont.PrintOptions(screen, leftSide, float64(86), fontOptions, fmt.Sprintf(font.TranslateFormat("%v GP"), int(float64(totalMana) * changePercent * alchemyConversion)))
++                smallFont.PrintOptions(screen, rightSide, float64(86), fontOptions, fmt.Sprintf(font.TranslateFormat("%v PP"), int(float64(totalMana) * changePercent)))
+             } else {
+-                smallFont.PrintOptions(screen, leftSide, float64(86), fontOptions, fmt.Sprintf("%v GP", int(float64(totalGold) * changePercent)))
+-                smallFont.PrintOptions(screen, rightSide, float64(86), fontOptions, fmt.Sprintf("%v PP", int(float64(totalGold) * changePercent * alchemyConversion)))
++                smallFont.PrintOptions(screen, leftSide, float64(86), fontOptions, fmt.Sprintf(font.TranslateFormat("%v GP"), int(float64(totalGold) * changePercent)))
++                smallFont.PrintOptions(screen, rightSide, float64(86), fontOptions, fmt.Sprintf(font.TranslateFormat("%v PP"), int(float64(totalGold) * changePercent * alchemyConversion)))
+             }
+         },
+     })
+@@ -371,17 +373,25 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
                  scale.DrawScaled(screen, background, &options)
              }
  
@@ -1040,6 +2081,29 @@ index 07d2243..9dd57ec 100644
              mana := int(math.Round(player.PowerDistribution.Mana * float64(magic.Power)))
              research := int(math.Round(player.PowerDistribution.Research * float64(magic.Power)))
              skill := magic.Power - (mana + research)
+ 
+-            fonts.NormalFont.PrintOptions(screen, float64(56), float64(160), rightShadow, fmt.Sprintf("%v MP", mana))
++            fonts.NormalFont.PrintOptions(screen, float64(56), float64(160), rightShadow, fmt.Sprintf(font.TranslateFormat("%v MP"), mana))
+             if player.ResearchingSpell.Valid() {
+-                fonts.NormalFont.PrintOptions(screen, float64(103), float64(160), rightShadow, fmt.Sprintf("%v RP", int(player.ComputeEffectiveResearchPerTurn(player.SpellResearchPerTurn(magic.Power), player.ResearchingSpell))))
++                fonts.NormalFont.PrintOptions(screen, float64(103), float64(160), rightShadow, fmt.Sprintf(font.TranslateFormat("%v RP"), int(player.ComputeEffectiveResearchPerTurn(player.SpellResearchPerTurn(magic.Power), player.ResearchingSpell))))
+             } else {
+                 fonts.NormalFont.PrintOptions(screen, float64(103), float64(160), rightShadow, "No Spell")
+             }
+-            fonts.NormalFont.PrintOptions(screen, float64(151), float64(160), rightShadow, fmt.Sprintf("%v SP", skill))
++            fonts.NormalFont.PrintOptions(screen, float64(151), float64(160), rightShadow, fmt.Sprintf(font.TranslateFormat("%v SP"), skill))
+ 
+             ui.StandardDraw(screen)
+         },
+@@ -594,7 +604,7 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+ 				changingStaffValueNow = false
+ 			},
+             Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
+-                return fmt.Sprintf("%v%%", int(player.PowerDistribution.Mana * 100)), fonts.SmallerFont
++                return fmt.Sprintf(font.TranslateFormat("%v%%"), int(player.PowerDistribution.Mana * 100)), fonts.SmallerFont
+             },
+             RightClick: func(element *uilib.UIElement){
+                 helpEntries := help.GetEntriesByName("Mana Points Ratio")
 @@ -647,7 +657,8 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
              }
          },
@@ -1060,6 +2124,50 @@ index 07d2243..9dd57ec 100644
          },
      })
  
+@@ -701,7 +713,7 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+ 				changingStaffValueNow = false
+ 			},
+             Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
+-                return fmt.Sprintf("%v%%", int(player.PowerDistribution.Research * 100)), fonts.SmallerFont
++                return fmt.Sprintf(font.TranslateFormat("%v%%"), int(player.PowerDistribution.Research * 100)), fonts.SmallerFont
+             },
+             RightClick: func(element *uilib.UIElement){
+                 helpEntries := help.GetEntriesByName("Research Ratio")
+@@ -768,7 +780,7 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+ 				changingStaffValueNow = false
+ 			},
+             Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
+-                return fmt.Sprintf("%v%%", int(player.PowerDistribution.Skill * 100)), fonts.SmallerFont
++                return fmt.Sprintf(font.TranslateFormat("%v%%"), int(player.PowerDistribution.Skill * 100)), fonts.SmallerFont
+             },
+             RightClick: func(element *uilib.UIElement){
+                 helpEntries := help.GetEntriesByName("Casting Skill Ratio")
+@@ -826,13 +838,13 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+             rightSide := spellCastUIRect.Max.X - 4
+ 
+             fonts.SmallerFont.PrintOptions(screen, float64(spellCastUIRect.Min.X), float64(176), leftShadow, "Casting Skill:")
+-            fonts.SmallerFont.PrintOptions(screen, float64(rightSide), 176, rightShadow, fmt.Sprintf("%v(%v)", overworldCastingSkill, castingSkill))
++            fonts.SmallerFont.PrintOptions(screen, float64(rightSide), 176, rightShadow, fmt.Sprintf(font.TranslateFormat("%v(%v)"), overworldCastingSkill, castingSkill))
+ 
+             fonts.SmallerFont.PrintOptions(screen, float64(spellCastUIRect.Min.X), float64(183), leftShadow, "Magic Reserve:")
+-            fonts.SmallerFont.PrintOptions(screen, float64(rightSide), float64(183), rightShadow, fmt.Sprintf("%v", player.Mana))
++            fonts.SmallerFont.PrintOptions(screen, float64(rightSide), float64(183), rightShadow, fmt.Sprintf(font.TranslateFormat("%v"), player.Mana))
+ 
+             fonts.SmallerFont.PrintOptions(screen, float64(spellCastUIRect.Min.X), float64(190), leftShadow, "Power Base:")
+-            fonts.SmallerFont.PrintOptions(screen, float64(rightSide), float64(190), rightShadow, fmt.Sprintf("%v", magic.Power))
++            fonts.SmallerFont.PrintOptions(screen, float64(rightSide), float64(190), rightShadow, fmt.Sprintf(font.TranslateFormat("%v"), magic.Power))
+         },
+     })
+ 
+@@ -946,7 +958,7 @@ func (magic *MagicScreen) MakeUI(player *playerlib.Player, enemies []*playerlib.
+                             ui.RemoveGroup(group)
+                         }
+ 
+-                        group.AddElements(uilib.MakeConfirmDialog(group, magic.Cache, &magic.ImageCache, fmt.Sprintf("Do you wish to cancel your %v spell?", name), false, yes, no))
++                        group.AddElements(uilib.MakeConfirmDialog(group, magic.Cache, &magic.ImageCache, fmt.Sprintf(font.TranslateFormat("Do you wish to cancel your %v spell?"), name), false, yes, no))
+                         ui.AddGroup(group)
+                     }
+                 },
 diff --git a/game/magic/mastery/mastery.go b/game/magic/mastery/mastery.go
 index 120f892..56732de 100644
 --- a/game/magic/mastery/mastery.go
@@ -1163,6 +2271,19 @@ index d6b0ef4..75a46e2 100644
  
              heroX := cornerX + 13
              heroY := cornerY + 142
+diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
+index 556d824..04c18a3 100644
+--- a/game/magic/settings/settings.go
++++ b/game/magic/settings/settings.go
+@@ -63,7 +63,7 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+             var options ebiten.DrawImageOptions
+             options.ColorScale.ScaleAlpha(getAlpha())
+-            fonts.OptionFont.PrintOptions(screen, 30, 40, font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, fmt.Sprintf("Volume: %02d%%", int(music.GetVolume() * 100)))
++            fonts.OptionFont.PrintOptions(screen, 30, 40, font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, fmt.Sprintf(font.TranslateFormat("Volume: %02d%%"), int(music.GetVolume() * 100)))
+         },
+     })
+ 
 diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
 index f0917fe..d44cebc 100644
 --- a/game/magic/setup/new-game.go
@@ -1207,7 +2328,7 @@ index f0917fe..d44cebc 100644
          HandleKeys: func(keys []ebiten.Key){
              for _, key := range keys {
 diff --git a/game/magic/setup/new-wizard.go b/game/magic/setup/new-wizard.go
-index 7eb793b..c69cb86 100644
+index 7eb793b..5ceea71 100644
 --- a/game/magic/setup/new-wizard.go
 +++ b/game/magic/setup/new-wizard.go
 @@ -1031,6 +1031,19 @@ func (screen *NewWizardScreen) Load(cache *lbx.LbxCache) error {
@@ -1249,6 +2370,24 @@ index 7eb793b..c69cb86 100644
      return out
  }
  
+@@ -1139,7 +1152,7 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
+         }
+ 
+         if len(removed) > 0 {
+-            screen.UI.AddElement(uilib.MakeErrorElement(screen.UI, screen.LbxCache, &imageCache, fmt.Sprintf("Retorts %v became ineligible", JoinAbilities(removed)), func(){}))
++            screen.UI.AddElement(uilib.MakeErrorElement(screen.UI, screen.LbxCache, &imageCache, fmt.Sprintf(font.TranslateFormat("Retorts %v became ineligible"), JoinAbilities(removed)), func(){}))
+         }
+     }
+ 
+@@ -1344,7 +1357,7 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
+                     screen.UI.AddElement(uilib.MakeErrorElement(screen.UI, screen.LbxCache, &imageCache, "You have already made all your picks", func(){}))
+                 } else {
+                     if SatisifiedDependencies(ability.Ability, &screen.CustomWizard) {
+-                        screen.UI.AddElement(uilib.MakeErrorElement(screen.UI, screen.LbxCache, &imageCache, fmt.Sprintf("You don't have enough picks left to make this selection. You need %v picks", 3 - picksLeft()), func(){}))
++                        screen.UI.AddElement(uilib.MakeErrorElement(screen.UI, screen.LbxCache, &imageCache, fmt.Sprintf(font.TranslateFormat("You don't have enough picks left to make this selection. You need %v picks"), 3 - picksLeft()), func(){}))
+                     } else {
+                         screen.UI.AddElement(uilib.MakeErrorElement(screen.UI, screen.LbxCache, &imageCache, ability.Ability.DependencyExplanation(), func(){}))
+                     }
 @@ -1429,6 +1442,21 @@ func (screen *NewWizardScreen) MakeCustomWizardBooksUI(previousUI UIFunc) *uilib
              customWizardBooks, _ := screen.ImageCache.GetImage("newgame.lbx", 41, 0)
              window.DrawImage(customWizardBooks, scale.ScaleOptions(options))
@@ -1276,7 +2415,7 @@ index 7eb793b..c69cb86 100644
  
              screen.Fonts.AbilityFontSelected.PrintOptions(window, 12, 180, font.FontOptions{Scale: scale.ScaleAmount}, JoinAbilities(screen.CustomWizard.Retorts))
 -            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v picks", picksLeft()))
-+            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v 點數", picksLeft()))
++            screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v 點數"), picksLeft()))
          },
          HandleKeys: func(keys []ebiten.Key){
              for _, key := range keys {
@@ -1285,7 +2424,7 @@ index 7eb793b..c69cb86 100644
                  titleY := 5
  
 -                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("Select %v Spells", magic.String()))
-+                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("選擇%v法術", magicChtName(magic)))
++                titleFont.PrintOptions(window, float64(titleX), float64(titleY), font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf(font.TranslateFormat("選擇%v法術"), magicChtName(magic)))
  
                  options.GeoM.Reset()
                  options.GeoM.Translate(180, 18)
@@ -1294,10 +2433,30 @@ index 7eb793b..c69cb86 100644
  
                  screen.Fonts.AbilityFontSelected.PrintOptions(window, 12, 180, font.FontOptions{Scale: scale.ScaleAmount}, JoinAbilities(screen.CustomWizard.Retorts))
 -                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v picks", picksLeft()))
-+                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf("%v 點數", picksLeft()))
++                screen.Fonts.NameFontBright.PrintOptions(window, 223, 185, font.FontOptions{Justify: font.FontJustifyCenter, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v 點數"), picksLeft()))
  
                  showDescription := func(y float64, text string, background *ebiten.Image){
                      descriptionX := float64(167)
+@@ -1796,16 +1824,16 @@ func (screen *NewWizardScreen) MakeSelectSpellsUI(previousUI UIFunc) *uilib.UI {
+ 
+                 spellBackground1, _ := screen.ImageCache.GetImage("newgame.lbx", 48, 0)
+                 if spellInfo.CommonMax > 0 {
+-                    showDescription(28, fmt.Sprintf("Common: %v", spellInfo.CommonMax), spellBackground1)
++                    showDescription(28, fmt.Sprintf(font.TranslateFormat("Common: %v"), spellInfo.CommonMax), spellBackground1)
+                 }
+ 
+                 if spellInfo.UncommonMax > 0 {
+-                    showDescription(28, fmt.Sprintf("Uncommon: %v", spellInfo.UncommonMax), spellBackground1)
++                    showDescription(28, fmt.Sprintf(font.TranslateFormat("Uncommon: %v"), spellInfo.UncommonMax), spellBackground1)
+                 }
+ 
+                 if spellInfo.RareMax > 0 {
+                     spellBackground2, _ := screen.ImageCache.GetImage("newgame.lbx", 49, 0)
+-                    showDescription(78, fmt.Sprintf("Rare: %v", spellInfo.RareMax), spellBackground2)
++                    showDescription(78, fmt.Sprintf(font.TranslateFormat("Rare: %v"), spellInfo.RareMax), spellBackground2)
+                 }
+ 
+                 ui.StandardDraw(window)
 @@ -2147,11 +2175,17 @@ func (screen *NewWizardScreen) Draw(window *ebiten.Image) {
  }
  
@@ -1318,9 +2477,36 @@ index 7eb793b..c69cb86 100644
  
      err := out.Load(cache)
 diff --git a/game/magic/spellbook/spell.go b/game/magic/spellbook/spell.go
-index 4bc65bc..7803f11 100644
+index 4bc65bc..2557d1d 100644
 --- a/game/magic/spellbook/spell.go
 +++ b/game/magic/spellbook/spell.go
+@@ -598,7 +598,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+                         if turns > 1 {
+                             turnString = "turns"
+                         }
+-                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf("Research Cost:%v (%v %v)", spell.ResearchCost, turns, turnString))
++                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf(font.TranslateFormat("Research Cost:%v (%v %v)"), spell.ResearchCost, turns, turnString))
+                         y += float64(spellTextNormalFont.Height())
+                     } else {
+                         spellCost := caster.ComputeEffectiveSpellCost(spell, true)
+@@ -611,7 +611,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+                         if turns > 1 {
+                             turnString = "turns"
+                         }
+-                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf("Casting cost:%v (%v %v)", spellCost, turns, turnString))
++                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf(font.TranslateFormat("Casting cost:%v (%v %v)"), spellCost, turns, turnString))
+                         y += float64(spellTextNormalFont.Height())
+                     }
+ 
+@@ -1417,7 +1417,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+             textColorOptions.ColorScale = textColorScale
+ 
+             infoFont.PrintOptions(screen, spellX, spellY, font.FontOptions{Options: &textColorOptions, Scale: scale.ScaleAmount}, spell.Name)
+-            infoFont.PrintOptions(screen, spellX + float64(124), spellY, font.FontOptions{Options: &textColorOptions, Justify: font.FontJustifyRight, Scale: scale.ScaleAmount}, fmt.Sprintf("%v MP", costRemaining))
++            infoFont.PrintOptions(screen, spellX + float64(124), spellY, font.FontOptions{Options: &textColorOptions, Justify: font.FontJustifyRight, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v MP"), costRemaining))
+             icon := getMagicIcon(spell)
+ 
+             nameLength := infoFont.MeasureTextWidth(spell.Name, 1) + 1
 @@ -1577,7 +1577,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
                  },
                  Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
@@ -1339,6 +2525,19 @@ index 4bc65bc..7803f11 100644
                          group.AddElements(uilib.MakeConfirmDialogWithLayer(group, cache, &imageCache, 2, message, true, confirm, func(){
                              ui.RemoveGroup(group)
                          }))
+diff --git a/game/magic/summon/summon.go b/game/magic/summon/summon.go
+index 1d4a24d..f2df03b 100644
+--- a/game/magic/summon/summon.go
++++ b/game/magic/summon/summon.go
+@@ -222,7 +222,7 @@ func MakeSummonUnit(cache *lbx.LbxCache, unit units.Unit, wizard data.WizardBase
+         log.Printf("Error: could not load monster image at index %v: %v", monsterIndex, err)
+     }
+ 
+-    return makeSummon(cache, fmt.Sprintf("%v Summoned", unit.Name), wizard, monsterPicture, getRealmColor(unit), short)
++    return makeSummon(cache, fmt.Sprintf(font.TranslateFormat("%v Summoned"), unit.Name), wizard, monsterPicture, getRealmColor(unit), short)
+ }
+ 
+ func MakeSummonArtifact(cache *lbx.LbxCache, wizard data.WizardBase, short bool) *Summon {
 diff --git a/game/magic/unitview/ui.go b/game/magic/unitview/ui.go
 index fa66239..bfe65cf 100644
 --- a/game/magic/unitview/ui.go
@@ -1362,9 +2561,21 @@ index fa66239..bfe65cf 100644
  
  type UIFonts struct {
 diff --git a/game/magic/unitview/unit.go b/game/magic/unitview/unit.go
-index b52c499..92dfa22 100644
+index b52c499..00f72f4 100644
 --- a/game/magic/unitview/unit.go
 +++ b/game/magic/unitview/unit.go
+@@ -100,9 +100,9 @@ func RenderUnitInfoNormal(screen *ebiten.Image, imageCache *util.ImageCache, uni
+ 
+     name := unit.GetName()
+     if namePrefix != "" {
+-        name = fmt.Sprintf("%v %v", namePrefix, name)
++        name = fmt.Sprintf(font.TranslateFormat("%v %v"), namePrefix, name)
+     } else if unit.IsUndead() {
+-        name = fmt.Sprintf("Death %v", name)
++        name = fmt.Sprintf(font.TranslateFormat("Death %v"), name)
+     }
+ 
+     if extraTitle != "" {
 @@ -154,7 +154,7 @@ func RenderUnitInfoNormal(screen *ebiten.Image, imageCache *util.ImageCache, uni
  
      options.GeoM.Translate(80, 0)
@@ -1374,6 +2585,33 @@ index b52c499..92dfa22 100644
  }
  
  func RenderUnitInfoBuild(screen *ebiten.Image, imageCache *util.ImageCache, unit UnitView, descriptionFont *font.Font, smallFont *font.Font, defaultOptions ebiten.DrawImageOptions, discountedCost int) {
+@@ -186,7 +186,7 @@ func RenderUnitInfoBuild(screen *ebiten.Image, imageCache *util.ImageCache, unit
+     renderUpkeep(screen, imageCache, unit, options)
+ 
+     cost := unit.GetProductionCost()
+-    smallFont.PrintOptions(screen, x, y + float64(27), font.FontOptions{DropShadow: true, Options: &defaultOptions, Scale: scale.ScaleAmount}, fmt.Sprintf("Cost %v(%v)", discountedCost, cost))
++    smallFont.PrintOptions(screen, x, y + float64(27), font.FontOptions{DropShadow: true, Options: &defaultOptions, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Cost %v(%v)"), discountedCost, cost))
+ }
+ 
+ // show rows of icons. the second row is offset a bit to the right and down
+@@ -384,7 +384,7 @@ func RenderExperienceBadge(screen *ebiten.Image, imageCache *util.ImageCache, un
+     x, y := defaultOptions.GeoM.Apply(0, 0)
+     text := experience.Name()
+     if showExperience {
+-        text = fmt.Sprintf("%v (%v ep)", experience.Name(), unit.GetExperience())
++        text = fmt.Sprintf(font.TranslateFormat("%v (%v ep)"), experience.Name(), unit.GetExperience())
+     }
+     showFont.PrintOptions(screen, x + float64(pic.Bounds().Dx() + 2), y + float64(5), font.FontOptions{DropShadow: true, Options: &defaultOptions, Scale: scale.ScaleAmount}, text)
+     return float64(pic.Bounds().Dy() + 1)
+@@ -579,7 +579,7 @@ func createUnitAbilitiesElements(cache *lbx.LbxCache, imageCache *util.ImageCach
+                 },
+                 LeftClick: func(element *uilib.UIElement){
+                     if allowDismiss {
+-                        message := fmt.Sprintf("Do you wish to turn off the %v spell?", enchantment.Name())
++                        message := fmt.Sprintf(font.TranslateFormat("Do you wish to turn off the %v spell?"), enchantment.Name())
+                         confirm := func(){
+                             unit.RemoveEnchantment(enchantment)
+                             updateAbilities()
 diff --git a/game/magic/util/cht_label.go b/game/magic/util/cht_label.go
 new file mode 100644
 index 0000000..124c9d5

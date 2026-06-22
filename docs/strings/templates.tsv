@@ -1,0 +1,140 @@
+source	zh	note
+City %d	城市 %d	template
+The %s of %s has completed the construction of a %s.	%s 的 %s 已完成興建 %s。	template
+Outpost Of %v	%v 的前哨站	template
+The spell %v has fizzled.	法術 %v 施法失敗。	template
+%v can not enter the city of %v	%v 無法進入城市 %v	template
+AI thinking %v...	AI 思考中 %v...	template
+You have found %v %v.	你發現了 %v %v。	template
+You have found %v %v. Scouts have spotted %v within the %v. Do you wish to enter?	你發現了 %v %v。偵察兵在 %v 內發現了 %v。你要進入嗎？	template
+%v Tranquility spell has caused %v's %v spell to fizzle.	%v 的寧靜法術使 %v 的 %v 法術施法失敗。	template
+The selected units cannot planar travel at this location.	所選部隊無法在此位置進行位面位移。	template
+Moves:%v	移動:%v	template
+%v Gold	%v 金幣	template
+%v Food	%v 食物	template
+%v Mana	%v 法力	template
+%v disbanded due to lack of gold	%v 因缺乏金幣而解散	template
+%v disbanded due to lack of food	%v 因缺乏食物而解散	template
+%v disbanded due to lack of mana	%v 因缺乏法力而解散	template
+%v has %v to a population of %v.	%v 人口已 %v 至 %v。	template
+The city of %v has been abandoned.	城市 %v 已被棄守。	template
+The outpost of %v has been deserted.	前哨站 %v 已被廢棄。	template
+The outpost of %v has grown into a hamlet.	前哨站 %v 已成長為小村莊。	template
+%v GP	%v 金	template
+%v PP	%v 魔力	template
+%v MP	%v 法力	template
+%v RP	%v 研究	template
+%v SP	%v 施法技能	template
+%v%%	%v%%	template
+%v(%v)	%v(%v)	template
+Do you wish to cancel your %v spell?	確定要取消你的 %v 法術嗎？	template
++%v Attack	+%v 攻擊	template
++%v To Hit	+%v 命中	template
++%v Defense	+%v 防禦	template
++%v Movement	+%v 移動	template
++%v Resistance	+%v 抗性	template
++%v Spell Skill	+%v 施法技能	template
+-%v Spell Save	-%v 法術抵抗	template
+%v Charges of %v	%v 充能: %v	template
++%v 	+%v	template
+ of %v	 的 %v	template
+ of %v x%v	 的 %v x%v	template
+%v x%v	%v x%v	template
+花費: %v	花費: %v	template
+Retorts %v became ineligible	天賦 %v 已不符合條件	template
+You don't have enough picks left to make this selection. You need %v picks	你沒有足夠的選擇點數。此選擇需要 %v 點	template
+%v 點數	%v 點數	template
+選擇%v法術	選擇%v法術	template
+Common: %v	普通: %v	template
+Uncommon: %v	非凡: %v	template
+Rare: %v	稀有: %v	template
+Death Gaze %v	死亡凝視 %v	template
+Fireball Spell x%v	火球法術 x%v	template
+Fire Breath %v	火焰噴息 %v	template
+Life Steal %v	生命汲取 %v	template
+Lightning Breath %v	閃電噴息 %v	template
+偵察%v	偵察%v	template
+Stoning Gaze %v	石化凝視 %v	template
+Stoning Touch %v	石化觸碰 %v	template
+Thrown %v	投擲 %v	template
+施法 %v	施法 %v	template
+%v +%v	%v +%v	template
+%v food	%v 食物	template
++%v%% production	+%v%% 生產力	template
++%v%% gold	+%v%% 金幣	template
++%v food	+%v 食物	template
++%v gold	+%v 金幣	template
++%v power	+%v 魔力	template
+Reduces normal unit cost by %v%%	普通單位費用降低 %v%%	template
+%v gold coins	%v 金幣	template
+%v mana crystals	%v 法力水晶	template
+a %v	一件 %v	template
+%v, a prisoner hero	%v，囚禁的英雄	template
+the spell %v	法術 %v	template
+a spellbook of %v magic	一本 %v 魔法書	template
+the retort %v	%v 天賦	template
+%v and %v	%v 和 %v	template
+%v, 	%v、	template
+Do you want to destroy your %v and gain %v mana crystals?	你確定要摧毀 %v 並獲得 %v 法力水晶嗎？	template
+Do you wish to make this transfer at a cost of %v mana crystals?	是否花費 %v 法力水晶進行傳送？	template
+%v has made a level.	%v 升級了。	template
+%s has been spell blasted	%s 遭到法術衝擊	template
+%s has been stolen	%s 已被竊取	template
+%s has been disjuncted	%s 已被解除	template
+%s has been subverted	%s 已被顛覆	template
+That unit already has %v cast on it	該部隊已施加了 %v	template
+%v Units	%v 的部隊	template
+Select a space as the target for an %v spell.	選擇施放 %v 的目標地點。	template
+Select a friendly city to cast %v on.	選擇一座友方城市施放 %v。	template
+Select a magic node as the target for a %v spell.	選擇一個魔法節點作為 %v 的目標。	template
+Select an enemy city as the target for a %v spell.	選擇一座敵方城市作為 %v 的目標。	template
+Select a friendly unit as the target for a %v spell.	選擇一支友方部隊作為 %v 的目標。	template
+Select an enemy unit as the target for a %v spell.	選擇一支敵方部隊作為 %v 的目標。	template
+You cannot cast %v on this city	無法對這座城市施放 %v	template
+You cannot cast %v on this unit	無法對這支部隊施放 %v	template
+This city already has a %v cast on it	這座城市已施加了 %v	template
+%s loses %d points of casting ability	%s 失去 %d 點施法能力	template
+%s loses %d points of mana	%s 失去 %d 點法力	template
+%v has cast	%v 已施放	template
+Farmers %d	農民 %d	template
+Workers %d	工人 %d	template
+Rebels %d	叛民 %d	template
+Are you sure you want to sell back the %v for %v gold?	確定要以 %v 金幣出售 %v 嗎？	template
+Do you wish to spend %v by purchasing a %v?	確定花費 %v 金幣購買 %v 嗎？	template
+Do you wish to turn off the %v spell?	確定要取消 %v 法術嗎？	template
+%v's Fortress	%v 的要塞	template
+%v (Replaced)	%v（已替換）	template
+%v of %s	%v 的 %s	template
+Population: %v (%v)	人口：%v（%v）	template
+Units   %v	單位   %v	template
+The Cities Of %v	%v 的城市	template
+%vGP	%v 金幣	template
+%vMP	%v 魔力	template
+%v citizens were lost and %v buildings were destroyed.	%v 位市民陣亡，%v 棟建築物被摧毀。	template
+%v citizens were lost.	%v 位市民陣亡。	template
+%v buildings were destroyed.	%v 棟建築物被摧毀。	template
+You gained %v fame	你獲得了 %v 點聲望	template
+You lost %v fame	你失去了 %v 點聲望	template
+You lost %v units while fleeing.	撤退途中損失了 %v 個單位。	template
+You lost %v fame and 1 unit while fleeing.	撤退途中失去了 %v 點聲望及 1 個單位。	template
+You lost %v fame and %v units while fleeing	撤退途中失去了 %v 點聲望及 %v 個單位	template
+You lost 1 unit while fleeing	撤退途中損失了 1 個單位	template
+Dispells Non-%v	消散非 %v 系法術	template
+%v Node Aura	%v 結界光環	template
+%v cast %v	%v 施放了 %v	template
+%v ammo	%v 枚彈藥	template
+%v mp	%v 魔力	template
+%v/%v HP	%v/%v 生命	template
+%v fizzled	%v 施法失敗	template
+%v the %v	%v 的 %v	template
++%v Hit Points	+%v 生命	template
+Death %v	亡靈 %v	template
+Cost %v(%v)	費用 %v(%v)	template
+%v (%v ep)	%v（%v 經驗）	template
+Research Cost:%v (%v %v)	研究費用：%v（%v %v）	template
+Casting cost:%v (%v %v)	施法費用：%v（%v %v）	template
+Volume: %02d%%	音量：%02d%%	template
+%v Summoned	%v 召喚成功	template
+Artifact Summoned	神器召喚	summon標題
+Hero Summoned	英雄召喚	summon標題
+Champion Summoned	勇者召喚	summon標題

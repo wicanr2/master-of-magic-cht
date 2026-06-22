@@ -37,6 +37,19 @@
   - **Hero 衝突**:armyview 對英雄略過種族前綴(避開 `Hero`→「召回英雄」同 key 衝突)。
   - 字型子集 1657 字,AppImage 重建驗證。
 
+- [x] **#6 動態數值模板 / 組合句(模板大隊)** (2026-06-22)
+  - 7 個 agent 分檔掃出玩家面 `fmt.Sprintf` 模板,包 `font.TranslateFormat`,共 **162 個 call site**
+    (game.go 25、magicview/artifact/abilities/new-wizard 48、surveyor/treasure/vault/hero 24、cast 18、
+    cityview 16、combat 16、misc[hero/unitview/spellbook/settings/summon] 15)。
+  - templates.tsv **139 條**:建造完成/拾獲/解散/城市放棄/前哨/勘查/寶物/法術回饋(無法對此城市施放/施法失敗)/
+    戰鬥結算/人口/農民工人叛民 tooltip/城市清單欄位等。佔位符數量英中 100% 一致。
+  - treasure/model/item/abilities/hero/cast-select-wizard 補 font import;`font.Translate`(不存在)修為 `TranslateFormat`。
+  - `%v of %s` 城市標題的 size 引數補翻;headless 驗證:「村落 的 Xanten」「Lo Pan 的城市」「獸人 農民 4」。
+  - 全引擎 build 通過(45 檔變更),字型子集 1659 字,AppImage 重建驗證。
+
 ## 待修
 
-(目前無)
+- [ ] **少數動態 enum 引數未翻** — 個別模板的 `%v` 引數是列舉 `.String()`(非城市標題那種已修),
+  若顯示英文再個案補 `TranslateFormat(arg.String())`。屬邊角,主要畫面已涵蓋。
+- [ ] **純字串常數型 UI**(無 %v、非 Sprintf)散落各畫面者,若實測發現英文再補 TSV。
+- [ ] **baked LBX bitmap 按鈕**(如軍隊 Items/Ok)需圖片疊字,非資料翻譯。
