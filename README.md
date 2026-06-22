@@ -4,6 +4,8 @@
 > Arcanus 與 Myrror,十四本魔法書,上百種單位與法術。那是《Master of Magic》(MicroProse)。
 > 它沒有官方中文版,三十年也沒人完整漢化過。這個 repo,就是想把這件事補上。
 
+![Master of Magic 標題畫面:哥德花體標題下,主選單「快速開始 / 繼續遊戲 / 讀取進度 / 新遊戲 / 離開遊戲」全中文](docs/img/playtest-mainmenu-1.60.png)
+
 跑在開源 Go 重製引擎 [kazzmir/master-of-magic](https://github.com/kazzmir/master-of-magic) 上,
 用**自製 CJK 渲染管線 + 載入後字串覆蓋**把遊戲文字一次解掉,且**全程不修改、不散布任何版權檔案**。
 本專案承接先前《銀河霸主》(Master of Orion) 中文化的方法論。
@@ -11,6 +13,8 @@
 三十年過去,這款沒人完整漢化的策略神作,現在從頭到尾都說中文了:十四本魔法書、上百種法術與單位、
 建築、城內百科、隨機事件、外交辭令、巫師與英雄的名字——**主要互動畫面全面中文化,可實際遊玩**。
 全部走 AppImage headless 截圖逐畫面驗證,沒有「編譯過就算數」的僥倖。
+
+![戰略地圖主畫面:頂列選單(遊戲/法術/軍隊/城市/魔法/資訊/位面)、右側 HUD(完成/巡邏/等待/建造)、城市命名對話全中文](docs/img/final-overworld-1.60.png)
 
 當年華文電玩圈怎麼看這款遊戲、它的譯名到底叫什麼、為什麼這麼多年沒有中文版——
 這段考古整理在 [`docs/history-chinese-reception.md`](docs/history-chinese-reception.md)。
