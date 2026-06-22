@@ -62,8 +62,15 @@
   - headless 驗證:城市清單「烏爾納(Ulna)」、標題「荷魯斯(Horus) 的城市」。
   - **[雷] 新增 TSV 檔需清 GOCACHE**:go:embed 增量 build 不重嵌新檔名 → 清 cache 才生效。
 
+- [x] **#9 專有名詞英文小字 + 軍隊按鈕放大** (2026-06-22)
+  - **英文小字**:override.go 對 names/citynames 的「中文(英文)」把尾端「(英文)」包進控制碼
+    `\x0e..\x0f`(SmallStart/SmallEnd);font.go doPrint/MeasureTextWidth 遇標記降字級
+    `smallScaleFactor=0.65` 並下移對齊基線(不繪標記)。scoped 不影響其他括號文字。
+    headless 驗證:奧柏力克(Oberic)、烏爾納(Ulna) 的英文部分明顯變小。
+  - **按鈕放大**:armyview Items/Ok 的「物品/確定」改 BigFont。
+  - 純 .go 改動(標記 runtime 插入,英文字母已在基礎字型),無需 TSV/字型重生。
+
 ## 待修
 
-- [ ] **英文小字** — 目前「中文(英文)」同字級;英文縮小需逐顯示點改雙重渲染,屬美術強化。
 - [ ] **零星 enum 引數/純字串** — 次要畫面若實測見英文再個案補(主要畫面已涵蓋)。
 - [ ] **Windows/macOS 包同步** — dist 的 Win/Mac 仍停在數輪前。

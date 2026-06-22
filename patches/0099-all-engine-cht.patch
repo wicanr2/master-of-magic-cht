@@ -1,5 +1,5 @@
 diff --git a/game/magic/armyview/view.go b/game/magic/armyview/view.go
-index 70ca4ff..0cafa7f 100644
+index 70ca4ff..a37a19c 100644
 --- a/game/magic/armyview/view.go
 +++ b/game/magic/armyview/view.go
 @@ -102,11 +102,16 @@ func (view *ArmyScreen) MakeUI() *uilib.UI {
@@ -26,12 +26,12 @@ index 70ca4ff..0cafa7f 100644
  
              this.StandardDraw(screen)
  
-+            // 中文化:疊掉 armylist.lbx 烘進的英文按鈕 "Items" / "Ok"
++            // 中文化:疊掉 armylist.lbx 烘進的英文按鈕 "Items" / "Ok" (用 BigFont 放大)
 +            if itemBtns, err := view.ImageCache.GetImages("armylist.lbx", 3); err == nil && len(itemBtns) > 0 {
-+                util.ChtLabel(screen, util.ImageRect(273, 163, itemBtns[0]), itemBtns[0], fonts.NormalFont, "物品")
++                util.ChtLabel(screen, util.ImageRect(273, 163, itemBtns[0]), itemBtns[0], fonts.BigFont, "物品")
 +            }
 +            if okBtns, err := view.ImageCache.GetImages("armylist.lbx", 4); err == nil && len(okBtns) > 0 {
-+                util.ChtLabel(screen, util.ImageRect(273, 183, okBtns[0]), okBtns[0], fonts.NormalFont, "確定")
++                util.ChtLabel(screen, util.ImageRect(273, 183, okBtns[0]), okBtns[0], fonts.BigFont, "確定")
 +            }
 +
              // vector.DrawFilledRect(minimapArea, float32(minimapRect.Min.X), float32(minimapRect.Min.Y), float32(minimapRect.Bounds().Dx()), float32(minimapRect.Bounds().Dy()), util.PremultiplyAlpha(color.RGBA{R: 0xff, G: 0, B: 0, A: 128}), false)
@@ -3002,7 +3002,7 @@ index 0000000..85d2fc0
 +	return img, wLogical
 +}
 diff --git a/lib/font/font.go b/lib/font/font.go
-index 7e84629..a7820b3 100644
+index 7e84629..b27eb64 100644
 --- a/lib/font/font.go
 +++ b/lib/font/font.go
 @@ -157,6 +157,8 @@ func (font *Font) PrintOutline(destination *ebiten.Image, edgeShader *ebiten.Sha
@@ -3035,58 +3035,129 @@ index 7e84629..a7820b3 100644
              continue
          }
  
-@@ -196,6 +212,8 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+@@ -196,7 +212,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
      // TODO: this shadow distance could be a parameter
      distance := 3.0/4
  
 +    text = translateForDisplay(text)
 +
++    curScale := scale // 小字標記內降為 scale*smallScaleFactor
++    smallY := 0.0     // 小字下移量,讓基線對齊
++
      for _, c := range text {
++        if c == SmallStart {
++            curScale = scale * smallScaleFactor
++            smallY = float64(font.GlyphHeight) * (scale - curScale)
++            continue
++        }
++        if c == SmallEnd {
++            curScale = scale
++            smallY = 0
++            continue
++        }
          if c == '\n' {
              y += float64(font.GlyphHeight + font.internalFont.VerticalSpacing)
-@@ -205,6 +223,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+             useX = 0
+@@ -205,6 +236,22 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
 +            // CJK 支線:碼點超出 ASCII glyph 範圍時,改用 TTF rasterize 的中文 glyph
 +            if cjkImage, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkImage != nil {
 +                var options ebiten.DrawImageOptions
-+                options.GeoM.Scale(scale/cjkSupersample, scale/cjkSupersample)
-+                options.GeoM.Translate(useX, y)
++                options.GeoM.Scale(curScale/cjkSupersample, curScale/cjkSupersample)
++                options.GeoM.Translate(useX, y+smallY)
 +                if dropShadow {
-+                    options.GeoM.Translate(scale*distance, scale*distance)
++                    options.GeoM.Translate(curScale*distance, curScale*distance)
 +                    options.ColorScale = colorScale
 +                    options.ColorScale.ScaleWithColor(shadowColor)
 +                    destination.DrawImage(cjkImage, &options)
-+                    options.GeoM.Translate(-scale*distance, -scale*distance)
++                    options.GeoM.Translate(-curScale*distance, -curScale*distance)
 +                }
 +                options.ColorScale = colorScale
 +                destination.DrawImage(cjkImage, &options)
-+                useX += float64(cjkAdv + font.internalFont.HorizontalSpacing) * scale
++                useX += float64(cjkAdv + font.internalFont.HorizontalSpacing) * curScale
 +            }
              continue
          }
  
-@@ -247,6 +281,7 @@ func (font *Font) Print(image *ebiten.Image, x float64, y float64, scale float64
+@@ -213,26 +260,29 @@ func (font *Font) doPrint(destination *ebiten.Image, x float64, y float64, scale
+ 
+         // draw the shadow first
+         var options ebiten.DrawImageOptions
+-        options.GeoM.Scale(scale, scale)
++        options.GeoM.Scale(curScale, curScale)
+ 
+-        options.GeoM.Translate(useX, y)
++        options.GeoM.Translate(useX, y+smallY)
+         if dropShadow {
+-            options.GeoM.Translate(scale*distance, scale*distance)
++            options.GeoM.Translate(curScale*distance, curScale*distance)
+             options.ColorScale = colorScale
+             options.ColorScale.ScaleWithColor(shadowColor)
+             destination.DrawImage(glyphImage, &options)
+ 
+             // then draw the normal glyph on top
+-            options.GeoM.Translate(-scale*distance, -scale*distance)
++            options.GeoM.Translate(-curScale*distance, -curScale*distance)
+         }
+ 
+         options.ColorScale = colorScale
+         destination.DrawImage(glyphImage, &options)
+ 
+-        useX += float64(glyph.Width + font.internalFont.HorizontalSpacing) * scale
++        useX += float64(glyph.Width + font.internalFont.HorizontalSpacing) * curScale
+     }
+ }
+ 
++// 小字標記內的字級倍率 (見 override.go SmallStart/SmallEnd)
++const smallScaleFactor = 0.65
++
+ func (font *Font) PrintDropShadow(destination *ebiten.Image, x float64, y float64, scale float64, colorScale ebiten.ColorScale, text string) {
+     font.doPrint(destination, x, y, scale, colorScale, true, color.Black, text)
+ }
+@@ -246,23 +296,37 @@ func (font *Font) Print(image *ebiten.Image, x float64, y float64, scale float64
+ }
  
  func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
-     width := 0
+-    width := 0
++    width := 0.0
 +    text = translateForDisplay(text)
++    glyphScale := 1.0 // 小字標記內降為 smallScaleFactor
      for _, c := range text {
++        if c == SmallStart {
++            glyphScale = smallScaleFactor
++            continue
++        }
++        if c == SmallEnd {
++            glyphScale = 1.0
++            continue
++        }
          if c == '\n' {
              continue
-@@ -254,6 +289,10 @@ func (font *Font) MeasureTextWidth(text string, scale float64) float64 {
+         }
  
          glyphIndex := int(c) - 32
          if glyphIndex >= len(font.Glyphs) || glyphIndex < 0 {
 +            // CJK 支線:中文 glyph 的寬度量測,讓置中/置右/換行計算正確
 +            if _, cjkAdv := cjkGlyphImage(c, font.GlyphHeight); cjkAdv > 0 {
-+                width += cjkAdv + font.internalFont.HorizontalSpacing
++                width += float64(cjkAdv+font.internalFont.HorizontalSpacing) * glyphScale
 +            }
              continue
          }
  
-@@ -344,23 +383,47 @@ func (font *Font) PrintOptions(image *ebiten.Image, x float64, y float64, option
+         glyph := font.Glyphs[glyphIndex]
+         // FIXME: technically we don't need to add the horizontal spacing for the last character
+-        width += glyph.Width + font.internalFont.HorizontalSpacing
++        width += float64(glyph.Width+font.internalFont.HorizontalSpacing) * glyphScale
+     }
+ 
+-    return float64(width) * scale
++    return width * scale
+ }
+ 
+ func (font *Font) PrintCenter(image *ebiten.Image, x float64, y float64, scale float64, colorScale ebiten.ColorScale, text string) {
+@@ -344,23 +408,47 @@ func (font *Font) PrintOptions(image *ebiten.Image, x float64, y float64, option
      }
  }
  
@@ -3144,7 +3215,7 @@ index 7e84629..a7820b3 100644
  }
  
  func (font *Font) PrintWrap(image *ebiten.Image, x float64, y float64, maxWidth float64, options FontOptions, text string) {
-@@ -405,6 +468,9 @@ func (font *Font) CreateWrappedText(maxWidth float64, scale float64, text string
+@@ -405,6 +493,9 @@ func (font *Font) CreateWrappedText(maxWidth float64, scale float64, text string
      var lines []string
      var yPos float64 = 0
  
@@ -3156,10 +3227,10 @@ index 7e84629..a7820b3 100644
      textLines := bytes.Split([]byte(text), []byte{NewLine})
 diff --git a/lib/font/override.go b/lib/font/override.go
 new file mode 100644
-index 0000000..61d2d31
+index 0000000..2c5d811
 --- /dev/null
 +++ b/lib/font/override.go
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,140 @@
 +package font
 +
 +// 字串覆蓋層 (顯示層翻譯) —— 工作魔法大帝中文化。
@@ -3206,7 +3277,7 @@ index 0000000..61d2d31
 +					continue
 +				}
 +				if f, err := os.Open(filepath.Join(dir, e.Name())); err == nil {
-+					loadOverrideReader(f)
++					loadOverrideReader(f, smallParensFile(e.Name()))
 +					f.Close()
 +				}
 +			}
@@ -3219,13 +3290,36 @@ index 0000000..61d2d31
 +				continue
 +			}
 +			if data, err := embeddedStrings.ReadFile("cht_strings/" + e.Name()); err == nil {
-+				loadOverrideReader(strings.NewReader(string(data)))
++				loadOverrideReader(strings.NewReader(string(data)), smallParensFile(e.Name()))
 +			}
 +		}
 +	}
 +}
 +
-+func loadOverrideReader(r io.Reader) {
++// 小字標記:夾在 SmallStart..SmallEnd 之間的字以較小字級渲染 (不繪標記本身)。
++// 用於專有名詞「中文(英文)」的英文部分,讓原文以小字並存。控制碼避開一般文字。
++const SmallStart = '\x0e'
++const SmallEnd = '\x0f'
++
++// smallParensFile:這些檔的「中文(英文)」zh 值,把尾端「(英文)」括號段包成小字。
++func smallParensFile(name string) bool {
++	n := strings.ToLower(name)
++	return n == "names.tsv" || n == "citynames.tsv"
++}
++
++// wrapSmallParens:把 zh 尾端的「(...)」括號段(含半形括號)包進小字標記。
++func wrapSmallParens(zh string) string {
++	if !strings.HasSuffix(zh, ")") {
++		return zh
++	}
++	i := strings.LastIndex(zh, "(")
++	if i <= 0 {
++		return zh
++	}
++	return zh[:i] + string(SmallStart) + zh[i:] + string(SmallEnd)
++}
++
++func loadOverrideReader(r io.Reader, smallParens bool) {
 +	scanner := bufio.NewScanner(r)
 +	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 +	for scanner.Scan() {
@@ -3246,6 +3340,10 @@ index 0000000..61d2d31
 +		// 讓 source 與引擎實際顯示字串精確比對、zh 也保有換行 (一般 entry 無 \n,無副作用)。
 +		src = strings.ReplaceAll(src, "\\n", "\x14")
 +		zh = strings.ReplaceAll(zh, "\\n", "\x14")
++		// 專有名詞檔:把「(英文)」包成小字標記
++		if smallParens {
++			zh = wrapSmallParens(zh)
++		}
 +		// 先到先得:不覆寫已存在的 key (讓較早載入的表優先;同義變體可並存)
 +		if _, exists := overrideTable[src]; !exists {
 +			overrideTable[src] = zh
