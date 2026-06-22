@@ -70,7 +70,14 @@
   - **按鈕放大**:armyview Items/Ok 的「物品/確定」改 BigFont。
   - 純 .go 改動(標記 runtime 插入,英文字母已在基礎字型),無需 TSV/字型重生。
 
+- [x] **#10 零星次要畫面字串** (2026-06-22)
+  - Damage %v / Cost %v / Building / Upkeep / %v Charges of %v 補翻補 wrap;%v of %s 寬度量測配合標題。
+- [x] **#11 三平台重新打包(含全部最新譯文)** (2026-06-22)
+  - Linux AppImage(40.2MB,1739 字字型)boot 驗證;Windows x64(33.5MB,magic.exe 只依賴 kernel32.dll 免外部 DLL);
+    macOS arm64(32.8MB,GitHub Actions 建 + 本地加 game160 + wrapper 帶 -data)。
+  - 三包同源 /tmp/mom-engine + 0099 patch;macOS 走 CI checkout 最新 repo(0099+assets+strings)。
+
 ## 待修
 
-- [ ] **零星 enum 引數/純字串** — 次要畫面若實測見英文再個案補(主要畫面已涵蓋)。
-- [ ] **Windows/macOS 包同步** — dist 的 Win/Mac 仍停在數輪前。
+- [ ] **零星 enum 引數/純數值 tooltip** — 次要畫面若實測見英文再個案補(主要畫面已涵蓋)。
+- [ ] **Web WASM / Android** — 跨平台延伸,見 docs/porting-difficulty.md。
