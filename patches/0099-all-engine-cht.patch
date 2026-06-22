@@ -1,3 +1,23 @@
+diff --git a/game/magic/armyview/view.go b/game/magic/armyview/view.go
+index 70ca4ff..ae5609a 100644
+--- a/game/magic/armyview/view.go
++++ b/game/magic/armyview/view.go
+@@ -102,11 +102,12 @@ func (view *ArmyScreen) MakeUI() *uilib.UI {
+             var options ebiten.DrawImageOptions
+             scale.DrawScaled(screen, background, &options)
+ 
+-            fonts.BigFont.PrintOptions(screen, float64(160), float64(8), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("The Armies Of %v", view.Player.Wizard.Name))
++            fonts.BigFont.PrintOptions(screen, float64(160), float64(8), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("The Armies Of %v"), view.Player.Wizard.Name))
+ 
+             if highlightedUnit != nil {
+-                raceName := highlightedUnit.GetRace().String()
+-                fonts.NormalFont.PrintOptions(screen, float64(190), float64(162), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v %v", raceName, highlightedUnit.GetName()))
++                // 種族名與單位名各自過顯示層翻譯後再合成 (中文不需空格);避免合成英文整串無對應 key
++                raceName := font.TranslateFormat(highlightedUnit.GetRace().String())
++                fonts.NormalFont.PrintOptions(screen, float64(190), float64(162), font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}, fmt.Sprintf("%v%v", raceName, font.TranslateFormat(highlightedUnit.GetName())))
+ 
+             }
+ 
 diff --git a/game/magic/artifact/create-artifact.go b/game/magic/artifact/create-artifact.go
 index d9a0204..05a07b8 100644
 --- a/game/magic/artifact/create-artifact.go
@@ -1250,6 +1270,28 @@ index 4bc65bc..7803f11 100644
                          group.AddElements(uilib.MakeConfirmDialogWithLayer(group, cache, &imageCache, 2, message, true, confirm, func(){
                              ui.RemoveGroup(group)
                          }))
+diff --git a/game/magic/unitview/ui.go b/game/magic/unitview/ui.go
+index fa66239..bfe65cf 100644
+--- a/game/magic/unitview/ui.go
++++ b/game/magic/unitview/ui.go
+@@ -85,7 +85,7 @@ type PortraitUnit interface {
+ }
+ 
+ func UnitDisbandMessage(unit UnitView) string {
+-    return fmt.Sprintf("Do you wish to disband the unit of %v?", unit.GetName())
++    return fmt.Sprintf(font.TranslateFormat("Do you wish to disband the unit of %v?"), font.TranslateFormat(unit.GetName()))
+ }
+ 
+ func MakeUnitContextMenu(cache *lbx.LbxCache, ui *uilib.UI, unit UnitView, doDisband func()) *uilib.UIElementGroup {
+@@ -98,7 +98,7 @@ func MakeUnitContextMenu(cache *lbx.LbxCache, ui *uilib.UI, unit UnitView, doDis
+ }
+ 
+ func makeHeroContextMenu(cache *lbx.LbxCache, ui *uilib.UI, hero *herolib.Hero, doDisband func()) *uilib.UIElementGroup {
+-    return MakeGenericContextMenu(cache, ui, hero, fmt.Sprintf("Do you wish to dismiss %v?", hero.GetName()), doDisband)
++    return MakeGenericContextMenu(cache, ui, hero, fmt.Sprintf(font.TranslateFormat("Do you wish to dismiss %v?"), font.TranslateFormat(hero.GetName())), doDisband)
+ }
+ 
+ type UIFonts struct {
 diff --git a/game/magic/unitview/unit.go b/game/magic/unitview/unit.go
 index b52c499..92dfa22 100644
 --- a/game/magic/unitview/unit.go

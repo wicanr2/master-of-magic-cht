@@ -340,3 +340,6 @@ Chancellor	大臣	顧問
 Tax Collector	稅務官	顧問
 Grand Vizier	大維齊爾	顧問
 Mirror	魔鏡	顧問 (巫師狀態鏡)
+The Armies Of %v	%v 的軍隊	軍隊清單標題
+Do you wish to disband the unit of %v?	您確定要解散這支 %v 部隊嗎?	解散確認
+Do you wish to dismiss %v?	您確定要遣散 %v 嗎?	遣散英雄確認

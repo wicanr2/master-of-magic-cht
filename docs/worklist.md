@@ -21,6 +21,13 @@
   - events.go 動態訊息包 `font.TranslateFormat`,內嵌 enum(城市規模/礦物)亦過翻譯;%v 順序與原文一致。
   - 確定性驗證:events.go 全部字面(13 靜態 + 13 模板 + 11 礦物)與 messages.tsv key 100% 精確命中;AppImage 重建 boot 無 regression。
 
+- [x] **#4 合成單位名 (race + unit) + 軍隊清單** (2026-06-22)
+  - armyview/view.go:種族名與單位名各自過 `font.TranslateFormat` 後再合成(中文不需空格),
+    避免合成英文整串無對應 key;標題 "The Armies Of %v" 走模板翻譯。
+  - unitview/ui.go:解散/遣散確認對話框模板化翻譯。
+  - ui.tsv 新增 3 模板;headless 驗證軍隊清單:標題「Oberic 的軍隊」+ 合成名「蜥蜴人劍士」全中文。
+  - 已知殘留:單位名 "Hero" 與既有 "Hero→召回英雄" 同 key 衝突(英雄單位 highlight 罕見,暫不處理)。
+
 ## 待修
 
 - [ ] **help 彈窗標題仍英文**(如 help scroll 頂端 "BUILDER'S HALL")
