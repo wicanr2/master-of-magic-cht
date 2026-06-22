@@ -32,3 +32,8 @@ Choose target for a Spell Blast spell	選擇法術衝擊的目標	施法提示
 Choose target for a Subversion spell	選擇顛覆的目標	施法提示
 %d units rise from the dead to serve their creator.	%d 個單位從死亡中復起,聽命於其創造者。	不死事件
 It will take %d turns to complete the construction of this road.	完成這條道路需要 %d 回合。	築路
+# === 零星次要畫面字串 (#10) ===
+Damage %v	傷害 %v	戰鬥單位
+Cost %v	花費 %v	建造畫面
+Building	建造中	勘查/築路
+Upkeep	維護	單位詳情

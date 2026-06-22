@@ -305,9 +305,18 @@ index 8ffae1b..b0843fd 100644
              if highlightedCity != nil {
                  normalFont.Print(screen, float64(99), float64(158), scale.ScaleAmount, ebiten.ColorScale{}, highlightedCity.Name)
 diff --git a/game/magic/cityview/build-screen.go b/game/magic/cityview/build-screen.go
-index 7675f86..b283afc 100644
+index 7675f86..cba5fa2 100644
 --- a/game/magic/cityview/build-screen.go
 +++ b/game/magic/cityview/build-screen.go
+@@ -209,7 +209,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
+                 }
+ 
+                 fonts.DescriptionFont.PrintOptions(screen, float64(130), float64(12), font.FontOptions{Scale: scale.ScaleAmount}, city.BuildingInfo.Name(building))
+-                fonts.SmallFont.PrintOptions(screen, float64(130), float64(33), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf("Cost %v", city.BuildingInfo.ProductionCost(building)))
++                fonts.SmallFont.PrintOptions(screen, float64(130), float64(33), font.FontOptions{Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Cost %v"), city.BuildingInfo.ProductionCost(building)))
+ 
+                 fonts.DescriptionFont.PrintOptions(screen, float64(85), float64(48), font.FontOptions{Scale: scale.ScaleAmount}, "Maintenance")
+ 
 @@ -429,7 +429,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
                  options.GeoM.Translate(float64(cancelX), float64(cancelY))
                  scale.DrawScaled(screen, buttonBackground, &options)
@@ -327,7 +336,7 @@ index 7675f86..b283afc 100644
          })
      }
 diff --git a/game/magic/cityview/city-screen.go b/game/magic/cityview/city-screen.go
-index 199e9f0..56d42b3 100644
+index 199e9f0..3c591a4 100644
 --- a/game/magic/cityview/city-screen.go
 +++ b/game/magic/cityview/city-screen.go
 @@ -612,7 +612,7 @@ func (cityScreen *CityScreen) CreateCitizenIcons(offset1 int, offset2 int, setup
@@ -357,6 +366,15 @@ index 199e9f0..56d42b3 100644
          for range cityScreen.City.Rebels {
              posX := citizenX
              var options ebiten.DrawImageOptions
+@@ -741,7 +741,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
+     ui.AddGroup(group)
+     // var elements []*uilib.UIElement
+ 
+-    textSize := cityScreen.Fonts.BigFont.MeasureTextWidth(fmt.Sprintf("%v of %s", cityScreen.City.GetSize(), cityScreen.City.Name), 1)
++    textSize := cityScreen.Fonts.BigFont.MeasureTextWidth(fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(cityScreen.City.GetSize().String()), font.TranslateFormat(cityScreen.City.Name)), 1)
+     group.AddElement(&uilib.UIElement{
+         Rect: image.Rect(20, 3, 20 + int(textSize), 3 + cityScreen.Fonts.BigFont.Height() - 1),
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image) {
 @@ -774,7 +774,7 @@ func (cityScreen *CityScreen) MakeUI(newBuilding buildinglib.Building) *uilib.UI
                  ui.RemoveGroup(group)
              }
@@ -832,6 +850,17 @@ index ae3dbde..16fb9fd 100644
              }
          }
          castedCallback(false)
+diff --git a/game/magic/combat/unit-view.go b/game/magic/combat/unit-view.go
+index 1735f3e..82bf7a2 100644
+--- a/game/magic/combat/unit-view.go
++++ b/game/magic/combat/unit-view.go
+@@ -146,5 +146,5 @@ func RenderUnitInfo(screen *ebiten.Image, imageCache *util.ImageCache, unit *Arm
+     }
+ 
+     y += float64((fonts.SmallFont.Height() + 3))
+-    fonts.SmallFont.PrintOptions(screen, x, y, font.FontOptions{DropShadow: true, Options: &defaultOptions, Scale: scale.ScaleAmount}, fmt.Sprintf("Damage %v", unit.GetDamage()))
++    fonts.SmallFont.PrintOptions(screen, x, y, font.FontOptions{DropShadow: true, Options: &defaultOptions, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("Damage %v"), unit.GetDamage()))
+ }
 diff --git a/game/magic/data/abilities.go b/game/magic/data/abilities.go
 index fefc1a9..d084285 100644
 --- a/game/magic/data/abilities.go
@@ -2078,6 +2107,29 @@ index f429e7b..0153ead 100644
      }
  
      return improvements
+diff --git a/game/magic/load/convert.go b/game/magic/load/convert.go
+index d7055ef..707c0b1 100644
+--- a/game/magic/load/convert.go
++++ b/game/magic/load/convert.go
+@@ -8,7 +8,8 @@ import (
+     "log"
+ 
+     "github.com/kazzmir/master-of-magic/lib/fraction"
+-    "github.com/kazzmir/master-of-magic/lib/lbx"
++    "github.com/kazzmir/master-of-magic/lib/font"
++	"github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/set"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+     "github.com/kazzmir/master-of-magic/game/magic/setup"
+@@ -1331,7 +1332,7 @@ func (saveGame *SaveGame) convertArtifacts(spells spellbook.Spells) []*artifact.
+                 Amount: int(item.Charges),
+                 Spell: useSpell,
+                 SpellCharges: int(item.Charges),
+-                Name: fmt.Sprintf("%v Charges of %v", item.Charges, useSpell.Name),
++                Name: fmt.Sprintf(font.TranslateFormat("%v Charges of %v"), item.Charges, font.TranslateFormat(useSpell.Name)),
+             })
+         }
+ 
 diff --git a/game/magic/magicview/view.go b/game/magic/magicview/view.go
 index 07d2243..009cc90 100644
 --- a/game/magic/magicview/view.go
