@@ -1,0 +1,73 @@
+source	zh	note
+Barracks	兵營	建築名
+Without a barracks, a city cannot organize and train regular military units.	沒有兵營，城市便無法組織並訓練常規軍事單位。	建築描述
+Armory	軍械庫	建築名
+An armory provides the city with a central location for the distribution and storage of arms and armor.	軍械庫為城市提供武器與盔甲的集中配發及儲存場所。	建築描述
+Fighters Guild	戰士公會	建築名
+A fighter's guild teaches troops basic fighting techniques.  All new troops start as regulars.	戰士公會傳授部隊基本戰鬥技術。所有新兵一律以正規兵身份入伍。	建築描述
+Armorers Guild	鎧甲師公會	建築名
+An armorer's guild provides troops with training in fighting techniques and basic battle tactics.	鎧甲師公會為部隊提供戰鬥技術與基礎作戰戰術的訓練。	建築描述
+War College	戰爭學院	建築名
+A war college teaches advanced battle strategy and tactics. All new troops start as veterans.	戰爭學院傳授高階作戰策略與戰術。所有新兵一律以老兵身份入伍。	建築描述
+Smithy	鐵匠鋪	建築名
+A smithy can develop and produce quality weaponry.	鐵匠鋪能夠研發並生產優質武器。	建築描述
+Stables	馬廄	建築名
+A stable provides training, housing and care of mounted troops and/or war beasts.	馬廄提供騎兵及戰獸的訓練、收容與照料。	建築描述
+Animists Guild	泛靈公會	建築名
+Increases each farmer's food harvest by 1, reduces unrest by 1, allows use of nightshade, doubles the healing rate of units inside the city.	每位農民的食物產量+1、動亂-1、允許使用夜影草，並使城內單位的治癒速度加倍。	建築描述
+Fantastic Stable	奇獸馬廄	建築名
+A city's fantastic stable houses and cares for magical beasts.	城市的奇獸馬廄負責收容並照料魔法野獸。	建築描述
+Ship Wrights Guild	造船工公會	建築名
+A ship wright's guild brings together skilled craftsmen to build small boats.	造船工公會集結技藝精湛的工匠來建造小型船隻。	建築描述
+Ship Yard	船塢	建築名
+A shipyard provides a city with the necessary equipment and workers to produce medium-sized ships.	船塢為城市提供建造中型船隻所需的設備與工人。	建築描述
+Maritime Guild	海事公會	建築名
+A maritime guild produces large ships by training, organizing, and supporting experienced ship builders.	海事公會透過培訓、組織並支援經驗豐富的造船師來建造大型船隻。	建築描述
+Sawmill	鋸木廠	建築名
+A sawmill will turn wood into deadly weaponry. It increases production by 25%, and improves the efficiency of Housing projects by 10%.	鋸木廠將木材加工為致命武器。生產+25%，並提升住宅建造效率10%。	建築描述
+Library	圖書館	建築名
+A library acts as a storehouse for knowledge and scholarship. It adds +2 spell research points.	圖書館作為知識與學術的儲藏所。法術研究點數+2。	建築描述
+Sages Guild	賢者公會	建築名
+A sage's guild is dedicated to the advanced study of magic.  It adds +3 spell research points and allows use of nightshade.	賢者公會致力於魔法的高階研究。法術研究點數+3，並允許使用夜影草。	建築描述
+Oracle	神諭所	建築名
+An Oracle provides a city with magical guidance, detecting all enemies within 4 squares of the city and reducing unrest by 2.	神諭所為城市提供魔法引導，偵測城市周圍4格內的所有敵方單位，並使動亂-2。	建築描述
+Alchemists Guild	煉金公會	建築名
+The alchemists' guild equips all new troops with magical weapons (+1 to hit), and generates +3 power as well.	煉金公會為所有新兵配備魔法武器（命中+1），同時產生+3魔力。	建築描述
+University	大學	建築名
+A university serves as a stronghold for education and scholarship.  It adds +5 spell research points.	大學是教育與學術的重鎮。法術研究點數+5。	建築描述
+Wizards Guild	巫師公會	建築名
+A wizard's guild acts as a center for the advancement of magic.  It adds +8 spell research points at an upkeep cost of 3 power per turn.	巫師公會作為魔法精進的中心。法術研究點數+8，每回合維護費3魔力。	建築描述
+Shrine	神龕	建築名
+A shrine provides spiritual comfort to the citizenry.  It adds +1 power, allows use of nightshade, and reduces the unrest level by 1.	神龕為市民提供心靈慰藉。魔力+1、允許使用夜影草，動亂-1。	建築描述
+Temple	神殿	建築名
+A temple serves as a center for basic religious instruction.  It adds +2 power, allows use of nightshade, and reduces the unrest level by 1.	神殿作為基礎宗教教育的中心。魔力+2、允許使用夜影草，動亂-1。	建築描述
+Parthenon	帕德嫩神廟	建築名
+A parthenon provides the city with a central focus for the study and teaching of religion. It adds +3 power and reduces the unrest by 1.	帕德嫩神廟為城市提供宗教研究與傳教的核心場所。魔力+3，動亂-1。	建築描述
+Cathedral	大教堂	建築名
+A cathedral provides the city with a major cultural and religious center.  It adds +4 power and reduces the unrest level by 1.	大教堂為城市提供重要的文化與宗教中心。魔力+4，動亂-1。	建築描述
+Marketplace	市集	建築名
+A marketplace promotes the city's economic growth by increasing the taxable revenues and mineral income of the city by +50%.	市集促進城市經濟成長，使城市的應稅收入與礦物收入提升+50%。	建築描述
+Bank	銀行	建築名
+A bank increases the taxable revenues and mineral income of a city by 50%, in addition to any gains from a marketplace.	銀行在市集收益基礎上，再將城市的應稅收入與礦物收入提升50%。	建築描述
+Merchants Guild	商人公會	建築名
+A merchant's guild increases the taxable revenues and mineral income of a city by +100%, in addition to the marketplace and bank.	商人公會在市集與銀行收益基礎上，再將城市的應稅收入與礦物收入提升+100%。	建築描述
+Granary	穀倉	建築名
+A granary serves as a storehouse for the city's food surplus.  It adds +2 maximum population, along with +2 food and +20 people per turn.	穀倉作為城市糧食盈餘的儲藏所。最大人口+2，每回合食物+2、人口+20。	建築描述
+Farmers Market	農夫市集	建築名
+A farmer's market is a focal point for the buying and selling of food surplus. It adds +3 food and maximum population and +30 people per turn.	農夫市集是糧食盈餘買賣的集中場所。食物+3、最大人口+3，每回合人口+30。	建築描述
+Foresters Guild	林務公會	建築名
+A forester's guild trains hunters and lumberjacks, increasing the food harvest by +2 and production by +25%.	林務公會訓練獵人與伐木工，食物產量+2，生產+25%。	建築描述
+Builders Hall	建造者大廳	建築名
+The builder's hall educates workers in skilled building techniques, improving the efficiency of Housing projects by 15%.	建造者大廳教導工人精熟建造技術，提升住宅建造效率15%。	建築描述
+Mechanicians Guild	機械師公會	建築名
+A mechanician's guild teaches advanced engineering techniques, increasing the production points of a city by +50%.	機械師公會傳授高階工程技術，城市生產點數+50%。	建築描述
+Miners Guild	礦工公會	建築名
+A miner's guild increases any special mineral bonuses by +50% and production by +50%.	礦工公會使所有特殊礦物加成提升+50%，生產+50%。	建築描述
+City Walls	城牆	建築名
+Surrounds the city with a high brick wall that extends the detection of enemy units out to 3 squares and lends protection in combat.	以高磚牆環繞城市，將敵方單位的偵測範圍延伸至3格，並在戰鬥中提供防護。	建築描述
+Fortress	堡壘	建築名
+Summoning Circle	召喚法陣	建築名
+Housing	住宅	建築名
+This special setting builds new housing for the local populace to draw them into the city and increase the city's population growth rate.	此特殊設定為當地居民建造新住宅，以吸引人口遷入城市並提升城市人口成長率。	建築描述
+Trade Goods	貿易品	建築名
+This special setting produces trade goods and converts 2 production to 1 gold.	此特殊設定生產貿易品，將2生產轉換為1金幣。	建築描述

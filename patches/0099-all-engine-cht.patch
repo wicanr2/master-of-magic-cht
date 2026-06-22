@@ -1651,10 +1651,10 @@ index 7e84629..a7820b3 100644
      textLines := bytes.Split([]byte(text), []byte{NewLine})
 diff --git a/lib/font/override.go b/lib/font/override.go
 new file mode 100644
-index 0000000..fea5c71
+index 0000000..61d2d31
 --- /dev/null
 +++ b/lib/font/override.go
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,113 @@
 +package font
 +
 +// 字串覆蓋層 (顯示層翻譯) —— 工作魔法大帝中文化。
@@ -1737,6 +1737,10 @@ index 0000000..fea5c71
 +		if src == "" || src == "source" || zh == "" {
 +			continue // 略過 header 與空譯文
 +		}
++		// help 等含 0x14 換行碼的 entry:TSV 以字面 \n 表示,載入時還原成 NewLine(0x14),
++		// 讓 source 與引擎實際顯示字串精確比對、zh 也保有換行 (一般 entry 無 \n,無副作用)。
++		src = strings.ReplaceAll(src, "\\n", "\x14")
++		zh = strings.ReplaceAll(zh, "\\n", "\x14")
 +		// 先到先得:不覆寫已存在的 key (讓較早載入的表優先;同義變體可並存)
 +		if _, exists := overrideTable[src]; !exists {
 +			overrideTable[src] = zh
@@ -1763,4 +1767,213 @@ index 0000000..fea5c71
 +// 比對失敗時回傳原模板,不影響英文顯示。
 +func TranslateFormat(template string) string {
 +	return translateForDisplay(template)
++}
+diff --git a/test/cht-dump/main.go b/test/cht-dump/main.go
+new file mode 100644
+index 0000000..7677801
+--- /dev/null
++++ b/test/cht-dump/main.go
+@@ -0,0 +1,74 @@
++package main
++
++// 中文化 dumper:用引擎讀出建築名/描述 + help entries 的精確英文字串,供翻譯。
++// help body 的 0x14 換行碼轉成字面 "\n" 方便處理 (翻完寫回 TSV 時再轉回 0x14)。
++import (
++	"fmt"
++	"os"
++	"strings"
++
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++	"github.com/kazzmir/master-of-magic/game/magic/building"
++	helplib "github.com/kazzmir/master-of-magic/game/magic/help"
++)
++
++func esc(s string) string {
++	s = strings.ReplaceAll(s, "\x14", "\\n")
++	s = strings.ReplaceAll(s, "\t", " ")
++	s = strings.ReplaceAll(s, "\n", "\\n")
++	s = strings.ReplaceAll(s, "\r", "")
++	return s
++}
++
++func main() {
++	cache := lbx.AutoCache()
++
++	// 建築名 + 描述
++	bf, _ := os.Create("/out/buildings_en.tsv")
++	defer bf.Close()
++	fmt.Fprintln(bf, "source\tzh\tnote")
++	infos, err := building.ReadBuildingInfo(cache)
++	desc := building.MakeBuildDescriptions(cache)
++	if err == nil {
++		seen := map[string]bool{}
++		for b := building.Building(1); b < building.BuildingLast; b++ {
++			name := infos.Name(b)
++			if name != "" && !seen[name] {
++				seen[name] = true
++				fmt.Fprintf(bf, "%s\t\t建築名\n", esc(name))
++			}
++			d := desc.Get(b)
++			if d != "" && !seen[d] {
++				seen[d] = true
++				fmt.Fprintf(bf, "%s\t\t建築描述\n", esc(d))
++			}
++		}
++	} else {
++		fmt.Println("building err:", err)
++	}
++
++	// help.lbx 全 entries
++	hf, _ := os.Create("/out/help_en.tsv")
++	defer hf.Close()
++	fmt.Fprintln(hf, "headline\tsource_body\tzh_body")
++	lbxFile, err := cache.GetLbxFile("help.lbx")
++	if err == nil {
++		help, err := helplib.ReadHelp(lbxFile, 2)
++		if err == nil {
++			fmt.Printf("HELP ENTRIES: %d\n", len(help.Entries))
++			n := 0
++			for _, e := range help.Entries {
++				if strings.TrimSpace(e.Text) == "" {
++					continue
++				}
++				fmt.Fprintf(hf, "%s\t%s\t\n", esc(e.Headline), esc(e.Text))
++				n++
++			}
++			fmt.Printf("HELP NON-EMPTY: %d\n", n)
++		} else {
++			fmt.Println("help err:", err)
++		}
++	} else {
++		fmt.Println("help lbx err:", err)
++	}
++}
+diff --git a/test/city-enchantment/main.go b/test/city-enchantment/main.go
+index 5d54df3..2a4f5c9 100644
+--- a/test/city-enchantment/main.go
++++ b/test/city-enchantment/main.go
+@@ -32,6 +32,10 @@ type Engine struct {
+     Cache *lbx.LbxCache
+ }
+ 
++// NoCityMapProvider maplib.CityProvider stub — 不含任何城市,讓 GetCatchmentArea 可正常執行
++type NoCityMapProvider struct{}
++func (p *NoCityMapProvider) ContainsCity(x int, y int, plane data.Plane) bool { return false }
++
+ type NoCityProvider struct {
+ }
+ 
+@@ -93,6 +97,7 @@ func (engine *Engine) MakeUI() (*uilib.UI, context.Context, error) {
+         Data: terrainData,
+         Map: terrain.GenerateLandCellularAutomata(20, 20, terrainData, data.PlaneArcanus),
+         TileCache: make(map[int]*ebiten.Image),
++        CityProvider: &NoCityMapProvider{},
+     }
+ 
+     player := &playerlib.Player{
+diff --git a/test/cjk-render/main.go b/test/cjk-render/main.go
+new file mode 100644
+index 0000000..2d7f7ec
+--- /dev/null
++++ b/test/cjk-render/main.go
+@@ -0,0 +1,100 @@
++package main
++
++// Phase 1 真實引擎 CJK 驗證:用引擎真正的字型管線 (VaultFonts + lib/font 的
++// PrintDropShadow / Print / PrintOptions / PrintOutline) 畫中英混排,
++// 觸發 lib/font/cjk.go 的 CJK glyph 注入,觀察:
++//   1. 中文是否在真實引擎字型路徑渲染
++//   2. drop shadow / outline 是否套用到 CJK glyph
++//   3. 在 320×200 邏輯畫布、scale 後的版面是否破版 (overflow)
++//
++// 基於 test/font/main.go 改寫,僅替換繪製字串。按 Esc 結束。
++
++import (
++	"image/color"
++	"log"
++
++	"github.com/kazzmir/master-of-magic/game/magic/data"
++	"github.com/kazzmir/master-of-magic/game/magic/fonts"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/kazzmir/master-of-magic/game/magic/util"
++	"github.com/kazzmir/master-of-magic/lib/font"
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++
++	"github.com/hajimehoshi/ebiten/v2"
++	"github.com/hajimehoshi/ebiten/v2/inpututil"
++)
++
++type Engine struct {
++	LbxCache   *lbx.LbxCache
++	ImageCache util.ImageCache
++	VaultFonts *fonts.VaultFonts
++}
++
++func NewEngine() (*Engine, error) {
++	cache := lbx.AutoCache()
++	return &Engine{
++		LbxCache:   cache,
++		ImageCache: util.MakeImageCache(cache),
++		VaultFonts: fonts.MakeVaultFonts(cache),
++	}, nil
++}
++
++func (engine *Engine) Update() error {
++	for _, key := range inpututil.AppendJustPressedKeys(nil) {
++		if key == ebiten.KeyEscape || key == ebiten.KeyCapsLock {
++			return ebiten.Termination
++		}
++	}
++	return nil
++}
++
++func (engine *Engine) Draw(screen *ebiten.Image) {
++	screen.Fill(color.RGBA{R: 24, G: 18, B: 48, A: 255})
++
++	// 全部 scale 1,直接用螢幕座標排版 (PrintOptions 會把 y 乘 scale,混用會錯位)。
++	// item power 名稱都餵入「引擎實際使用的英文字串」,由 lib/font 顯示層覆蓋層
++	// (MOM_CHT_STRINGS 載 item-powers.tsv) 自動轉中文;引擎邏輯字串不動。
++
++	cs := ebiten.ColorScale{}
++	IN := engine.VaultFonts.ItemName
++	PW := engine.VaultFonts.PowerFont
++
++	// 標題 (literal CJK)
++	IN.PrintDropShadow(screen, 6, 6, 1, cs, "工作魔法大帝")
++	// 神器名:artifacts.tsv 尚未翻 → 保持英文 (證明覆蓋是選擇性的)
++	IN.Print(screen, 6, 26, 1, cs, "Sword of Mallana")
++	// 餵英文 → 覆蓋層自動轉中文
++	IN.Print(screen, 6, 42, 1, cs, "Holy Avenger")
++
++	// 物品能力:每條餵真實英文 power 名,自動翻譯
++	powers := []string{"Flaming", "Vampiric", "+3 Attack", "Magic Immunity", "Invisibility"}
++	py := 64.0
++	for _, p := range powers {
++		PW.Print(screen, 6, py, 1, cs, p)
++		py += 14
++	}
++
++	// 散文 CJK 斷行示範:長中文描述自動逐字換行 (maxWidth 內);
++	// 真實流程中這段由覆蓋層從英文整段翻好,再進 CreateWrappedText 斷行。
++	IN.Print(screen, 6, 150, 1, cs, "── 描述 (CJK 逐字斷行) ──")
++	desc := "烈焰之劍:每次攻擊都附帶火焰傷害,並使敵人陷入恐懼。持有者在戰場上所向披靡,無人能擋其鋒芒。"
++	engine.VaultFonts.ItemName.PrintWrap(screen, 6, 166, 240, font.FontOptions{Scale: 1}, desc)
++}
++
++func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
++	return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++}
++
++func main() {
++	log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
++	ebiten.SetWindowSize(data.ScreenWidth*4, data.ScreenHeight*4)
++	ebiten.SetWindowTitle("cjk-render")
++	engine, err := NewEngine()
++	if err != nil {
++		log.Printf("engine load error: %v", err)
++		return
++	}
++	if err := ebiten.RunGame(engine); err != nil && err != ebiten.Termination {
++		log.Printf("run error: %v", err)
++	}
 +}
