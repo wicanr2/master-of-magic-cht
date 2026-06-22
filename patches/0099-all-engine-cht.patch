@@ -327,7 +327,7 @@ index 7675f86..b283afc 100644
          })
      }
 diff --git a/game/magic/cityview/city-screen.go b/game/magic/cityview/city-screen.go
-index 199e9f0..3286661 100644
+index 199e9f0..56d42b3 100644
 --- a/game/magic/cityview/city-screen.go
 +++ b/game/magic/cityview/city-screen.go
 @@ -612,7 +612,7 @@ func (cityScreen *CityScreen) CreateCitizenIcons(offset1 int, offset2 int, setup
@@ -504,7 +504,7 @@ index 199e9f0..3286661 100644
      }
  
 -    cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v of %s", cityScreen.City.GetSize(), cityScreen.City.Name))
-+    cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(cityScreen.City.GetSize().String()), cityScreen.City.Name))
++    cityScreen.Fonts.BigFont.PrintOptions(screen, 20, 3, font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v of %s"), font.TranslateFormat(cityScreen.City.GetSize().String()), font.TranslateFormat(cityScreen.City.Name)))
      cityScreen.Fonts.DescriptionFont.PrintOptions(screen, 6, 19, font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true}, fmt.Sprintf("%v", cityScreen.City.Race))
  
      deltaNumber := func(n int) string {
@@ -1143,7 +1143,7 @@ index 92ed88e..0484cad 100644
  
              fonts.InfoFont.PrintCenter(screen, float64(data.ScreenWidth / 2 + offset), float64(data.ScreenHeight / 2 + frame.Bounds().Dy() / 2), scale.ScaleAmount, options.ColorScale, text)
 diff --git a/game/magic/game/events.go b/game/magic/game/events.go
-index a350e17..efefdd8 100644
+index a350e17..6e77446 100644
 --- a/game/magic/game/events.go
 +++ b/game/magic/game/events.go
 @@ -5,6 +5,7 @@ import (
@@ -1159,7 +1159,7 @@ index a350e17..efefdd8 100644
          Type: RandomEventDepletion,
          BirthYear: year,
 -        Message: fmt.Sprintf("Depletion! A %v mine within %v has become depleted and can no longer be mined.", bonus, cityName),
-+        Message: fmt.Sprintf(font.TranslateFormat("Depletion! A %v mine within %v has become depleted and can no longer be mined."), font.TranslateFormat(bonus.String()), cityName),
++        Message: fmt.Sprintf(font.TranslateFormat("Depletion! A %v mine within %v has become depleted and can no longer be mined."), font.TranslateFormat(bonus.String()), font.TranslateFormat(cityName)),
          LbxIndex: 9,
          IsConjunction: false,
          Instant: true,
@@ -1168,7 +1168,7 @@ index a350e17..efefdd8 100644
          Type: RandomEventDiplomaticMarriage,
          BirthYear: year,
 -        Message: fmt.Sprintf("Diplomatic Marriage! The neutral %v of %v has offered to join your cause.", city.GetSize(), city.Name),
-+        Message: fmt.Sprintf(font.TranslateFormat("Diplomatic Marriage! The neutral %v of %v has offered to join your cause."), font.TranslateFormat(city.GetSize().String()), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("Diplomatic Marriage! The neutral %v of %v has offered to join your cause."), font.TranslateFormat(city.GetSize().String()), font.TranslateFormat(city.Name)),
          LbxIndex: 3,
          IsConjunction: false,
          Instant: true,
@@ -1213,7 +1213,7 @@ index a350e17..efefdd8 100644
          Type: RandomEventNewMinerals,
          BirthYear: year,
 -        Message: fmt.Sprintf("New Mine! Surveyors find a %v deposit near the %v of %v.", bonus, city.GetSize(), city.Name),
-+        Message: fmt.Sprintf(font.TranslateFormat("New Mine! Surveyors find a %v deposit near the %v of %v."), font.TranslateFormat(bonus.String()), font.TranslateFormat(city.GetSize().String()), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("New Mine! Surveyors find a %v deposit near the %v of %v."), font.TranslateFormat(bonus.String()), font.TranslateFormat(city.GetSize().String()), font.TranslateFormat(city.Name)),
          LbxIndex: 10,
          IsConjunction: false,
          Instant: true,
@@ -1232,8 +1232,8 @@ index a350e17..efefdd8 100644
          BirthYear: year,
 -        Message: fmt.Sprintf("PLAGUE! A virulent plague has broken out in the %v of %v.", city.GetSize(), city.Name),
 -        MessageStop: fmt.Sprintf("The plague in %v has ended.", city.Name),
-+        Message: fmt.Sprintf(font.TranslateFormat("PLAGUE! A virulent plague has broken out in the %v of %v."), font.TranslateFormat(city.GetSize().String()), city.Name),
-+        MessageStop: fmt.Sprintf(font.TranslateFormat("The plague in %v has ended."), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("PLAGUE! A virulent plague has broken out in the %v of %v."), font.TranslateFormat(city.GetSize().String()), font.TranslateFormat(city.Name)),
++        MessageStop: fmt.Sprintf(font.TranslateFormat("The plague in %v has ended."), font.TranslateFormat(city.Name)),
          LbxIndex: 6,
          IsConjunction: false,
          TargetCity: city,
@@ -1243,8 +1243,8 @@ index a350e17..efefdd8 100644
          BirthYear: year,
 -        Message: fmt.Sprintf("Population Boom! A sudden population boom doubles the population growth rate of the %v of %v.", city.GetSize(), city.Name),
 -        MessageStop: fmt.Sprintf("The population boom in %v has ended.", city.Name),
-+        Message: fmt.Sprintf(font.TranslateFormat("Population Boom! A sudden population boom doubles the population growth rate of the %v of %v."), font.TranslateFormat(city.GetSize().String()), city.Name),
-+        MessageStop: fmt.Sprintf(font.TranslateFormat("The population boom in %v has ended."), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("Population Boom! A sudden population boom doubles the population growth rate of the %v of %v."), font.TranslateFormat(city.GetSize().String()), font.TranslateFormat(city.Name)),
++        MessageStop: fmt.Sprintf(font.TranslateFormat("The population boom in %v has ended."), font.TranslateFormat(city.Name)),
          LbxIndex: 11,
          IsConjunction: false,
          TargetCity: city,
@@ -1253,12 +1253,12 @@ index a350e17..efefdd8 100644
          Type: RandomEventRebellion,
          BirthYear: year,
 -        Message: fmt.Sprintf("Rebellion! The %v of %v has rebelled and become a neutral city.", city.GetSize(), city.Name),
-+        Message: fmt.Sprintf(font.TranslateFormat("Rebellion! The %v of %v has rebelled and become a neutral city."), font.TranslateFormat(city.GetSize().String()), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("Rebellion! The %v of %v has rebelled and become a neutral city."), font.TranslateFormat(city.GetSize().String()), font.TranslateFormat(city.Name)),
          LbxIndex: 7,
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..a24e6b2 100644
+index 44c64b8..192af1f 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1291,7 +1291,7 @@ index 44c64b8..a24e6b2 100644
      animal := game.GetWizardAnimal(player.Wizard)
  
 -    wrappedText := fonts.BigFont.CreateWrappedText(float64(175), 1, fmt.Sprintf("The %s of %s has completed the construction of a %s.", city.GetSize(), city.Name, game.Model.BuildingInfo.Name(building)))
-+    wrappedText := fonts.BigFont.CreateWrappedText(float64(175), 1, fmt.Sprintf(font.TranslateFormat("The %s of %s has completed the construction of a %s."), city.GetSize(), city.Name, game.Model.BuildingInfo.Name(building)))
++    wrappedText := fonts.BigFont.CreateWrappedText(float64(175), 1, fmt.Sprintf(font.TranslateFormat("The %s of %s has completed the construction of a %s."), font.TranslateFormat(city.GetSize().String()), font.TranslateFormat(city.Name), game.Model.BuildingInfo.Name(building)))
  
      rightSide, _ := game.ImageCache.GetImage("resource.lbx", 41, 0)
  
@@ -1300,7 +1300,7 @@ index 44c64b8..a24e6b2 100644
                  fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, "New Outpost Founded")
              } else {
 -                fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, fmt.Sprintf("Outpost Of %v", city.Name))
-+                fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, fmt.Sprintf(font.TranslateFormat("Outpost Of %v"), city.Name))
++                fonts.BigFont.Print(screen, x, y, scale.ScaleAmount, uiOptions.ColorScale, fmt.Sprintf(font.TranslateFormat("Outpost Of %v"), font.TranslateFormat(city.Name)))
              }
  
              cityScapeOptions := uiOptions
@@ -3275,10 +3275,10 @@ index 0000000..61d2d31
 +}
 diff --git a/test/cht-dump/main.go b/test/cht-dump/main.go
 new file mode 100644
-index 0000000..7677801
+index 0000000..279f75a
 --- /dev/null
 +++ b/test/cht-dump/main.go
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,89 @@
 +package main
 +
 +// 中文化 dumper:用引擎讀出建築名/描述 + help entries 的精確英文字串,供翻譯。
@@ -3290,6 +3290,7 @@ index 0000000..7677801
 +
 +	"github.com/kazzmir/master-of-magic/lib/lbx"
 +	"github.com/kazzmir/master-of-magic/game/magic/building"
++	citylib "github.com/kazzmir/master-of-magic/game/magic/city"
 +	helplib "github.com/kazzmir/master-of-magic/game/magic/help"
 +)
 +
@@ -3326,6 +3327,20 @@ index 0000000..7677801
 +		}
 +	} else {
 +		fmt.Println("building err:", err)
++	}
++
++	// 城市名池 (cityname.lbx)
++	if names, err := citylib.ReadCityNames(cache); err == nil {
++		cf, _ := os.Create("/out/citynames_en.tsv")
++		for _, n := range names {
++			if strings.TrimSpace(n) != "" {
++				fmt.Fprintf(cf, "%s\t\t城市名\n", esc(n))
++			}
++		}
++		cf.Close()
++		fmt.Printf("CITY NAMES: %d\n", len(names))
++	} else {
++		fmt.Println("cityname err:", err)
 +	}
 +
 +	// help.lbx 全 entries

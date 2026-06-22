@@ -56,8 +56,14 @@
   - **B 位圖按鈕**:armyview Items/Ok → 疊「物品」「確定」(util.ChtLabel);headless 驗證。
   - 字型子集 1670 字,全引擎 build 通過(47 檔),AppImage 重建驗證。
 
+- [x] **#8 城市名 中文(英文)** (2026-06-22)
+  - cityname.lbx 280 名(德/英/古典/奇幻)→ citynames.tsv 279 條(去 Bremen 重複),真實地名通用譯、奇幻名意譯/音譯。
+  - cities list 直接列印自動生效;城市標題 `%v of %s`、Outpost、事件訊息的 city.Name 引數補 wrap。
+  - headless 驗證:城市清單「烏爾納(Ulna)」、標題「荷魯斯(Horus) 的城市」。
+  - **[雷] 新增 TSV 檔需清 GOCACHE**:go:embed 增量 build 不重嵌新檔名 → 清 cache 才生效。
+
 ## 待修
 
-- [ ] **城市名 中文(英文)** — runtime 名稱池(大、版面風險),暫緩;巫師/英雄已做。
 - [ ] **英文小字** — 目前「中文(英文)」同字級;英文縮小需逐顯示點改雙重渲染,屬美術強化。
 - [ ] **零星 enum 引數/純字串** — 次要畫面若實測見英文再個案補(主要畫面已涵蓋)。
+- [ ] **Windows/macOS 包同步** — dist 的 Win/Mac 仍停在數輪前。
