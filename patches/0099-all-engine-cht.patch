@@ -460,6 +460,121 @@ index a2dd539..9fe14ba 100644
              if counter % 7 == 0 {
                  if animating && wizardAnimation.Done() {
                      // 0 = happy, 1 = angry, 2 = neutral
+diff --git a/game/magic/game/events.go b/game/magic/game/events.go
+index a350e17..efefdd8 100644
+--- a/game/magic/game/events.go
++++ b/game/magic/game/events.go
+@@ -5,6 +5,7 @@ import (
+     "slices"
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
++    "github.com/kazzmir/master-of-magic/lib/font"
+     "github.com/kazzmir/master-of-magic/game/magic/data"
+     citylib "github.com/kazzmir/master-of-magic/game/magic/city"
+     playerlib "github.com/kazzmir/master-of-magic/game/magic/player"
+@@ -167,7 +168,7 @@ func MakeDepletionEvent(year uint64, bonus data.BonusType, cityName string) *Ran
+     return &RandomEvent{
+         Type: RandomEventDepletion,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Depletion! A %v mine within %v has become depleted and can no longer be mined.", bonus, cityName),
++        Message: fmt.Sprintf(font.TranslateFormat("Depletion! A %v mine within %v has become depleted and can no longer be mined."), font.TranslateFormat(bonus.String()), cityName),
+         LbxIndex: 9,
+         IsConjunction: false,
+         Instant: true,
+@@ -178,7 +179,7 @@ func MakeDiplomaticMarriageEvent(year uint64, city *citylib.City) *RandomEvent {
+     return &RandomEvent{
+         Type: RandomEventDiplomaticMarriage,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Diplomatic Marriage! The neutral %v of %v has offered to join your cause.", city.GetSize(), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("Diplomatic Marriage! The neutral %v of %v has offered to join your cause."), font.TranslateFormat(city.GetSize().String()), city.Name),
+         LbxIndex: 3,
+         IsConjunction: false,
+         Instant: true,
+@@ -189,7 +190,7 @@ func MakeDonationEvent(year uint64, amount int, target *playerlib.Player) *Rando
+     return &RandomEvent{
+         Type: RandomEventDonation,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Donation! A wealthy merchant has decided to support your cause with a contribution of %v gold.", amount),
++        Message: fmt.Sprintf(font.TranslateFormat("Donation! A wealthy merchant has decided to support your cause with a contribution of %v gold."), amount),
+         LbxIndex: 8,
+         IsConjunction: false,
+         Instant: true,
+@@ -201,7 +202,7 @@ func MakeEarthquakeEvent(year uint64, cityName string, people int, units int, bu
+     return &RandomEvent{
+         Type: RandomEventEarthquake,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Earthquake! A violent quake struck %v, killing %v people and %v units, and destroying %v buildings.", cityName, people, units, buildings),
++        Message: fmt.Sprintf(font.TranslateFormat("Earthquake! A violent quake struck %v, killing %v people and %v units, and destroying %v buildings."), cityName, people, units, buildings),
+         LbxIndex: 4,
+         IsConjunction: false,
+         Instant: true,
+@@ -212,7 +213,7 @@ func MakeGiftEvent(year uint64, name string, target *playerlib.Player) *RandomEv
+     return &RandomEvent{
+         Type: RandomEventGift,
+         BirthYear: year,
+-        Message: fmt.Sprintf("The Gift! An ancient God has returned, bearing the relic of %v to aid your cause.", name),
++        Message: fmt.Sprintf(font.TranslateFormat("The Gift! An ancient God has returned, bearing the relic of %v to aid your cause."), name),
+         LbxIndex: 1,
+         IsConjunction: false,
+         Instant: true,
+@@ -224,7 +225,7 @@ func MakeGreatMeteorEvent(year uint64, city string, people int, units int, build
+     return &RandomEvent{
+         Type: RandomEventGreatMeteor,
+         BirthYear: year,
+-        Message: fmt.Sprintf("A meteor has hit %v killing %v townsfolk and %v units, and destroying %v buildings.", city, people, units, buildings),
++        Message: fmt.Sprintf(font.TranslateFormat("A meteor has hit %v killing %v townsfolk and %v units, and destroying %v buildings."), city, people, units, buildings),
+         LbxIndex: 0,
+         IsConjunction: false,
+         Instant: true,
+@@ -246,7 +247,7 @@ func MakeNewMineralsEvent(year uint64, bonus data.BonusType, city *citylib.City)
+     return &RandomEvent{
+         Type: RandomEventNewMinerals,
+         BirthYear: year,
+-        Message: fmt.Sprintf("New Mine! Surveyors find a %v deposit near the %v of %v.", bonus, city.GetSize(), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("New Mine! Surveyors find a %v deposit near the %v of %v."), font.TranslateFormat(bonus.String()), font.TranslateFormat(city.GetSize().String()), city.Name),
+         LbxIndex: 10,
+         IsConjunction: false,
+         Instant: true,
+@@ -257,7 +258,7 @@ func MakePiracyEvent(year uint64, gold int, target *playerlib.Player) *RandomEve
+     return &RandomEvent{
+         Type: RandomEventPiracy,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Pirates! Pirates have plundered your gold reserve, looting and stealing %v gold.", gold),
++        Message: fmt.Sprintf(font.TranslateFormat("Pirates! Pirates have plundered your gold reserve, looting and stealing %v gold."), gold),
+         LbxIndex: 5,
+         IsConjunction: false,
+         Instant: true,
+@@ -269,8 +270,8 @@ func MakePlagueEvent(year uint64, city *citylib.City) *RandomEvent {
+     return &RandomEvent{
+         Type: RandomEventPlague,
+         BirthYear: year,
+-        Message: fmt.Sprintf("PLAGUE! A virulent plague has broken out in the %v of %v.", city.GetSize(), city.Name),
+-        MessageStop: fmt.Sprintf("The plague in %v has ended.", city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("PLAGUE! A virulent plague has broken out in the %v of %v."), font.TranslateFormat(city.GetSize().String()), city.Name),
++        MessageStop: fmt.Sprintf(font.TranslateFormat("The plague in %v has ended."), city.Name),
+         LbxIndex: 6,
+         IsConjunction: false,
+         TargetCity: city,
+@@ -281,8 +282,8 @@ func MakePopulationBoomEvent(year uint64, city *citylib.City) *RandomEvent {
+     return &RandomEvent{
+         Type: RandomEventPopulationBoom,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Population Boom! A sudden population boom doubles the population growth rate of the %v of %v.", city.GetSize(), city.Name),
+-        MessageStop: fmt.Sprintf("The population boom in %v has ended.", city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("Population Boom! A sudden population boom doubles the population growth rate of the %v of %v."), font.TranslateFormat(city.GetSize().String()), city.Name),
++        MessageStop: fmt.Sprintf(font.TranslateFormat("The population boom in %v has ended."), city.Name),
+         LbxIndex: 11,
+         IsConjunction: false,
+         TargetCity: city,
+@@ -293,7 +294,7 @@ func MakeRebellionEvent(year uint64, city *citylib.City) *RandomEvent {
+     return &RandomEvent{
+         Type: RandomEventRebellion,
+         BirthYear: year,
+-        Message: fmt.Sprintf("Rebellion! The %v of %v has rebelled and become a neutral city.", city.GetSize(), city.Name),
++        Message: fmt.Sprintf(font.TranslateFormat("Rebellion! The %v of %v has rebelled and become a neutral city."), font.TranslateFormat(city.GetSize().String()), city.Name),
+         LbxIndex: 7,
+         IsConjunction: false,
+         Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
 index 44c64b8..832a2e3 100644
 --- a/game/magic/game/game.go

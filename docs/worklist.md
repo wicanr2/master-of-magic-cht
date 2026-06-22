@@ -16,6 +16,11 @@
   - help body 含 0x14 換行:override.go 載入時把 TSV 字面 `\n` 還原成 0x14,本體換行與數值(15%、金幣/回合)正確。
   - 字型子集擴至 1628 字;AppImage 重建並 headless 驗證(城市畫面 + BUILDER'S HALL help 本體)。
 
+- [x] **#3 隨機事件 / 災害訊息 (events.go)** (2026-06-22)
+  - messages.tsv:13 靜態訊息(解咒/凶月/吉月/三交會/魔力短路 + 結束句)+ 13 動態模板(枯竭/聯姻/捐獻/地震/天賜/隕石/新礦/海盜/瘟疫/人口激增/叛亂 + 結束句)+ 11 礦物名。
+  - events.go 動態訊息包 `font.TranslateFormat`,內嵌 enum(城市規模/礦物)亦過翻譯;%v 順序與原文一致。
+  - 確定性驗證:events.go 全部字面(13 靜態 + 13 模板 + 11 礦物)與 messages.tsv key 100% 精確命中;AppImage 重建 boot 無 regression。
+
 ## 待修
 
 - [ ] **help 彈窗標題仍英文**(如 help scroll 頂端 "BUILDER'S HALL")

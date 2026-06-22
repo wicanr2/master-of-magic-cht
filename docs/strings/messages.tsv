@@ -1,0 +1,41 @@
+source	zh	note
+# === 隨機事件:靜態訊息 (events.go,過顯示層覆蓋) ===
+Disjunction! The fabric of magic has been torn asunder destroying all overland enchantments.	解咒!魔法的織體被撕裂,摧毀了戰略地圖上所有的結界。	事件
+Bad Moon! The moon controlling the powers over evil waxes, doubling the power from evil temples.	凶月!掌管邪惡力量的月亮漸盈,使邪惡神殿產生的魔力加倍。	事件
+The bad moon has waned.	凶月已經虧缺。	事件
+Good Moon! The moon controlling the powers over good waxes, doubling the power of good temples.	吉月!掌管良善力量的月亮漸盈,使良善神殿產生的魔力加倍。	事件
+The good moon has waned.	吉月已經虧缺。	事件
+The rising triad of red stars come together, doubling all power gained from red nodes and halving all others.	升起的三顆紅星交會,使紅色節點獲得的魔力加倍,其餘所有節點減半。	事件
+The conjunction of chaos has ended.	混沌交會已經結束。	事件
+The rising triad of green stars come together, doubling all power gained from green nodes and halving all others.	升起的三顆綠星交會,使綠色節點獲得的魔力加倍,其餘所有節點減半。	事件
+The conjunction of nature has ended.	自然交會已經結束。	事件
+The rising triad of blue stars come together, doubling all power gained from blue nodes and halving all others.	升起的三顆藍星交會,使藍色節點獲得的魔力加倍,其餘所有節點減半。	事件
+The conjunction of sorcery has ended.	祕法交會已經結束。	事件
+Magic Short! All sources of magical power have been shorted out.	魔力短路!所有魔力來源都被切斷了。	事件
+The mana short has ended and magic has returned to normal.	魔力短路已經結束,魔法恢復正常。	事件
+# === 隨機事件:動態模板 (TranslateFormat,%v 順序須與原文一致) ===
+Depletion! A %v mine within %v has become depleted and can no longer be mined.	枯竭!%v 礦脈在「%v」境內已經枯竭,無法再開採。	事件模板 bonus,city
+Diplomatic Marriage! The neutral %v of %v has offered to join your cause.	聯姻!中立的%v「%v」提議加入你的陣營。	事件模板 size,city
+Donation! A wealthy merchant has decided to support your cause with a contribution of %v gold.	捐獻!一位富商決定捐助 %v 金幣支持你的大業。	事件模板 amount
+Earthquake! A violent quake struck %v, killing %v people and %v units, and destroying %v buildings.	地震!一場劇烈地震襲擊了「%v」,造成 %v 名居民與 %v 個單位喪生,並摧毀 %v 棟建築。	事件模板 city,people,units,bldgs
+The Gift! An ancient God has returned, bearing the relic of %v to aid your cause.	天賜!一位遠古神祇歸來,帶來「%v」聖物相助你的大業。	事件模板 relic
+A meteor has hit %v killing %v townsfolk and %v units, and destroying %v buildings.	一顆隕石擊中了「%v」,造成 %v 名市民與 %v 個單位喪生,並摧毀 %v 棟建築。	事件模板 city,people,units,bldgs
+New Mine! Surveyors find a %v deposit near the %v of %v.	新礦脈!勘測員發現一處 %v 礦藏,位於%v「%v」附近。	事件模板 bonus,size,city
+Pirates! Pirates have plundered your gold reserve, looting and stealing %v gold.	海盜!海盜洗劫了你的金庫,搶走了 %v 金幣。	事件模板 gold
+PLAGUE! A virulent plague has broken out in the %v of %v.	瘟疫!一場致命瘟疫在%v「%v」爆發。	事件模板 size,city
+The plague in %v has ended.	「%v」的瘟疫已經結束。	事件模板 city
+Population Boom! A sudden population boom doubles the population growth rate of the %v of %v.	人口激增!突如其來的人口潮使%v「%v」的人口成長率加倍。	事件模板 size,city
+The population boom in %v has ended.	「%v」的人口激增已經結束。	事件模板 city
+Rebellion! The %v of %v has rebelled and become a neutral city.	叛亂!%v「%v」發動叛亂,淪為中立城市。	事件模板 size,city
+# === 礦物 / 資源 bonus (BonusType.String(),用於事件與勘測) ===
+Gold Ore	金礦	礦物
+Silver Ore	銀礦	礦物
+Wild Game	野味	礦物
+Nightshade	夜影草	礦物
+Iron Ore	鐵礦	礦物
+Coal	煤礦	礦物
+Mithril Ore	祕銀礦	礦物
+Adamantium Ore	精金礦	礦物
+Gem	寶石	礦物
+Quork Crystal	闊克水晶	礦物
+Crysx Crystal	克里斯水晶	礦物
