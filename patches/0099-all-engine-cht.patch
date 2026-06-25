@@ -1461,7 +1461,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..8ed816e 100644
+index 44c64b8..7abbe5c 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1489,6 +1489,15 @@ index 44c64b8..8ed816e 100644
  
      predefinedNames, err := citylib.ReadCityNames(game.Cache)
      if err != nil {
+@@ -951,7 +953,7 @@ func (game *Game) doArmyView(yield coroutine.YieldFunc) {
+     }
+ 
+     showVault := func(){
+-        game.doVault(yield, nil)
++        game.doVault(yield, nil, nil)
+     }
+ 
+     army := armyview.MakeArmyScreen(game.Cache, game.Model.GetHumanPlayer(), drawMinimap, showVault)
 @@ -1172,7 +1174,7 @@ func (game *Game) showNewBuilding(yield coroutine.YieldFunc, city *citylib.City,
  
      animal := game.GetWizardAnimal(player.Wizard)
@@ -1507,7 +1516,21 @@ index 44c64b8..8ed816e 100644
              }
  
              cityScapeOptions := uiOptions
-@@ -1847,6 +1849,13 @@ func (game *Game) doHireHero(yield coroutine.YieldFunc, cost int, hero *herolib.
+@@ -1734,8 +1736,11 @@ func (game *Game) doGameMenu(yield coroutine.YieldFunc) {
+     }
+ }
+ 
+-func (game *Game) doVault(yield coroutine.YieldFunc, newArtifact *artifact.Artifact) {
+-    vaultLogic, vaultDrawer := game.showVaultScreen(newArtifact, game.Model.GetHumanPlayer())
++// #10 修正:foundLocation 為「新發現戰利品」的地圖位置(發現地點),用來判定「Same Location」免費裝備。
++// 手冊(pp.28-29):與物品當前位置同格的英雄裝備免費,異地才付 20 mana 傳送。打怪英雄站在戰鬥地點 →
++// 同格 → 免費。非戰利品情境(從軍隊畫面開 vault、商人購入、死亡英雄裝備回庫)傳 nil → 維持 fortress。
++func (game *Game) doVault(yield coroutine.YieldFunc, newArtifact *artifact.Artifact, foundLocation *data.PlanePoint) {
++    vaultLogic, vaultDrawer := game.showVaultScreen(newArtifact, game.Model.GetHumanPlayer(), foundLocation)
+ 
+     drawer := game.LastDrawer()
+ 
+@@ -1847,6 +1852,13 @@ func (game *Game) doHireHero(yield coroutine.YieldFunc, cost int, hero *herolib.
                  }
  
                  game.RefreshUI()
@@ -1521,7 +1544,16 @@ index 44c64b8..8ed816e 100644
              }
          } else {
              hero.GainLevel(units.ExperienceChampionHero)
-@@ -2112,7 +2121,7 @@ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Playe
+@@ -2094,7 +2106,7 @@ func (game *Game) maybeBuyFromMerchant(player *playerlib.Player) {
+         if bought {
+             delete(game.Model.ArtifactPool, artifact.Name)
+             player.Gold -= cost
+-            game.doVault(yield, artifact)
++            game.doVault(yield, artifact, nil) // 商人購入,物品到 fortress vault
+         }
+     }
+ 
+@@ -2112,7 +2124,7 @@ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Playe
      if caster.IsHuman() {
          game.Events <- &GameEventNotice{
              // FIXME: align this message with how dos mom does it
@@ -1530,7 +1562,16 @@ index 44c64b8..8ed816e 100644
          }
      }
  }
-@@ -3426,7 +3435,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
+@@ -2451,7 +2463,7 @@ func (game *Game) ProcessEvents(yield coroutine.YieldFunc) {
+                     case *GameEventVault:
+                         vaultEvent := event.(*GameEventVault)
+                         if vaultEvent.Player.IsHuman() {
+-                            game.doVault(yield, vaultEvent.CreatedArtifact)
++                            game.doVault(yield, vaultEvent.CreatedArtifact, nil) // 死亡英雄裝備回庫(fortress)
+                         } else {
+                             // FIXME: give item to AI
+                         }
+@@ -3426,7 +3438,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
              for _, unit := range stack.ActiveUnits() {
                  if !city.CanEnter(unit) {
                      stopMoving = true
@@ -1539,7 +1580,7 @@ index 44c64b8..8ed816e 100644
                      break quitMoving
                  }
              }
-@@ -3660,7 +3669,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
+@@ -3660,7 +3672,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
                              for _, unit := range stack.ActiveUnits() {
                                  if !newCity.CanEnter(unit) {
                                      canMove = false
@@ -1548,7 +1589,7 @@ index 44c64b8..8ed816e 100644
                                      break
                                  }
                              }
-@@ -3921,7 +3930,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
+@@ -3921,7 +3933,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
  
              options.ColorScale = ebiten.ColorScale{}
              options.ColorScale.ScaleAlpha(getAlpha())
@@ -1557,7 +1598,7 @@ index 44c64b8..8ed816e 100644
          })
  
          for !done {
-@@ -4294,11 +4303,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
+@@ -4294,11 +4306,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
      defer game.Music.PopSong()
  
      if len(encounter.Units) == 0 {
@@ -1571,7 +1612,18 @@ index 44c64b8..8ed816e 100644
  }
  
  func (game *Game) doEncounter(yield coroutine.YieldFunc, player *playerlib.Player, stack *playerlib.UnitStack, encounter *maplib.ExtraEncounter, mapUse *maplib.Map, x int, y int) combat.CombatState {
-@@ -4606,25 +4615,41 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+@@ -4488,7 +4500,9 @@ func (game *Game) ApplyTreasure(yield coroutine.YieldFunc, player *playerlib.Pla
+             case *TreasureMagicalItem:
+                 magicalItem := item.(*TreasureMagicalItem)
+                 if player.IsHuman() {
+-                    game.doVault(yield, magicalItem.Artifact)
++                    // #10 修正:傳發現地點 → 站在戰鬥地點的打怪英雄當場穿戴免 20 mana(手冊 Same Location 規則)。
++                    treasurePoint := treasure.Point
++                    game.doVault(yield, magicalItem.Artifact, &treasurePoint)
+                 } else {
+                     if player.AIBehavior != nil {
+                         // there is a light impedance mismatch between giving a treasure item and invoking the merchant item function
+@@ -4606,25 +4620,41 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
      // do graphic combat only if a human is involved
      useHuman := attacker.IsHuman() || defender.IsHuman()
  
@@ -1613,7 +1665,7 @@ index 44c64b8..8ed816e 100644
          }
  
          return &army
-@@ -5084,7 +5109,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+@@ -5084,7 +5114,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
  
      textOffset := 70
  
@@ -1622,7 +1674,7 @@ index 44c64b8..8ed816e 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
-@@ -5644,7 +5669,7 @@ func (game *Game) doPlanarTraval() {
+@@ -5644,7 +5674,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
                      select {
@@ -1631,7 +1683,7 @@ index 44c64b8..8ed816e 100644
                          default:
                      }
                  } else {
-@@ -5705,6 +5730,25 @@ func (game *Game) DumpInfo(x int, y int) {
+@@ -5705,6 +5735,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
  
@@ -1657,7 +1709,7 @@ index 44c64b8..8ed816e 100644
  func (game *Game) MakeHudUI() *uilib.UI {
      type TrackKey struct {
          Key ebiten.Key
-@@ -5815,6 +5859,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5815,6 +5864,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
      ui.AddGroup(group)
  
      // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
@@ -1667,7 +1719,7 @@ index 44c64b8..8ed816e 100644
      makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
          buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
          rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
-@@ -5853,6 +5900,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5853,6 +5905,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
                  options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
                  options.ColorScale.ScaleWithColorScale(colorScale)
                  scale.DrawScaled(screen, buttons[index], &options)
@@ -1677,7 +1729,7 @@ index 44c64b8..8ed816e 100644
              },
          }
      }
-@@ -6145,6 +6195,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6145,6 +6200,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
                      scale.DrawScaled(screen, doneImages[doneIndex], &options)
@@ -1685,7 +1737,7 @@ index 44c64b8..8ed816e 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      doneCounter += 1
-@@ -6185,6 +6236,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6185,6 +6241,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
@@ -1693,7 +1745,7 @@ index 44c64b8..8ed816e 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      patrolCounter += 1
-@@ -6229,6 +6281,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6229,6 +6286,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, waitImages[waitIndex], &options)
@@ -1701,7 +1753,7 @@ index 44c64b8..8ed816e 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      waitCounter += 1
-@@ -6310,6 +6363,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6310,6 +6368,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      }
  
                      colorm.DrawImage(screen, use, matrix, &options)
@@ -1716,7 +1768,7 @@ index 44c64b8..8ed816e 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
-@@ -6364,7 +6425,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6364,7 +6430,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
          elements = append(elements, &uilib.UIElement{
              Draw: func(element *uilib.UIElement, screen *ebiten.Image){
                  if !minMoves.IsZero() {
@@ -1725,7 +1777,7 @@ index 44c64b8..8ed816e 100644
  
                      sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
                      swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
-@@ -6474,21 +6535,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6474,21 +6540,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
  
                      if goldPerTurn < 0 {
@@ -1753,7 +1805,7 @@ index 44c64b8..8ed816e 100644
                      }
  
                      if conjunction != "" {
-@@ -6738,7 +6799,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6738,7 +6804,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
                      log.Printf("Disband %v due to lack of gold", unit)
@@ -1762,7 +1814,7 @@ index 44c64b8..8ed816e 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6746,7 +6807,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6746,7 +6812,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if foodIssue && unit.GetUpkeepFood() > 0 {
                      log.Printf("Disband %v due to lack of food", unit)
@@ -1771,7 +1823,7 @@ index 44c64b8..8ed816e 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6754,7 +6815,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6754,7 +6820,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if manaIssue && unit.GetUpkeepMana() > 0 {
                      log.Printf("Disband %v due to lack of mana", unit)
@@ -1780,7 +1832,7 @@ index 44c64b8..8ed816e 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -7020,7 +7081,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7020,7 +7086,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
  
                          scrollEvent := GameEventScroll{
                              Title: "CITY GROWTH",
@@ -1789,7 +1841,7 @@ index 44c64b8..8ed816e 100644
                          }
  
                          select {
-@@ -7032,7 +7093,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7032,7 +7098,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -1798,7 +1850,7 @@ index 44c64b8..8ed816e 100644
                              default:
                          }
                      }
-@@ -7051,14 +7112,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7051,14 +7117,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -2151,10 +2203,39 @@ index 563373a..9815c8a 100644
      wrapped := showFont.CreateWrappedText(float64(buffer.Bounds().Dx() - 10), 1, text)
  
 diff --git a/game/magic/game/vault.go b/game/magic/game/vault.go
-index 8bf2618..8d15100 100644
+index 8bf2618..4167fbc 100644
 --- a/game/magic/game/vault.go
 +++ b/game/magic/game/vault.go
-@@ -114,8 +114,8 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+@@ -67,7 +67,8 @@ func (game *Game) showItemPopup(item *artifact.Artifact, cache *lbx.LbxCache, im
+     return logic, drawer
+ }
+ 
+-func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *playerlib.Player) (func(coroutine.YieldFunc), func (*ebiten.Image)) {
++// foundLocation:新發現戰利品的地圖位置(發現地點);非戰利品情境傳 nil → 物品視為在 fortress vault。
++func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *playerlib.Player, foundLocation *data.PlanePoint) (func(coroutine.YieldFunc), func (*ebiten.Image)) {
+     defer mouse.Mouse.SetImage(game.MouseData.Normal)
+ 
+     imageCache := util.MakeImageCache(game.Cache)
+@@ -100,9 +101,17 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+         fortressLocation = fortressCity.GetPlanePoint()
+     }
+ 
++    // #10 修正:新發現的戰利品其「位置」應為發現地點(戰鬥地點),讓站在該地點的打怪英雄
++    // 當場穿戴判定為 Same Location → 免費(手冊 pp.28-29)。其餘情境(從軍隊畫面瀏覽 vault、
++    // 商人購入、死亡英雄裝備回庫)foundLocation 為 nil → 物品在 fortress vault,給異地英雄才付 20 mana。
++    initialLocation := fortressLocation
++    if createdArtifact != nil && foundLocation != nil {
++        initialLocation = *foundLocation
++    }
++
+     selectedItem := ItemLocation{
+         Item: createdArtifact,
+-        Location: fortressLocation,
++        Location: initialLocation,
+     }
+ 
+     ui := &uilib.UI{
+@@ -114,8 +123,8 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
              scale.DrawScaled(screen, background, &options)
  
              fontOptions := font.FontOptions{Justify: font.FontJustifyRight, DropShadow: true, Options: &options, Scale: scale.ScaleAmount}
@@ -2165,7 +2246,7 @@ index 8bf2618..8d15100 100644
  
              ui.StandardDraw(screen)
          },
-@@ -214,7 +214,7 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+@@ -214,7 +223,7 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
                          ui.RemoveGroup(group)
                      }
  
@@ -2174,7 +2255,7 @@ index 8bf2618..8d15100 100644
                      ui.AddGroup(group)
                  }
              },
-@@ -340,7 +340,7 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
+@@ -340,7 +349,7 @@ func (game *Game) showVaultScreen(createdArtifact *artifact.Artifact, player *pl
                                  no := func(){}
  
                                  group := uilib.MakeGroup()
@@ -2841,6 +2922,110 @@ index 0000000..4c4ea66
 +    }
 +    test.Logf(">>> bug:CastingSpell 只存名字 → 讀檔 FindByName 回 base spell(OverrideCost=0)→ 成本退回 base")
 +    test.Logf(">>> 修正(serialize.go):讀檔後 CastingSpell=Create Artifact 時,從 CreateArtifact.Cost 還原 OverrideCost")
++}
+diff --git a/game/magic/player/cht_herodeath_test.go b/game/magic/player/cht_herodeath_test.go
+new file mode 100644
+index 0000000..b22643c
+--- /dev/null
++++ b/game/magic/player/cht_herodeath_test.go
+@@ -0,0 +1,98 @@
++package player
++
++// 驗證 issue #3:我方英雄在戰鬥中被打死、但因最後獲勝而「自動復活、好像沒被幹掉一樣」。
++//
++// 手冊 oracle(manual.pdf p.71):英雄是獨特存在,死了除非被復活否則就是死了 →
++// 戰死英雄不該因獲勝而回到名冊/滿血。
++//
++// 完整 doCombat 的戰後 reconciliation 內嵌在 game.go,且需要版權 LBX(MakeGame 需 lbxCache)
++// 才能跑完整 Game,單元測試拿不到。本測試改在 player 層**精確重現** doCombat(AttackerWin)
++// 對英雄做的兩步,驗證資料層不變式:
++//   (1) 存活 re-add(game.go:4778):僅 `GetHealth()>0` 的單位重新加回 stack(死亡英雄略過)。
++//   (2) killUnits  (game.go:4922):`GetHealth()<=0` → `player.RemoveUnit(unit)`。
++// 致死走 combat 真實路徑:ArmyUnit.TakeDamage 對 unit.Unit 呼叫 AdjustHealth(-damage),
++// 對英雄物件即 Hero.AdjustHealth → health<=0 時 SetStatus(StatusDead)。
++//
++// 結論斷言:戰死英雄結束時 Status==StatusDead、不在 Heroes 名冊、不在 AliveHeroes、未重回軍隊。
++// 若引擎有 #3 復活 bug,本測試會在對應斷言失敗。
++
++import (
++    "testing"
++
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    herolib "github.com/kazzmir/master-of-magic/game/magic/hero"
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++    "github.com/kazzmir/master-of-magic/game/magic/units"
++)
++
++func TestChtHeroDeathNotRevivedOnWin(test *testing.T) {
++    player := MakePlayer(setup.WizardCustom{Banner: data.BannerRed}, true, 1, 1, make(map[herolib.HeroType]string), &NoGlobalEnchantments{})
++
++    h := herolib.MakeHero(
++        units.MakeOverworldUnitFromUnit(units.HeroRakir, 1, 1, data.PlaneArcanus, data.BannerRed, player.MakeExperienceInfo(), player.MakeUnitEnchantmentProvider()),
++        herolib.HeroRakir, "Rakir")
++
++    if !player.AddHero(h, 1, 1, data.PlaneArcanus) {
++        test.Fatalf("AddHero 失敗")
++    }
++    h.SetStatus(herolib.StatusEmployed) // 模擬已雇用、在我方軍隊中作戰
++
++    // 戰前:英雄活著、在名冊、滿血
++    if h.GetHealth() <= 0 {
++        test.Fatalf("戰前英雄應滿血,得 %d", h.GetHealth())
++    }
++    if n := len(player.AliveHeroes()); n != 1 {
++        test.Fatalf("戰前應有 1 位存活英雄,得 %d", n)
++    }
++
++    stack := player.FindStack(1, 1, data.PlaneArcanus)
++    if stack == nil {
++        test.Fatalf("找不到英雄所在 stack")
++    }
++
++    // === 模擬戰鬥致死(combat 真實路徑)===
++    h.AdjustHealth(-h.GetMaxHealth())
++
++    if h.GetHealth() != 0 {
++        test.Fatalf("致死後血量應為 0,得 %d", h.GetHealth())
++    }
++    if h.Status != herolib.StatusDead {
++        test.Errorf(">>> 復活 bug 徵兆:英雄血量歸零卻非 StatusDead(得 %v)→ 戰後會被當存活", h.Status)
++    }
++
++    // === 重現 doCombat(AttackerWin)戰後 reconciliation ===
++    // (1) 存活 re-add:僅 GetHealth()>0 重新加回 stack。
++    var reAdded []units.StackUnit
++    for _, u := range stack.Units() {
++        if u.GetHealth() > 0 {
++            reAdded = append(reAdded, u)
++        }
++    }
++    // (2) killUnits:GetHealth()<=0 → player.RemoveUnit。
++    for _, u := range stack.Units() {
++        if u.GetHealth() <= 0 {
++            player.RemoveUnit(u)
++        }
++    }
++
++    // === 斷言:英雄沒有復活 ===
++    if h.Status != herolib.StatusDead {
++        test.Errorf(">>> 復活 bug:RemoveUnit 後英雄 Status=%v(期望 StatusDead);RemoveUnit 只在 StatusEmployed 時改 status,死亡英雄應保持 Dead", h.Status)
++    }
++    for i, slot := range player.Heroes {
++        if slot == h {
++            test.Errorf(">>> 復活 bug:戰死英雄仍留在 Heroes[%d] 名冊", i)
++        }
++    }
++    if n := len(player.AliveHeroes()); n != 0 {
++        test.Errorf(">>> 復活 bug:戰後 AliveHeroes=%d(期望 0,英雄已死)", n)
++    }
++    for _, u := range reAdded {
++        if u == units.StackUnit(h) {
++            test.Errorf(">>> 復活 bug:戰死英雄被重新加回我方軍隊")
++        }
++    }
++
++    test.Logf("英雄戰死後正確保持 StatusDead、移出 Heroes 名冊、未重回軍隊 → 資料層 reconciliation 無 #3 復活問題")
++    test.Logf("關鍵:Hero.AdjustHealth 在 health<=0 設 StatusDead;player.RemoveUnit 僅在 StatusEmployed 時改 Available,故不會把死亡英雄改回可用")
 +}
 diff --git a/game/magic/player/serialize.go b/game/magic/player/serialize.go
 index 56f9721..9741d4c 100644
