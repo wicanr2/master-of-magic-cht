@@ -40,7 +40,15 @@
     CapsLock 全碼庫無其他用途;柵欄正當目的是「Escape 取消」,CapsLock 是搭便車意外。
   - 修:`input_default.go` 的 `IsQuitKey`/`IsQuitPressed` 移除 CapsLock(保留 Escape)。根因一處修好 5 畫面。
   - 驗:`IsQuitKey(CapsLock)=false, Escape=true`(xvfb 確定性)。
-- [ ] #1 走進怪物點直接判敗、無法開打(戰鬥初始化/自動結算)
+- [~] **#1 走進怪物點直接判敗**(調查中,需運行期重現才動戰鬥邏輯)
+  - 靜態事實:`doEncounter`→`doCombat`;`useHuman = attacker.IsHuman()||defender.IsHuman()`,
+    玩家攻據點 attacker=人類 → **應進戰鬥畫面**(非 useHuman、非 StrategicCombat 自動結算——後者已註解停用)。
+  - 主假說:`createArmy` 地形過濾(`CombatLandscapeWater && IsLandWalker` 濾陸行單位 4626;
+    非水域濾 sailing 4631)在特定據點把玩家單位**全濾掉 → 空軍隊 → 秒敗**。
+  - 反證:`GetCombatLandscape` 只有 `terrain.Ocean`→Water;多數據點在陸地,此假說只解釋**水上據點**。
+  - **結論**:成因不只一種,靜態無法確定。**需先在真實遊戲重現**(玩家提供存檔或重現步驟最佳)
+    再動 combat——避免推測性修補弄壞所有戰鬥(Chesterton's Fence + 別猜原則)。
+  - 待辦:請玩家提供「秒敗的那格存檔/座標/地形」或重現步驟 → 建 repro → 確定根因 → 修(必要時 flag 保護)。
 - [x] **#9 召喚第七英雄靜默失效** (2026-06-25)
   - 根因:`doHireHero`(召喚 cost 0 與雇用共用此路徑,經 `GameEventHireHero`)的 `if added {...}`
     沒有 else——英雄滿 6(`AddHero` 找不到空 slot 回 false)時靜默吞掉。上限本身有強制(維持 6),只缺警告。
