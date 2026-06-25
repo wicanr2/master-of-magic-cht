@@ -4943,6 +4943,119 @@ index 0000000..279f75a
 +		fmt.Println("help lbx err:", err)
 +	}
 +}
+diff --git a/test/cht-settings/main.go b/test/cht-settings/main.go
+new file mode 100644
+index 0000000..90254cb
+--- /dev/null
++++ b/test/cht-settings/main.go
+@@ -0,0 +1,107 @@
++package main
++
++// 中文化驗證 harness:渲染設定畫面(settings.MakeSettingsUI),第 N 幀把畫面存成 PNG 後結束。
++// 用途:headless 目視驗證設定畫面雙欄版面 + 11 個 toggle 的中文與排版(不撞 OK 鈕)。
++// 跑法:cwd 指向遊戲 LBX 目錄(AutoCache 會找到),xvfb 下執行,輸出 /out/settings.png。
++
++import (
++    "image"
++    "image/png"
++    "log"
++    "os"
++
++    "github.com/kazzmir/master-of-magic/lib/lbx"
++    "github.com/kazzmir/master-of-magic/game/magic/settings"
++    "github.com/kazzmir/master-of-magic/game/magic/audio"
++    musiclib "github.com/kazzmir/master-of-magic/game/magic/music"
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    "github.com/kazzmir/master-of-magic/game/magic/util"
++    "github.com/kazzmir/master-of-magic/game/magic/scale"
++    uilib "github.com/kazzmir/master-of-magic/game/magic/ui"
++    "github.com/kazzmir/master-of-magic/game/magic/mouse"
++
++    "github.com/hajimehoshi/ebiten/v2"
++)
++
++type Engine struct {
++    UI      *uilib.UI
++    counter int
++    outPath string
++}
++
++func NewEngine() (*Engine, error) {
++    cache := lbx.AutoCache()
++    imageCache := util.MakeImageCache(cache)
++    music := musiclib.MakeMusic(cache)
++
++    ui := &uilib.UI{
++        Draw: func(ui *uilib.UI, screen *ebiten.Image) {
++            ui.IterateElementsByLayer(func(element *uilib.UIElement) {
++                if element.Draw != nil {
++                    element.Draw(element, screen)
++                }
++            })
++        },
++    }
++    ui.SetElementsFromArray(nil)
++
++    group, _ := settings.MakeSettingsUI(cache, &imageCache, music)
++    ui.AddGroup(group)
++
++    out := os.Getenv("SHOT")
++    if out == "" {
++        out = "/out/settings.png"
++    }
++
++    return &Engine{UI: ui, outPath: out}, nil
++}
++
++func (engine *Engine) Update() error {
++    engine.UI.StandardUpdate()
++    engine.counter++
++    return nil
++}
++
++func (engine *Engine) Draw(screen *ebiten.Image) {
++    engine.UI.Draw(engine.UI, screen)
++
++    // fade-in 為 7 幀;第 20 幀已完全顯示,截圖後結束。
++    if engine.counter == 20 {
++        bounds := screen.Bounds()
++        buf := make([]byte, 4*bounds.Dx()*bounds.Dy())
++        screen.ReadPixels(buf)
++        img := &image.NRGBA{Pix: buf, Stride: 4 * bounds.Dx(), Rect: image.Rect(0, 0, bounds.Dx(), bounds.Dy())}
++        f, err := os.Create(engine.outPath)
++        if err != nil {
++            log.Printf("create png: %v", err)
++            os.Exit(1)
++        }
++        if err := png.Encode(f, img); err != nil {
++            log.Printf("encode png: %v", err)
++        }
++        f.Close()
++        log.Printf("wrote %v (%dx%d)", engine.outPath, bounds.Dx(), bounds.Dy())
++        os.Exit(0)
++    }
++}
++
++func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
++    return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++}
++
++func main() {
++    log.SetFlags(log.Lshortfile)
++    ebiten.SetWindowSize(data.ScreenWidth*3, data.ScreenHeight*3)
++    ebiten.SetWindowTitle("cht-settings")
++    audio.Initialize()
++    mouse.Initialize()
++
++    engine, err := NewEngine()
++    if err != nil {
++        log.Printf("init: %v", err)
++        return
++    }
++    if err := ebiten.RunGame(engine); err != nil {
++        log.Printf("run: %v", err)
++    }
++}
 diff --git a/test/city-enchantment/main.go b/test/city-enchantment/main.go
 index 5d54df3..2a4f5c9 100644
 --- a/test/city-enchantment/main.go
