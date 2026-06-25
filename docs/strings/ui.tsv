@@ -301,6 +301,13 @@ Arcane	奧術
 # #7 法術書排序切換 (settings.go,對應原版 Spell Book Ordering)
 Spell Book Ordering: By Category	法術書排序:按分類
 Spell Book Ordering: By Color	法術書排序:按顏色
+# 設定畫面切換項 (settings.go,對應原版 Settings 畫面)
+%v: On	%v:開
+%v: Off	%v:關
+Strategic Combat Only	全自動戰鬥
+Sound Effects	音效
+Background Music	背景音樂
+Random Events	隨機事件
 # 施法書取消/確認對話 (格式字串 template,走 TranslateFormat → fmt.Sprintf)
 Do you wish to abort your %v spell?	您確定要中止施放 %v 嗎?
 # 施法書 overland tooltip

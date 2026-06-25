@@ -281,6 +281,30 @@ index 2d2251c..3fc5493 100644
              })
          }
  
+diff --git a/game/magic/audio/audio.go b/game/magic/audio/audio.go
+index 1410fb8..2c56ebd 100644
+--- a/game/magic/audio/audio.go
++++ b/game/magic/audio/audio.go
+@@ -8,6 +8,7 @@ import (
+ 
+     "github.com/kazzmir/master-of-magic/lib/lbx"
+     "github.com/kazzmir/master-of-magic/lib/voc"
++    gamedata "github.com/kazzmir/master-of-magic/game/magic/data" // 別名:避免與本檔區域變數 data([]byte) 撞名
+     audiolib "github.com/hajimehoshi/ebiten/v2/audio"
+ )
+ 
+@@ -136,6 +137,11 @@ func GetSoundMaker(soundLbx *lbx.LbxFile, index int) (MakePlayerFunc, error) {
+     }
+ 
+     return func() (*audiolib.Player){
++        // #1 音效開關:設定關閉時回傳空 player(Play() 無聲)。此處是所有音效(UI 點擊、戰鬥、
++        // 法術等皆經 GetSoundMaker/LoadSoundFromLbx)的共同產生點,一處 guard 即全域靜音。
++        if !gamedata.Settings.SoundEffects {
++            return Context.NewPlayerFromBytes(nil)
++        }
+         // return Context.NewPlayer(resampled)
+         return Context.NewPlayerFromBytes(resampledData)
+     }, nil
 diff --git a/game/magic/banish/banish.go b/game/magic/banish/banish.go
 index 77232f2..60c5239 100644
 --- a/game/magic/banish/banish.go
@@ -1124,6 +1148,31 @@ index b0430fc..3c28720 100644
  type DifficultySetting int
  const (
      DifficultyIntro DifficultySetting = iota
+diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
+new file mode 100644
+index 0000000..cca2919
+--- /dev/null
++++ b/game/magic/data/settings.go
+@@ -0,0 +1,19 @@
++package data
++
++// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
++// 目前為全域 runtime 偏好,不隨存檔序列化、重啟重置 —— 與音量、法術書排序同模式。
++// 預設值對齊原版預設:音效開、隨機事件開、戰略戰鬥(全自動結算)關。
++//
++// 放在 data 套件(最底層、人人可 import)以避免 import cycle:
++// settings 畫面(寫)與 game/ui(讀)都能存取,不需互相 import。
++type GameSettings struct {
++    SoundEffects        bool // #1 介面音效開關
++    RandomEvents        bool // #9 隨機事件(火山/地震/好月壞月等)
++    StrategicCombatOnly bool // #11 所有戰鬥自動結算,不進戰術戰鬥畫面(仍顯示勝負結果)
++}
++
++var Settings = GameSettings{
++    SoundEffects:        true,
++    RandomEvents:        true,
++    StrategicCombatOnly: false,
++}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
 --- a/game/magic/diplomacy/diplomacy.go
@@ -1562,7 +1611,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..7abbe5c 100644
+index 44c64b8..eddc51d 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1724,10 +1773,14 @@ index 44c64b8..7abbe5c 100644
                  } else {
                      if player.AIBehavior != nil {
                          // there is a light impedance mismatch between giving a treasure item and invoking the merchant item function
-@@ -4606,25 +4620,41 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+@@ -4606,25 +4620,45 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
      // do graphic combat only if a human is involved
      useHuman := attacker.IsHuman() || defender.IsHuman()
  
++    // #11 戰略戰鬥(全自動):開啟時人類參與的戰鬥也跳過戰術戰鬥畫面、直接自動結算(combat.Run),
++    // 但仍保留戰後勝負/戰功結果畫面(useHuman 維持 true)→ 對應手冊「不必親自指揮、只被告知結果」。
++    autoResolve := data.Settings.StrategicCombatOnly && (attacker.IsHuman() || defender.IsHuman())
++
 +    classicRules := game.Model.Settings.RuleSet == data.RuleSetClassic
 +
      createArmy := func (player *playerlib.Player, stack *playerlib.UnitStack) *combat.Army {
@@ -1766,7 +1819,16 @@ index 44c64b8..7abbe5c 100644
          }
  
          return &army
-@@ -5084,7 +5114,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+@@ -4663,7 +4697,7 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+ 
+     popCombatScreen := false
+ 
+-    if useHuman || game.WatchMode {
++    if (useHuman && !autoResolve) || game.WatchMode {
+         defer mouse.Mouse.SetImage(game.MouseData.Normal)
+ 
+         controllingPlayer := optional.Of[combat.ArmyPlayer](game.Model.GetHumanPlayer())
+@@ -5084,7 +5118,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
  
      textOffset := 70
  
@@ -1775,7 +1837,7 @@ index 44c64b8..7abbe5c 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
-@@ -5644,7 +5674,7 @@ func (game *Game) doPlanarTraval() {
+@@ -5644,7 +5678,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
                      select {
@@ -1784,7 +1846,7 @@ index 44c64b8..7abbe5c 100644
                          default:
                      }
                  } else {
-@@ -5705,6 +5735,25 @@ func (game *Game) DumpInfo(x int, y int) {
+@@ -5705,6 +5739,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
  
@@ -1810,7 +1872,7 @@ index 44c64b8..7abbe5c 100644
  func (game *Game) MakeHudUI() *uilib.UI {
      type TrackKey struct {
          Key ebiten.Key
-@@ -5815,6 +5864,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5815,6 +5868,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
      ui.AddGroup(group)
  
      // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
@@ -1820,7 +1882,7 @@ index 44c64b8..7abbe5c 100644
      makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
          buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
          rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
-@@ -5853,6 +5905,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5853,6 +5909,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
                  options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
                  options.ColorScale.ScaleWithColorScale(colorScale)
                  scale.DrawScaled(screen, buttons[index], &options)
@@ -1830,7 +1892,7 @@ index 44c64b8..7abbe5c 100644
              },
          }
      }
-@@ -6145,6 +6200,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6145,6 +6204,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
                      scale.DrawScaled(screen, doneImages[doneIndex], &options)
@@ -1838,7 +1900,7 @@ index 44c64b8..7abbe5c 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      doneCounter += 1
-@@ -6185,6 +6241,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6185,6 +6245,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
@@ -1846,7 +1908,7 @@ index 44c64b8..7abbe5c 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      patrolCounter += 1
-@@ -6229,6 +6286,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6229,6 +6290,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, waitImages[waitIndex], &options)
@@ -1854,7 +1916,7 @@ index 44c64b8..7abbe5c 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      waitCounter += 1
-@@ -6310,6 +6368,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6310,6 +6372,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      }
  
                      colorm.DrawImage(screen, use, matrix, &options)
@@ -1869,7 +1931,7 @@ index 44c64b8..7abbe5c 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
-@@ -6364,7 +6430,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6364,7 +6434,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
          elements = append(elements, &uilib.UIElement{
              Draw: func(element *uilib.UIElement, screen *ebiten.Image){
                  if !minMoves.IsZero() {
@@ -1878,7 +1940,7 @@ index 44c64b8..7abbe5c 100644
  
                      sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
                      swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
-@@ -6474,21 +6540,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6474,21 +6544,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
  
                      if goldPerTurn < 0 {
@@ -1906,7 +1968,7 @@ index 44c64b8..7abbe5c 100644
                      }
  
                      if conjunction != "" {
-@@ -6738,7 +6804,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6738,7 +6808,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
                      log.Printf("Disband %v due to lack of gold", unit)
@@ -1915,7 +1977,7 @@ index 44c64b8..7abbe5c 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6746,7 +6812,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6746,7 +6816,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if foodIssue && unit.GetUpkeepFood() > 0 {
                      log.Printf("Disband %v due to lack of food", unit)
@@ -1924,7 +1986,7 @@ index 44c64b8..7abbe5c 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6754,7 +6820,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6754,7 +6824,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if manaIssue && unit.GetUpkeepMana() > 0 {
                      log.Printf("Disband %v due to lack of mana", unit)
@@ -1933,7 +1995,7 @@ index 44c64b8..7abbe5c 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -7020,7 +7086,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7020,7 +7090,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
  
                          scrollEvent := GameEventScroll{
                              Title: "CITY GROWTH",
@@ -1942,7 +2004,7 @@ index 44c64b8..7abbe5c 100644
                          }
  
                          select {
-@@ -7032,7 +7098,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7032,7 +7102,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -1951,7 +2013,7 @@ index 44c64b8..7abbe5c 100644
                              default:
                          }
                      }
-@@ -7051,14 +7117,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7051,14 +7121,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -2116,7 +2178,7 @@ index ce51df7..40ef521 100644
      })
  
 diff --git a/game/magic/game/model.go b/game/magic/game/model.go
-index eba3455..54138ef 100644
+index eba3455..51683c7 100644
 --- a/game/magic/game/model.go
 +++ b/game/magic/game/model.go
 @@ -219,21 +219,21 @@ func (model *GameModel) FindPath(oldX int, oldY int, newX int, newY int, player
@@ -2150,6 +2212,18 @@ index eba3455..54138ef 100644
  
          /*
          if !tileTo.Tile.IsLand() && !allFlyers && stack.AnyLandWalkers() {
+@@ -974,6 +974,11 @@ func (model *GameModel) DoRandomEvents() {
+         eventProbability = fraction.Zero()
+     }
+ 
++    // #9 隨機事件設定:關閉時完全不擲骰(火山/地震/好月壞月等都不發生)。
++    if !data.Settings.RandomEvents {
++        eventProbability = fraction.Zero()
++    }
++
+     if rand.N(512) < int(eventProbability.ToFloat()) {
+         choices := set.NewSet[RandomEventType](
+             RandomEventBadMoon,
 diff --git a/game/magic/game/road.go b/game/magic/game/road.go
 index f5ef5e5..fb024b3 100644
 --- a/game/magic/game/road.go
@@ -2728,7 +2802,7 @@ index 07d2243..009cc90 100644
                      }
                  },
 diff --git a/game/magic/main.go b/game/magic/main.go
-index 4d2b7f7..7652560 100644
+index 4d2b7f7..5432786 100644
 --- a/game/magic/main.go
 +++ b/game/magic/main.go
 @@ -64,6 +64,9 @@ type MagicGame struct {
@@ -2777,7 +2851,47 @@ index 4d2b7f7..7652560 100644
  
          yield()
  
-@@ -858,6 +865,8 @@ func main() {
+@@ -816,7 +823,15 @@ func NewMagicGame(dataPath string, startGame bool, loadSave string, enableMusic
+     return game, nil
+ }
+ 
+-func (game *MagicGame) Update() error {
++func (game *MagicGame) Update() (updateErr error) {
++    // 閃退 log:攔截遊戲迴圈 panic,寫下堆疊後 re-panic(維持原崩潰行為,只多一份可回收現場)。
++    defer func() {
++        if r := recover(); r != nil {
++            logPanic("Update", r)
++            panic(r)
++        }
++    }()
++
+     inputmanager.Update()
+ 
+     if ebiten.IsWindowBeingClosed() {
+@@ -842,6 +857,14 @@ func (game *MagicGame) Layout(outsideWidth int, outsideHeight int) (int, int) {
+ func (game *MagicGame) Draw(screen *ebiten.Image) {
+     // screen.Fill(color.RGBA{0x80, 0xa0, 0xc0, 0xff})
+ 
++    // 閃退 log:攔截繪製 panic,寫下堆疊後 re-panic。
++    defer func() {
++        if r := recover(); r != nil {
++            logPanic("Draw", r)
++            panic(r)
++        }
++    }()
++
+     if game.Drawer != nil {
+         game.Drawer(screen)
+     }
+@@ -851,6 +874,7 @@ func (game *MagicGame) Draw(screen *ebiten.Image) {
+ 
+ func main() {
+     log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
++    setupCrashLog() // 把 log 落到持久檔 + 之後 Update/Draw 的 panic 會被記錄
+ 
+     var dataPath string
+     var startGame bool
+@@ -858,6 +882,8 @@ func main() {
      var enableMusic bool
      var loadSave string
      var watchMode bool
@@ -2786,7 +2900,7 @@ index 4d2b7f7..7652560 100644
      flag.StringVar(&dataPath, "data", "", "path to master of magic lbx data files. Give either a directory or a zip file. Data is searched for in the current directory if not given.")
      flag.BoolVar(&enableMusic, "music", true, "enable music playback")
      flag.BoolVar(&startGame, "start", false, "start the game immediately with a random wizard")
-@@ -893,6 +902,7 @@ func main() {
+@@ -893,6 +919,7 @@ func main() {
          log.Printf("Error: unable to load game: %v", err)
          return
      }
@@ -2794,6 +2908,70 @@ index 4d2b7f7..7652560 100644
  
      err = ebiten.RunGame(game)
      if err != nil {
+diff --git a/game/magic/main_crashlog.go b/game/magic/main_crashlog.go
+new file mode 100644
+index 0000000..0c8783e
+--- /dev/null
++++ b/game/magic/main_crashlog.go
+@@ -0,0 +1,58 @@
++package main
++
++// 閃退 log(issue:閃退穩定性追查):引擎本來只把 log.Printf 輸出到 stderr,玩家雙擊 AppImage/.app
++// 執行時沒有主控台,閃退後現場全失。本檔把所有 log 同時導到持久檔 crash.log,並在 ebiten 的
++// Update/Draw 攔截 panic、寫下 panic 值與堆疊(落盤後再讓它照常崩潰),方便事後回收「閃退前最後發生什麼」。
++
++import (
++    "io"
++    "log"
++    "os"
++    "path/filepath"
++    "runtime/debug"
++)
++
++// crashLogDir 回傳可寫的 log 目錄(跨平台:Linux ~/.config、Windows %AppData%、mac App Support)。
++// AppImage(squashfs)/.app bundle 的 cwd 可能是唯讀掛載,故不寫 cwd。失敗時退回系統暫存目錄。
++func crashLogDir() string {
++    base, err := os.UserConfigDir()
++    if err != nil || base == "" {
++        base = os.TempDir()
++    }
++    dir := filepath.Join(base, "master-of-magic-cht")
++    if err := os.MkdirAll(dir, 0o755); err != nil {
++        return os.TempDir()
++    }
++    return dir
++}
++
++var crashLogFile *os.File
++
++// CrashLogPath 回傳目前 log 檔的完整路徑(供啟動時告知玩家位置)。
++func CrashLogPath() string {
++    return filepath.Join(crashLogDir(), "crash.log")
++}
++
++// setupCrashLog 把所有 log 輸出同時導到主控台與持久檔 crash.log。引擎大量以 log.Printf 記錄狀態轉換,
++// 落檔後閃退時即可看到「最後發生什麼」。回傳 log 檔路徑(開檔失敗則回空字串、僅輸出主控台)。
++func setupCrashLog() string {
++    path := CrashLogPath()
++    f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
++    if err != nil {
++        log.Printf("crashlog: 無法開啟 log 檔 %v: %v(僅輸出到主控台)", path, err)
++        return ""
++    }
++    crashLogFile = f
++    log.SetOutput(io.MultiWriter(os.Stderr, f))
++    log.Printf("==== Master of Magic CHT 啟動;log 檔:%v ====", path)
++    return path
++}
++
++// logPanic 在 ebiten Update/Draw 攔截到 panic 時,把 panic 值與堆疊寫進 log 並落盤,
++// 供呼叫端 re-panic 維持原崩潰行為(只多了一份可回收的現場)。
++func logPanic(where string, r any) {
++    log.Printf("==== PANIC (%s): %v ====\n%s", where, r, debug.Stack())
++    if crashLogFile != nil {
++        _ = crashLogFile.Sync()
++    }
++}
 diff --git a/game/magic/mainview/view.go b/game/magic/mainview/view.go
 index d306987..01229ed 100644
 --- a/game/magic/mainview/view.go
@@ -2963,16 +3141,20 @@ index d6b0ef4..75a46e2 100644
              heroY := cornerY + 142
 diff --git a/game/magic/player/cht_books_test.go b/game/magic/player/cht_books_test.go
 new file mode 100644
-index 0000000..8681e1e
+index 0000000..b55121f
 --- /dev/null
 +++ b/game/magic/player/cht_books_test.go
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,53 @@
 +package player
 +
 +// 驗證 issue #6/#8:法術可用性是否依持有書系過濾。
 +// 結論(本測試證明):研究池嚴格依 player.Wizard.Books 過濾——無某系書 = 該系 0 法術。
 +// 故玩家「沒紅書卻有混沌法術」「選生命書戰鬥卻有死亡法術」並非研究洩漏,
 +// 而是英雄/物品的 spell charges(合法 MoM 機制,不受書系限制),非引擎 bug。
++// 手冊 oracle(p.82,英雄能力「*Inherent Spell Knowledge」):
++//   "Spells accessible to the hero (such spells are not necessarily part of the wizard's
++//    spell book); these spells appear during combat."
++// → 手冊明載英雄內在法術不必然在巫師法術書、且於戰鬥中出現,與引擎行為一致。程式碼+手冊雙重佐證。
 +
 +import (
 +    "fmt"
@@ -3184,18 +3366,19 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..80f0be5 100644
+index 556d824..03899dd 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
-@@ -13,6 +13,7 @@ import (
+@@ -13,6 +13,8 @@ import (
      "github.com/kazzmir/master-of-magic/game/magic/scale"
      uilib "github.com/kazzmir/master-of-magic/game/magic/ui"
      musiclib "github.com/kazzmir/master-of-magic/game/magic/music"
 +    "github.com/kazzmir/master-of-magic/game/magic/spellbook"
++    "github.com/kazzmir/master-of-magic/game/magic/data"
  
      "github.com/hajimehoshi/ebiten/v2"
      "github.com/hajimehoshi/ebiten/v2/vector"
-@@ -63,7 +64,7 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -63,7 +65,7 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          Draw: func(element *uilib.UIElement, screen *ebiten.Image){
              var options ebiten.DrawImageOptions
              options.ColorScale.ScaleAlpha(getAlpha())
@@ -3204,32 +3387,74 @@ index 556d824..80f0be5 100644
          },
      })
  
-@@ -103,6 +104,30 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,72 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
-+    // #7:法術書排序切換(對應原版 MoM「Spell Book Ordering」設定,手冊 p.24)。
-+    // 顯示目前模式並可點擊切換:按類別(召喚/城市/附魔…)↔ 按顏色(自然/秘術/混沌/生命/死亡)。
-+    // 純顯示偏好,點擊立即生效於法術書渲染(spellbook.SpellBookOrderByColor)。
-+    spellOrderText := func() string {
++    // 設定切換鈕共用 helper:在 (30, y) 顯示一行可點擊的文字,點擊執行 onClick;文字由 label() 即時取得。
++    addToggle := func(y int, label func() string, onClick func()){
++        group.AddElement(&uilib.UIElement{
++            Layer: settingsLayer,
++            Rect: image.Rect(30, y, 30 + 240, y + 12),
++            PlaySoundLeftClick: true,
++            LeftClick: func(element *uilib.UIElement){
++                onClick()
++            },
++            Draw: func(element *uilib.UIElement, screen *ebiten.Image){
++                var options ebiten.DrawImageOptions
++                options.ColorScale.ScaleAlpha(getAlpha())
++                fonts.OptionFont.PrintOptions(screen, float64(element.Rect.Min.X), float64(element.Rect.Min.Y), font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, label())
++            },
++        })
++    }
++
++    // On/Off 標籤共用格式(走 TranslateFormat → 中文)。
++    onOff := func(prefix string, on bool) string {
++        if on {
++            return fmt.Sprintf(font.TranslateFormat("%v: On"), font.TranslateFormat(prefix))
++        }
++        return fmt.Sprintf(font.TranslateFormat("%v: Off"), font.TranslateFormat(prefix))
++    }
++
++    // #7 法術書排序:按類別 ↔ 按顏色(對應原版 Spell Book Ordering)。
++    addToggle(75, func() string {
 +        if spellbook.SpellBookOrderByColor {
 +            return font.TranslateFormat("Spell Book Ordering: By Color")
 +        }
 +        return font.TranslateFormat("Spell Book Ordering: By Category")
-+    }
++    }, func(){
++        spellbook.SpellBookOrderByColor = !spellbook.SpellBookOrderByColor
++    })
 +
-+    group.AddElement(&uilib.UIElement{
-+        Layer: settingsLayer,
-+        Rect: image.Rect(30, 75, 30 + 220, 75 + 12),
-+        PlaySoundLeftClick: true,
-+        LeftClick: func(element *uilib.UIElement){
-+            spellbook.SpellBookOrderByColor = !spellbook.SpellBookOrderByColor
-+        },
-+        Draw: func(element *uilib.UIElement, screen *ebiten.Image){
-+            var options ebiten.DrawImageOptions
-+            options.ColorScale.ScaleAlpha(getAlpha())
-+            fonts.OptionFont.PrintOptions(screen, 30, 75, font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, spellOrderText())
-+        },
++    // #11 戰略戰鬥(全自動):開啟時所有戰鬥自動結算、不進戰術畫面(仍顯示勝負結果)。
++    addToggle(90, func() string {
++        return onOff("Strategic Combat Only", data.Settings.StrategicCombatOnly)
++    }, func(){
++        data.Settings.StrategicCombatOnly = !data.Settings.StrategicCombatOnly
++    })
++
++    // #1 介面/戰鬥音效開關。
++    addToggle(105, func() string {
++        return onOff("Sound Effects", data.Settings.SoundEffects)
++    }, func(){
++        data.Settings.SoundEffects = !data.Settings.SoundEffects
++    })
++
++    // #2 背景音樂開關(關閉時立即停止目前播放)。
++    addToggle(120, func() string {
++        return onOff("Background Music", music.Enabled)
++    }, func(){
++        music.Enabled = !music.Enabled
++        if !music.Enabled {
++            music.Stop()
++        }
++    })
++
++    // #9 隨機事件開關(火山/地震/好月壞月等)。
++    addToggle(135, func() string {
++        return onOff("Random Events", data.Settings.RandomEvents)
++    }, func(){
++        data.Settings.RandomEvents = !data.Settings.RandomEvents
 +    })
 +
      return group, quit
@@ -4685,3 +4910,17 @@ index 0000000..2d7f7ec
 +		log.Printf("run error: %v", err)
 +	}
 +}
+diff --git a/test/main-screen/main.go b/test/main-screen/main.go
+index 850b02e..986b077 100644
+--- a/test/main-screen/main.go
++++ b/test/main-screen/main.go
+@@ -21,7 +21,8 @@ type Engine struct {
+ func NewEngine() (*Engine, error) {
+     cache := lbx.AutoCache()
+ 
+-    mainScreen := mainview.MakeMainScreen(cache, nil, musiclib.MakeMusic(cache))
++    ruleSet := data.RuleSetRemake
++    mainScreen := mainview.MakeMainScreen(cache, nil, musiclib.MakeMusic(cache), &ruleSet)
+ 
+     return &Engine{
+         LbxCache: cache,

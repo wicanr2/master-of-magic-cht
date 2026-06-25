@@ -64,7 +64,13 @@
     玩家法術書不可能沒研究就有他系法術。
   - 他系法術來自**英雄/物品 spell charges**(`hero.GetSpellChargeSpells`,合法 MoM,不受書系限制);
     MoM 中**召喚英雄不依書系 gate**(可同時有 Roland+Mortu)。Life/Death 互斥已在建角強制(new-wizard.go:1213)。
-  - **結論**:正常 MoM 行為被誤記。柵欄原則 + 別猜——不對正確機制加錯誤限制。`cht_books_test.go` 留作證明。
+  - **手冊 oracle(p.82,英雄/單位能力清單「*Inherent Spell Knowledge」)**:
+    *“Spells accessible to the hero (such spells are not necessarily part of the wizard's spell book);
+    these spells appear during combat.”* —— 手冊白紙黑字:英雄內在法術知識**不必然屬於巫師法術書**,
+    且**在戰鬥中出現**。玩家「戰鬥時法術書裡有他系(混亂/死亡)法術」正是召喚到該系英雄、其自帶法術於戰鬥出現,
+    與引擎行為完全吻合。另「Innate Spell Ability」(單位每場戰鬥可施特定法術一次)亦是非書來源的合法機制。
+  - **結論**:正常 MoM 行為被誤記。柵欄原則 + 別猜——不對正確機制加錯誤限制。
+    **程式碼證明(`cht_books_test.go`)+ 手冊 oracle(p.82)雙重佐證**。
 - [x] **#2 製造神器成本(存讀檔丟失 OverrideCost)** (2026-06-25)
   - **手冊 oracle**(manual.pdf p.88):製作神器時間取決於「神器法力成本、施法技能、每回合法力」;
     強大物品極貴、需很長時間。故 4000 神器 2 回合完成確是 bug。
