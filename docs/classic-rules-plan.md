@@ -110,7 +110,27 @@
     商人購入、死亡英雄裝備回庫)傳 nil → 維持 fortress。打怪英雄當場穿戴 = Same Location = 免費,符合手冊。
   - **驗證**:全引擎 `go build ./...` 通過(4 個 doVault caller + showVaultScreen 簽名一致);UI seam 無法
     unit test(需 LBX),以手冊 oracle + 移動程式碼路徑(stack==treasure.Point)+ 編譯為據。
-- [ ] #4 船斜向/長程海上尋路錯誤聲(pathfinding)
+- [x] **#4 船斜向/長程海上尋路有時錯誤聲、無法選 — 移除不安全的水體早退優化**(2026-06-25)
+  - **症狀**:點很遠的海上目的地或斜向海洋,有時發出錯誤聲、無法選,有時又正常(間歇性)。
+  - **根因(兩個,移除早退對兩者皆免疫)**:`model.FindPath`(model.go:229)曾用「水體分量」做早退優化 ——
+    起終點不在同一 `GetWaterBody` 就直接回 false、不跑真正尋路。但:
+    (1) **有向 flood-fill 被當無向水體用**:`CanTraverse` 是方向性的(Ocean 任意方向可航;Shore 對角無
+    water compatibility → 對角不可航),作者**刻意**讓 shore 對角分隔水體(maplib `TestWaterBodies` 即測此設計)。
+    把這種會把實際可達 tile 切開的有向分量拿來做 `!=` 拒絕並不安全:例如 Ocean(O2) 能對角航向 Shore(S)、
+    S 再正交接 Ocean(O1),「O2 的船→O1」實際可達,卻因 O1/O2 被分到不同水體而被早退偽拒。
+    (2) **水體快取永不失效**:`WaterBodies` 首次使用後快取(model.go:416),地形改變(改地形/火山/地震/夷平城市)
+    後不重算 → 舊快取對新地形誤判。兩者都造成「有時可有時不可」。
+  - **柵欄檢查**:`GetWaterBodies` 的有向 flood-fill + shore 分隔水體是**作者刻意設計**(既有測試保護),
+    不可改它本身(我曾試對稱化連通 → 立刻打破 `TestWaterBodies`,證明那是柵欄)。`GetWaterBody` 的**唯一**
+    consumer 就是這個早退;city 連通用的是 `FindPath` 而非水體。
+  - **修(兩模式)**:移除 model.FindPath 的水體早退,讓 water→water 一律交給權威 `FindPath`(用實際
+    `CanTraverse` 逐步 A* 搜尋,會正確找到 O2→S→O1;真正不可達才回 false)。water→land 的早退維持不變
+    (那是永遠正確的)。代價僅是對「真正不可達」的水路多跑一次 A*,MoM 地圖尺度可忽略(正確性 > 效能)。
+    `GetWaterBodies`/`GetWaterBody` 保留不動(柵欄 + 潛在重用)。
+  - **驗證**:`cht_waterpath_test.go` 守護 sailing 單位(Warship)經 model.FindPath 斜向/遠程/反向尋路皆 PASS;
+    既有 `TestPathBasic` 無 regression;`TestWaterBodies` 柵欄保留;全引擎 `go build ./...` 通過。
+    註:精確「不對稱水體切分」的最小單元重現難構造(讓地圖可航的 ocean 格本身會讓 flood-fill 合併),
+    故以根因分析 + 柵欄保留 + 尋路回歸 + 全 build 為據(同 #10 的 UI seam 取捨)。
 - [ ] #7 法術書顏色排序選項 + 設定畫面補項
 
 > 註:閃退(穩定性)獨立追,不在規則範疇。

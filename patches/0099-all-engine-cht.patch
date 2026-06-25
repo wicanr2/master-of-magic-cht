@@ -1345,6 +1345,107 @@ index 92ed88e..0484cad 100644
              }
  
              fonts.InfoFont.PrintCenter(screen, float64(data.ScreenWidth / 2 + offset), float64(data.ScreenHeight / 2 + frame.Bounds().Dy() / 2), scale.ScaleAmount, options.ColorScale, text)
+diff --git a/game/magic/game/cht_waterpath_test.go b/game/magic/game/cht_waterpath_test.go
+new file mode 100644
+index 0000000..df2d00f
+--- /dev/null
++++ b/game/magic/game/cht_waterpath_test.go
+@@ -0,0 +1,95 @@
++package game
++
++// 驗證 issue #4:船按很遠的目的地自動前往,但「斜向的海洋有時會發出錯誤聲、無法選,有時又沒問題」。
++//
++// 根因(兩個,移除水體早退對兩者皆免疫):
++//  (1) 有向 flood-fill 被當無向水體用:model.FindPath 曾用 GetWaterBody 做早退優化 ——
++//      起終點不在同一水體就直接回 false。但 GetWaterBodies 的連通是「方向性」的
++//      (Ocean 任意方向可航;Shore 對角無 water compatibility → 對角不可航),作者刻意讓 shore
++//      對角分隔水體(見 maplib TestWaterBodies,該設計與測試保留不動)。把這種會把實際可達 tile
++//      切開的有向分量拿來做 != 拒絕並不安全 → 對某些方向的可達移動偽拒。
++//  (2) 水體快取永不失效:WaterBodies 首次使用後被快取、地形改變(改地形/火山/地震/夷平城市)後不重算
++//      → 舊快取對新地形誤判 → 偽拒。
++//
++// 修:移除 model.FindPath 中的水體早退,讓 water→water 一律交給權威 FindPath(用實際 CanTraverse
++// 逐步搜尋,真正不可達才回 false)。water→land 的早退維持不變。
++//
++// 本測試守護:sailing 單位(Warship)經 model.FindPath 在含「對角」與「遠程」的海面能正確找到路徑,
++// 確認移除早退後水路尋路(含斜向)正常、不會偽拒。
++
++import (
++    "testing"
++    "image"
++
++    playerlib "github.com/kazzmir/master-of-magic/game/magic/player"
++    herolib "github.com/kazzmir/master-of-magic/game/magic/hero"
++    "github.com/kazzmir/master-of-magic/game/magic/units"
++    "github.com/kazzmir/master-of-magic/game/magic/maplib"
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++    "github.com/kazzmir/master-of-magic/game/magic/terrain"
++)
++
++func TestChtWaterDiagonalPathfinding(test *testing.T) {
++    var model GameModel
++
++    terrainData := terrain.MakeTerrainData([]image.Image{nil, nil}, []terrain.TerrainTile{
++        terrain.TerrainTile{TileIndex: 0, Tile: terrain.TileLand},
++        terrain.TerrainTile{TileIndex: 1, Tile: terrain.TileOcean},
++    })
++
++    // 5x5 全海地圖,四周不重要;重點是 sailing 單位要能斜向 + 遠程尋路。
++    width, height := 5, 5
++    xmap := maplib.Map{
++        Map: terrain.MakeMap(width, height),
++        Data: terrainData,
++        Plane: data.PlaneArcanus,
++    }
++    for x := 0; x < width; x++ {
++        for y := 0; y < height; y++ {
++            xmap.Map.Terrain[x][y] = 1 // ocean
++        }
++    }
++    model.ArcanusMap = &xmap
++
++    fog := make(data.FogMap, width)
++    for x := 0; x < width; x++ {
++        fog[x] = make([]data.FogType, height)
++        for y := range height {
++            fog[x][y] = data.FogTypeVisible
++        }
++    }
++
++    pathOK := func(fromX, fromY, toX, toY int) bool {
++        player1 := playerlib.MakePlayer(setup.WizardCustom{}, true, 3, 1, map[herolib.HeroType]string{}, &model)
++        u := units.MakeOverworldUnit(units.Warship, fromX, fromY, data.PlaneArcanus)
++        added := player1.AddUnit(u)
++        added.SetX(fromX)
++        added.SetY(fromY)
++        stack := player1.FindStack(fromX, fromY, data.PlaneArcanus)
++        path, ok := model.FindPath(fromX, fromY, toX, toY, player1, stack, fog)
++        return ok && len(path) > 0
++    }
++
++    // 純斜向一步:(0,0) → (1,1)
++    if !pathOK(0, 0, 1, 1) {
++        test.Errorf(">>> #4:sailing 單位無法斜向移動一格(0,0)→(1,1)")
++    }
++
++    // 遠程斜向:(0,0) → (4,4)(對角穿越整張海)
++    if !pathOK(0, 0, 4, 4) {
++        test.Errorf(">>> #4:sailing 單位無法遠程斜向尋路(0,0)→(4,4)")
++    }
++
++    // 遠程正交:(0,2) → (4,2)
++    if !pathOK(0, 2, 4, 2) {
++        test.Errorf(">>> #4:sailing 單位無法遠程尋路(0,2)→(4,2)")
++    }
++
++    // 反向斜向(對稱性):(4,4) → (0,0)
++    if !pathOK(4, 4, 0, 0) {
++        test.Errorf(">>> #4:sailing 單位反向斜向尋路失敗(4,4)→(0,0)")
++    }
++
++    test.Logf("sailing 單位於開放海面斜向/遠程尋路皆正常 → 移除水體早退後 water→water 由 FindPath 權威判定,無偽拒")
++}
 diff --git a/game/magic/game/events.go b/game/magic/game/events.go
 index a350e17..6e77446 100644
 --- a/game/magic/game/events.go
@@ -2014,6 +2115,41 @@ index ce51df7..40ef521 100644
          },
      })
  
+diff --git a/game/magic/game/model.go b/game/magic/game/model.go
+index eba3455..54138ef 100644
+--- a/game/magic/game/model.go
++++ b/game/magic/game/model.go
+@@ -219,21 +219,21 @@ func (model *GameModel) FindPath(oldX int, oldY int, newX int, newY int, player
+     // such as a water unit trying to move to land
+     if fog.GetFog(useMap.WrapX(newX), newY) != data.FogTypeUnexplored {
+         tileTo := useMap.GetTile(newX, newY)
+-        tileFrom := useMap.GetTile(oldX, oldY)
+ 
+         // if this is a water unit that cannot walk on land then just return nil immediately since the move is impossible
+         if tileTo.Tile.IsLand() && !stack.CanMoveOnLand(true) {
+             return nil, false
+         }
+ 
+-        // if this is a water unit and it is moving from water to more water, but the destination water tile
+-        // is landlocked and the origin tile is not part of the same body of water, then there cannot be a valid
+-        // path between the two water tiles
+-        if tileTo.Tile.IsWater() && tileFrom.Tile.IsWater() && !stack.CanMoveOnLand(true) {
+-            if model.GetWaterBody(useMap, newX, newY) != model.GetWaterBody(useMap, oldX, oldY) {
+-                return nil, false
+-            }
+-        }
++        // #4 修正:原本這裡用「水體分量」做早退優化 —— 若起終點不在同一 GetWaterBody 就直接回 false。
++        // 但 GetWaterBodies 的 flood-fill 連通是「方向性」的(Ocean 任意方向可航;Shore 對角無 water
++        // compatibility → 對角不可航),且作者刻意讓 shore 對角分隔水體(見 maplib TestWaterBodies)。
++        // 把這種有向、會把實際可達 tile 切開的分量拿來做 != 拒絕並不安全:例如 Ocean(O2) 能對角航向
++        // Shore(S)、S 再正交接 Ocean(O1),「O2 的船→O1」實際可達,卻因 O1/O2 被分到不同水體而被早退偽拒 →
++        // 點遠處或斜向海洋出現錯誤聲、無法選(issue #4「有時可有時不可」)。
++        // 移除此水體早退,讓 water→water 一律交給權威的 FindPath 判定(它用實際 CanTraverse 逐步搜尋,
++        // 會正確找到 O2→S→O1;真正不可達時才回 false)。代價僅是對「真正不可達」的水路多跑一次 A*,
++        // 在 MoM 地圖尺度可忽略,且符合正確性 > 效能的優先序。water→land 的早退(上面)維持不變。
+ 
+         /*
+         if !tileTo.Tile.IsLand() && !allFlyers && stack.AnyLandWalkers() {
 diff --git a/game/magic/game/road.go b/game/magic/game/road.go
 index f5ef5e5..fb024b3 100644
 --- a/game/magic/game/road.go
