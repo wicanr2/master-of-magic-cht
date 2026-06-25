@@ -1184,10 +1184,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..272357a
+index 0000000..baaa5de
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,39 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1209,6 +1209,9 @@ index 0000000..272357a
 +    EnemySpells         bool // #14 其餘對手法術(catch-all)
 +    // #12 戰鬥中顯示當前單位的額外資訊(剩餘彈藥/法力/血量),對應原版 Additional Unit Information
 +    AdditionalUnitInformation bool
++    // 自動結束回合:開啟時所有單位用完移動即自動推進回合。對應原版 End of Turn Wait(關=自動推進);
++    // 此處用正向旗標(開=自動),預設關 → 維持手動點下一回合的現況。
++    AutoEndTurn bool
 +}
 +
 +var Settings = GameSettings{
@@ -1222,6 +1225,7 @@ index 0000000..272357a
 +    SummoningEvents:     true,
 +    EnemySpells:         true,
 +    AdditionalUnitInformation: true,
++    AutoEndTurn:         false, // 預設關:維持手動點下一回合
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -1696,7 +1700,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..ee92107 100644
+index 44c64b8..7dc3725 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1860,7 +1864,24 @@ index 44c64b8..ee92107 100644
                                      break
                                  }
                              }
-@@ -3921,7 +3964,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
+@@ -3852,6 +3895,16 @@ func (game *Game) Update(yield coroutine.YieldFunc) GameState {
+                 if player.IsHuman() {
+                     if game.HudUI.GetHighestLayerValue() == 0 {
+                         game.doPlayerUpdate(yield, player)
++
++                        // 自動結束回合(對應原版 End of Turn Wait,預設關閉):開啟時,當 overworld 閒置
++                        // (無模態 UI,即上面 GetHighestLayerValue()==0)且玩家所有單位都用完移動,
++                        // 自動送出與「下一回合」按鈕相同的事件。預設關閉 → 不改變現況行為。
++                        if data.Settings.AutoEndTurn && game.Model.CurrentPlayer == 0 && player.AllStacksOutOfMoves() {
++                            select {
++                                case game.Events <- &GameEventNextTurn{}:
++                                default:
++                            }
++                        }
+                     }
+                 } else {
+                     game.doAiUpdate(yield, player)
+@@ -3921,7 +3974,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
  
              options.ColorScale = ebiten.ColorScale{}
              options.ColorScale.ScaleAlpha(getAlpha())
@@ -1869,7 +1890,7 @@ index 44c64b8..ee92107 100644
          })
  
          for !done {
-@@ -4294,11 +4337,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
+@@ -4294,11 +4347,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
      defer game.Music.PopSong()
  
      if len(encounter.Units) == 0 {
@@ -1883,7 +1904,7 @@ index 44c64b8..ee92107 100644
  }
  
  func (game *Game) doEncounter(yield coroutine.YieldFunc, player *playerlib.Player, stack *playerlib.UnitStack, encounter *maplib.ExtraEncounter, mapUse *maplib.Map, x int, y int) combat.CombatState {
-@@ -4488,7 +4531,9 @@ func (game *Game) ApplyTreasure(yield coroutine.YieldFunc, player *playerlib.Pla
+@@ -4488,7 +4541,9 @@ func (game *Game) ApplyTreasure(yield coroutine.YieldFunc, player *playerlib.Pla
              case *TreasureMagicalItem:
                  magicalItem := item.(*TreasureMagicalItem)
                  if player.IsHuman() {
@@ -1894,7 +1915,7 @@ index 44c64b8..ee92107 100644
                  } else {
                      if player.AIBehavior != nil {
                          // there is a light impedance mismatch between giving a treasure item and invoking the merchant item function
-@@ -4606,25 +4651,45 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+@@ -4606,25 +4661,45 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
      // do graphic combat only if a human is involved
      useHuman := attacker.IsHuman() || defender.IsHuman()
  
@@ -1940,7 +1961,7 @@ index 44c64b8..ee92107 100644
          }
  
          return &army
-@@ -4663,7 +4728,7 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+@@ -4663,7 +4738,7 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
  
      popCombatScreen := false
  
@@ -1949,7 +1970,7 @@ index 44c64b8..ee92107 100644
          defer mouse.Mouse.SetImage(game.MouseData.Normal)
  
          controllingPlayer := optional.Of[combat.ArmyPlayer](game.Model.GetHumanPlayer())
-@@ -5084,7 +5149,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+@@ -5084,7 +5159,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
  
      textOffset := 70
  
@@ -1958,7 +1979,7 @@ index 44c64b8..ee92107 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
-@@ -5644,7 +5709,7 @@ func (game *Game) doPlanarTraval() {
+@@ -5644,7 +5719,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
                      select {
@@ -1967,7 +1988,7 @@ index 44c64b8..ee92107 100644
                          default:
                      }
                  } else {
-@@ -5705,6 +5770,25 @@ func (game *Game) DumpInfo(x int, y int) {
+@@ -5705,6 +5780,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
  
@@ -1993,7 +2014,7 @@ index 44c64b8..ee92107 100644
  func (game *Game) MakeHudUI() *uilib.UI {
      type TrackKey struct {
          Key ebiten.Key
-@@ -5815,6 +5899,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5815,6 +5909,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
      ui.AddGroup(group)
  
      // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
@@ -2003,7 +2024,7 @@ index 44c64b8..ee92107 100644
      makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
          buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
          rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
-@@ -5853,6 +5940,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5853,6 +5950,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
                  options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
                  options.ColorScale.ScaleWithColorScale(colorScale)
                  scale.DrawScaled(screen, buttons[index], &options)
@@ -2013,7 +2034,7 @@ index 44c64b8..ee92107 100644
              },
          }
      }
-@@ -6145,6 +6235,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6145,6 +6245,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
                      scale.DrawScaled(screen, doneImages[doneIndex], &options)
@@ -2021,7 +2042,7 @@ index 44c64b8..ee92107 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      doneCounter += 1
-@@ -6185,6 +6276,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6185,6 +6286,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
@@ -2029,7 +2050,7 @@ index 44c64b8..ee92107 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      patrolCounter += 1
-@@ -6229,6 +6321,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6229,6 +6331,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, waitImages[waitIndex], &options)
@@ -2037,7 +2058,7 @@ index 44c64b8..ee92107 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      waitCounter += 1
-@@ -6310,6 +6403,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6310,6 +6413,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      }
  
                      colorm.DrawImage(screen, use, matrix, &options)
@@ -2052,7 +2073,7 @@ index 44c64b8..ee92107 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
-@@ -6364,7 +6465,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6364,7 +6475,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
          elements = append(elements, &uilib.UIElement{
              Draw: func(element *uilib.UIElement, screen *ebiten.Image){
                  if !minMoves.IsZero() {
@@ -2061,7 +2082,7 @@ index 44c64b8..ee92107 100644
  
                      sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
                      swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
-@@ -6474,21 +6575,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6474,21 +6585,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
  
                      if goldPerTurn < 0 {
@@ -2089,7 +2110,7 @@ index 44c64b8..ee92107 100644
                      }
  
                      if conjunction != "" {
-@@ -6738,7 +6839,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6738,7 +6849,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
                      log.Printf("Disband %v due to lack of gold", unit)
@@ -2098,7 +2119,7 @@ index 44c64b8..ee92107 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6746,7 +6847,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6746,7 +6857,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if foodIssue && unit.GetUpkeepFood() > 0 {
                      log.Printf("Disband %v due to lack of food", unit)
@@ -2107,7 +2128,7 @@ index 44c64b8..ee92107 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6754,7 +6855,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6754,7 +6865,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if manaIssue && unit.GetUpkeepMana() > 0 {
                      log.Printf("Disband %v due to lack of mana", unit)
@@ -2116,7 +2137,7 @@ index 44c64b8..ee92107 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6956,9 +7057,12 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -6956,9 +7067,12 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
          player.Mana -= manaSpent
  
          if spellCost <= player.CastingSpellProgress {
@@ -2129,7 +2150,7 @@ index 44c64b8..ee92107 100644
          }
      }
  
-@@ -7020,7 +7124,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7020,7 +7134,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
  
                          scrollEvent := GameEventScroll{
                              Title: "CITY GROWTH",
@@ -2138,7 +2159,7 @@ index 44c64b8..ee92107 100644
                          }
  
                          select {
-@@ -7032,7 +7136,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7032,7 +7146,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -2147,7 +2168,7 @@ index 44c64b8..ee92107 100644
                              default:
                          }
                      }
-@@ -7051,14 +7155,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7051,14 +7165,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -3390,6 +3411,68 @@ index 0000000..4c4ea66
 +    test.Logf(">>> bug:CastingSpell 只存名字 → 讀檔 FindByName 回 base spell(OverrideCost=0)→ 成本退回 base")
 +    test.Logf(">>> 修正(serialize.go):讀檔後 CastingSpell=Create Artifact 時,從 CreateArtifact.Cost 還原 OverrideCost")
 +}
+diff --git a/game/magic/player/cht_endturn_test.go b/game/magic/player/cht_endturn_test.go
+new file mode 100644
+index 0000000..fe1180b
+--- /dev/null
++++ b/game/magic/player/cht_endturn_test.go
+@@ -0,0 +1,56 @@
++package player
++
++// 驗證「自動結束回合」(對應原版 End of Turn Wait)的核心判斷:玩家所有 stack 是否都已用完移動。
++// 不需跑遊戲——直接構造玩家 + 單位、設定移動力,單元測試 AllStacksOutOfMoves()。
++// 遊戲端的 hook(game.Update)在設定開啟、overworld 閒置、此函式為真時自動送出下一回合事件。
++
++import (
++    "testing"
++
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    herolib "github.com/kazzmir/master-of-magic/game/magic/hero"
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++    "github.com/kazzmir/master-of-magic/game/magic/units"
++    "github.com/kazzmir/master-of-magic/lib/fraction"
++)
++
++func TestChtAllStacksOutOfMoves(test *testing.T) {
++    player := MakePlayer(setup.WizardCustom{Banner: data.BannerRed}, true, 1, 1, make(map[herolib.HeroType]string), &NoGlobalEnchantments{})
++
++    // 沒有任何 stack → 視為全部動完(本回合無單位待命令)
++    if !player.AllStacksOutOfMoves() {
++        test.Errorf("無 stack 時應回 true(無單位待命令)")
++    }
++
++    // 加入一個有移動力的單位 → 並非全部動完
++    unit := units.MakeOverworldUnit(units.HighMenSpearmen, 5, 5, data.PlaneArcanus)
++    player.AddUnit(unit)
++    unit.SetMovesLeft(true, fraction.FromInt(1))
++
++    if player.AllStacksOutOfMoves() {
++        test.Errorf("有可移動單位時應回 false")
++    }
++
++    // 用完移動 → 全部動完
++    unit.SetMovesLeft(true, fraction.Zero())
++    if !player.AllStacksOutOfMoves() {
++        test.Errorf("單位用完移動後應回 true")
++    }
++
++    // 再加第二個仍有移動力的單位(不同位置 → 不同 stack)→ 又變成非全部動完
++    unit2 := units.MakeOverworldUnit(units.HighMenSpearmen, 9, 9, data.PlaneArcanus)
++    player.AddUnit(unit2)
++    unit2.SetMovesLeft(true, fraction.FromInt(1))
++    if player.AllStacksOutOfMoves() {
++        test.Errorf("第二個 stack 仍可移動時應回 false")
++    }
++
++    // 兩個都用完 → 全部動完
++    unit2.SetMovesLeft(true, fraction.Zero())
++    if !player.AllStacksOutOfMoves() {
++        test.Errorf("所有 stack 用完移動後應回 true")
++    }
++
++    test.Logf("AllStacksOutOfMoves 正確:無單位/全動完→true,任一 stack 尚可移動→false")
++    test.Logf("自動結束回合預設關閉(data.Settings.AutoEndTurn=false)→ 不改變現況;開啟才在此為真時自動推進")
++}
 diff --git a/game/magic/player/cht_herodeath_test.go b/game/magic/player/cht_herodeath_test.go
 new file mode 100644
 index 0000000..b22643c
@@ -3494,6 +3577,29 @@ index 0000000..b22643c
 +    test.Logf("英雄戰死後正確保持 StatusDead、移出 Heroes 名冊、未重回軍隊 → 資料層 reconciliation 無 #3 復活問題")
 +    test.Logf("關鍵:Hero.AdjustHealth 在 health<=0 設 StatusDead;player.RemoveUnit 僅在 StatusEmployed 時改 Available,故不會把死亡英雄改回可用")
 +}
+diff --git a/game/magic/player/player.go b/game/magic/player/player.go
+index 88fc074..fc22d5c 100644
+--- a/game/magic/player/player.go
++++ b/game/magic/player/player.go
+@@ -1519,6 +1519,18 @@ func (player *Player) AddStack(stack *UnitStack) *UnitStack {
+     return stack
+ }
+ 
++// AllStacksOutOfMoves 回傳玩家所有 stack 是否都已用完移動(或全忙碌)——即本回合再無單位待命令。
++// 供 #End of Turn Wait(自動結束回合)判斷:設定開啟且此為真且 overworld 閒置時自動推進回合。
++// 抽成可測函式(不需跑遊戲即可單元測試)。
++func (player *Player) AllStacksOutOfMoves() bool {
++    for _, stack := range player.Stacks {
++        if !stack.OutOfMoves() {
++            return false
++        }
++    }
++    return true
++}
++
+ // update all the fields that relate the player to the unit
+ func (player *Player) UpdateUnit(unit units.StackUnit) units.StackUnit {
+     unit.SetBanner(player.GetBanner())
 diff --git a/game/magic/player/serialize.go b/game/magic/player/serialize.go
 index 56f9721..9741d4c 100644
 --- a/game/magic/player/serialize.go
@@ -3515,7 +3621,7 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..9c49c74 100644
+index 556d824..ad46a37 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3536,7 +3642,7 @@ index 556d824..9c49c74 100644
          },
      })
  
-@@ -103,6 +105,129 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,136 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
@@ -3661,6 +3767,13 @@ index 556d824..9c49c74 100644
 +        return onOff("Additional Unit Information", data.Settings.AdditionalUnitInformation)
 +    }, func(){
 +        data.Settings.AdditionalUnitInformation = !data.Settings.AdditionalUnitInformation
++    })
++
++    // 自動結束回合(對應原版 End of Turn Wait;開=單位動完自動推進,預設關)。
++    addToggle(func() string {
++        return onOff("Auto End Turn", data.Settings.AutoEndTurn)
++    }, func(){
++        data.Settings.AutoEndTurn = !data.Settings.AutoEndTurn
 +    })
 +
      return group, quit

@@ -168,7 +168,7 @@
 | 1 | Sound Effects | ✅ | `audio.GetSoundMaker` 一處 guard(關閉回空 player),覆蓋全部音效 |
 | 9 | Random Events | ✅ | `model.go` 事件擲骰前 guard |
 | 16 | Spell Animations | ✅ | `doCastOnMap`(定點特效)+ `doCastGlobalEnchantment`(全域附魔)guard,關閉直接套效果 |
-| — | End of Turn Wait | 評估中 | OFF=全部單位行動完自動推進(引擎只有 ON/手動點)。需 `stack.OutOfMoves()` 全檢 + idle 偵測 + 自動 `doNextTurn`。中偏難,需 playtest |
+| — | End of Turn Wait（自動結束回合）| ✅ | 正向旗標 AutoEndTurn 預設關;game.Update 在 idle(GetHighestLayerValue==0)+ player.AllStacksOutOfMoves() 時送 GameEventNextTurn。邏輯抽成 AllStacksOutOfMoves() 並單元測試(cht_endturn_test) |
 | 3 | Event Music | 跳過 | 要區分事件曲 vs 背景曲,低價值 |
 | 4/5/6/14 | Spell/Enemy 事件通知 | ✅ | 一套 `maybeNotifySpellCast`:7028(`CastingSpell` 完成)是所有玩家施法 chokepoint;對手施法依 Section 分類 + 各設定通知。設定畫面改雙欄容納 |
 | 17 | Show Node Owners | ✅ | 光環渲染早已存在(map.go DrawLayer2 已用旗色畫 sparkle);加設定 guard 即可 |
