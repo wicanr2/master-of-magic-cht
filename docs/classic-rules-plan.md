@@ -78,7 +78,13 @@
     還原 OverrideCost。`cht_castcost_test` 證序列化丟失 + CreateArtifact.Cost 可還原。
 
 ### T3 需先對照 1.31 oracle 再決策(可能 bug 也可能 CP1.60 故意改)
-- [ ] #3 英雄戰死、我方獲勝後是否該復活(查原版規則)
+- [~] **#3 英雄戰死獲勝後復活**(oracle 確認是 bug,根因調查中)
+  - **手冊 oracle**(p.71 line 3695):「英雄是獨特存在,死了除非被復活否則就是死了」→ 戰死英雄不該因獲勝復活,是 bug。
+  - 已查:`ArmyUnit.TakeDamage`(model.go:1782)有 `unit.Unit.AdjustHealth(-damage)` 打進底層;
+    戰後存活判定 game.go:4779 `unit.Unit.GetHealth()>0` 保留。`killUnits`(model.go:4393)勝利時只有
+    **Regeneration 能力**單位治療(正確,英雄無此特例)。亡靈升起 4423 排除英雄。
+  - **未定位**:英雄死亡是否正確進 `army.KilledUnits` / 戰後 health 是否異常 >0。需追 KilledUnits 填入 +
+    寫 test 重現(建一個 hero 被打到 0、跑勝利結算、驗 GetHealth)。下一輪做。
 - [ ] #4 船斜向/長程海上尋路錯誤聲(pathfinding)
 - [ ] #10 打怪英雄當場穿裝備是否免 20 傳送法力(查原版 Enchant Item move 規則)
 - [ ] #7 法術書顏色排序選項 + 設定畫面補項
