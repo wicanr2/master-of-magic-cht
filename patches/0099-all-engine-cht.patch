@@ -37,6 +37,49 @@ index 70ca4ff..a37a19c 100644
              // vector.DrawFilledRect(minimapArea, float32(minimapRect.Min.X), float32(minimapRect.Min.Y), float32(minimapRect.Bounds().Dx()), float32(minimapRect.Bounds().Dy()), util.PremultiplyAlpha(color.RGBA{R: 0xff, G: 0, B: 0, A: 128}), false)
          },
      }
+diff --git a/game/magic/artifact/cht_cost_test.go b/game/magic/artifact/cht_cost_test.go
+new file mode 100644
+index 0000000..86cc483
+--- /dev/null
++++ b/game/magic/artifact/cht_cost_test.go
+@@ -0,0 +1,37 @@
++package artifact
++
++// 驗證 issue #2:製造神器的施法成本是否 = 神器法力成本(手冊:時間取決於神器成本/施法技能/每回合法力)。
++// 本測試直接驗 calculateCost 的成本計算,確認貴神器的成本確實高(而非便宜)。
++
++import (
++    "testing"
++)
++
++func TestChtArtifactCost(test *testing.T) {
++    // 空神器(無附魔):各類型 base 成本
++    sword := &Artifact{Type: ArtifactTypeSword}
++    misc := &Artifact{Type: ArtifactTypeMisc}
++    staff := &Artifact{Type: ArtifactTypeStaff}
++
++    costs := map[Power]int{}
++
++    test.Logf("空神器 base 成本: 劍=%d 雜項=%d 法杖=%d", calculateCost(sword, costs), calculateCost(misc, costs), calculateCost(staff, costs))
++
++    if calculateCost(sword, costs) != 100 {
++        test.Errorf("劍 base 應 100,得 %d", calculateCost(sword, costs))
++    }
++
++    // 加幾個高成本 power(模擬玩家做的「三四千的東西」)
++    p1 := Power{Type: PowerTypeAttack, Amount: 6}
++    p2 := Power{Type: PowerTypeDefense, Amount: 6}
++    costs[p1] = 1600
++    costs[p2] = 1600
++    expensive := &Artifact{Type: ArtifactTypeSword, Powers: []Power{p1, p2}}
++    cost := calculateCost(expensive, costs)
++    test.Logf("加 2 個 1600 成本 power 的劍 → 總成本 %d (應 = 100 + 1600 + 1600 = 3300)", cost)
++    if cost != 3300 {
++        test.Errorf("成本計算異常:期望 3300,得 %d", cost)
++    }
++    test.Logf(">>> calculateCost 正確加總(base + 各 power);若玩家神器顯示 3-4000,created.Cost 也應 3-4000")
++    test.Logf(">>> 成本流:created.Cost→spell.OverrideCost→player.CastingSpell→多回合 ComputeEffectiveSpellCost(尊重 OverrideCost)")
++}
 diff --git a/game/magic/artifact/create-artifact.go b/game/magic/artifact/create-artifact.go
 index d9a0204..2a18dff 100644
 --- a/game/magic/artifact/create-artifact.go
@@ -2756,6 +2799,69 @@ index 0000000..8681e1e
 +    }
 +    test.Logf(">>> 研究 gating 正確:無書系=0 法術。#6/#8 的他系法術來自英雄 spell charges(合法 MoM),非 bug。")
 +}
+diff --git a/game/magic/player/cht_castcost_test.go b/game/magic/player/cht_castcost_test.go
+new file mode 100644
+index 0000000..4c4ea66
+--- /dev/null
++++ b/game/magic/player/cht_castcost_test.go
+@@ -0,0 +1,37 @@
++package player
++
++// 驗證 issue #2 根因:存檔只存 CastingSpell.Name,丟失 Create Artifact 的 OverrideCost(=神器成本)。
++// 手冊確認:製作神器時間取決於神器法力成本。讀檔後成本退回 base → 貴神器幾回合做好、法力不足照做。
++// 本測試證明:(1) 序列化確實丟失 OverrideCost;(2) 另存的 CreateArtifact.Cost 可用來還原(即修正依據)。
++
++import (
++    "testing"
++
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++    "github.com/kazzmir/master-of-magic/game/magic/spellbook"
++    "github.com/kazzmir/master-of-magic/game/magic/artifact"
++    "github.com/kazzmir/master-of-magic/game/magic/hero"
++)
++
++func TestChtCastingSpellOverrideCostLost(test *testing.T) {
++    player := MakePlayer(setup.WizardCustom{}, true, 1, 1, make(map[hero.HeroType]string), &NoGlobalEnchantments{})
++
++    // 模擬:玩家正在製作一個 4000 成本的神器(CastingSpell 帶 OverrideCost)
++    player.CastingSpell = spellbook.Spell{Name: "Create Artifact", OverrideCost: 4000}
++    player.CastingSpellProgress = 46
++    player.CreateArtifact = &artifact.Artifact{Type: artifact.ArtifactTypeSword, Cost: 4000}
++
++    serialized := SerializePlayer(player)
++
++    test.Logf("序列化後 CastingSpell = %q (只存名字,OverrideCost 沒進序列化)", serialized.CastingSpell)
++    if serialized.CreateArtifact == nil {
++        test.Fatalf("CreateArtifact 未序列化,無法還原成本")
++    }
++    test.Logf("序列化後 CreateArtifact.Cost = %d (神器成本有另存 → 修正可從此還原 OverrideCost)", serialized.CreateArtifact.Cost)
++
++    if serialized.CreateArtifact.Cost != 4000 {
++        test.Errorf("CreateArtifact 成本應 4000,得 %d", serialized.CreateArtifact.Cost)
++    }
++    test.Logf(">>> bug:CastingSpell 只存名字 → 讀檔 FindByName 回 base spell(OverrideCost=0)→ 成本退回 base")
++    test.Logf(">>> 修正(serialize.go):讀檔後 CastingSpell=Create Artifact 時,從 CreateArtifact.Cost 還原 OverrideCost")
++}
+diff --git a/game/magic/player/serialize.go b/game/magic/player/serialize.go
+index 56f9721..9741d4c 100644
+--- a/game/magic/player/serialize.go
++++ b/game/magic/player/serialize.go
+@@ -435,6 +435,15 @@ func ReconstructPlayer(serialized *SerializedPlayer, globalEnchantmentsProvider
+         PlayerRelations: make(map[*Player]*Relationship), // will be initialized later
+     }
+ 
++    // #2 修正:存檔只存 CastingSpell.Name(serialize.go:250),丟失 Create Artifact / Enchant Item
++    // 的 OverrideCost(= 神器法力成本)。讀檔後 CastingSpell 用名字查回 base spell(OverrideCost=0),
++    // 使進行中的貴神器以 base cost 完成(幾回合做好、法力不足照做)= issue #2。
++    // 另存的 CreateArtifact 含 .Cost,從它還原成本。純存檔資料丟失 bug,兩模式都修。
++    if player.CreateArtifact != nil && player.CastingSpell.Valid() &&
++        (player.CastingSpell.Name == "Create Artifact" || player.CastingSpell.Name == "Enchant Item") {
++        player.CastingSpell.OverrideCost = player.CreateArtifact.Cost
++    }
++
+     player.HeroPool = reconstructHeroPool(serialized.HeroPool, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
+     player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
+ 
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
 index 556d824..04c18a3 100644
 --- a/game/magic/settings/settings.go

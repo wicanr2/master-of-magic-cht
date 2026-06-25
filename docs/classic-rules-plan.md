@@ -65,15 +65,17 @@
   - 他系法術來自**英雄/物品 spell charges**(`hero.GetSpellChargeSpells`,合法 MoM,不受書系限制);
     MoM 中**召喚英雄不依書系 gate**(可同時有 Roland+Mortu)。Life/Death 互斥已在建角強制(new-wizard.go:1213)。
   - **結論**:正常 MoM 行為被誤記。柵欄原則 + 別猜——不對正確機制加錯誤限制。`cht_books_test.go` 留作證明。
-- [~] **#2 製造神器/施法成本**(調查中,需確認測試)
-  - 多回合施法邏輯**正確**(game.go:7002-7023):`manaSpent = min(mana, RemainingCastingSkill, 剩餘成本)`,
-    每回合受施法技能上限;4000 成本 / 技能 46 ≈ 87 回合。所以不是這條路徑。
-  - 成本來源:`ComputeEffectiveSpellCost`→`ComputeSpellCost`,有 `Spell.OverrideCost` 機制;
-    spell.go:1295 註解「casting Create Artifact 時 override cost 存在 currentSpell」= 成本**該**= 物品成本(4000)。
-  - **假說**:Create Artifact 的 `OverrideCost`(=物品成本)沒正確流進 `player.CastingSpell`,
-    使多回合施法用 base cost(遠小於 4000)→ 貴物品便宜快速做出 + 法力不足照做。
-  - **待辦**:寫測試(如 #1)確認 OverrideCost 是否流進 CastingSpellProgress 的成本判定 → 確定根因再修。
-    不在沒確認測試下倉促改施法成本系統(會影響所有施法)。
+- [x] **#2 製造神器成本(存讀檔丟失 OverrideCost)** (2026-06-25)
+  - **手冊 oracle**(manual.pdf p.88):製作神器時間取決於「神器法力成本、施法技能、每回合法力」;
+    強大物品極貴、需很長時間。故 4000 神器 2 回合完成確是 bug。
+  - **live 流向其實正確**(我先前假說錯):game.go:5426 `spell.OverrideCost=created.Cost` → 5450
+    `player.CastingSpell=spell` → 7009 多回合用 `ComputeEffectiveSpellCost`(尊重 OverrideCost)。
+    測試 `cht_cost_test` 證 `calculateCost` 正確加總(100+1600+1600=3300)。
+  - **真根因(存讀檔特定)**:serialize.go:250 只存 `CastingSpell.Name`,**OverrideCost 丟失**;
+    讀檔 426 `FindByName` 回 base spell(OverrideCost=0)→ 進行中貴神器成本退回 base → 幾回合做好+法力不足照做。
+    **對上玩家「會閃退、注意存檔」=常存讀檔。**
+  - **修(兩模式)**:讀檔後 CastingSpell=Create Artifact/Enchant Item 時,從另存的 `CreateArtifact.Cost`
+    還原 OverrideCost。`cht_castcost_test` 證序列化丟失 + CreateArtifact.Cost 可還原。
 
 ### T3 需先對照 1.31 oracle 再決策(可能 bug 也可能 CP1.60 故意改)
 - [ ] #3 英雄戰死、我方獲勝後是否該復活(查原版規則)
