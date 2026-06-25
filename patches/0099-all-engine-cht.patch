@@ -1314,7 +1314,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..192af1f 100644
+index 44c64b8..6fef536 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1360,7 +1360,21 @@ index 44c64b8..192af1f 100644
              }
  
              cityScapeOptions := uiOptions
-@@ -2112,7 +2114,7 @@ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Playe
+@@ -1847,6 +1849,13 @@ func (game *Game) doHireHero(yield coroutine.YieldFunc, cost int, hero *herolib.
+                 }
+ 
+                 game.RefreshUI()
++            } else if player.IsHuman() {
++                // #9 修正:英雄已滿 (AddHero 回 false),原本靜默吞掉。原版會警告需先解僱。
++                // 召喚 (cost 0) 與雇用都走此路徑,故一處修好兩者。
++                select {
++                    case game.Events <- &GameEventNotice{Message: "You have no room for another hero. Dismiss one first."}:
++                    default:
++                }
+             }
+         } else {
+             hero.GainLevel(units.ExperienceChampionHero)
+@@ -2112,7 +2121,7 @@ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Playe
      if caster.IsHuman() {
          game.Events <- &GameEventNotice{
              // FIXME: align this message with how dos mom does it
@@ -1369,7 +1383,7 @@ index 44c64b8..192af1f 100644
          }
      }
  }
-@@ -3426,7 +3428,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
+@@ -3426,7 +3435,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
              for _, unit := range stack.ActiveUnits() {
                  if !city.CanEnter(unit) {
                      stopMoving = true
@@ -1378,7 +1392,7 @@ index 44c64b8..192af1f 100644
                      break quitMoving
                  }
              }
-@@ -3660,7 +3662,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
+@@ -3660,7 +3669,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
                              for _, unit := range stack.ActiveUnits() {
                                  if !newCity.CanEnter(unit) {
                                      canMove = false
@@ -1387,7 +1401,7 @@ index 44c64b8..192af1f 100644
                                      break
                                  }
                              }
-@@ -3921,7 +3923,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
+@@ -3921,7 +3930,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
  
              options.ColorScale = ebiten.ColorScale{}
              options.ColorScale.ScaleAlpha(getAlpha())
@@ -1396,7 +1410,7 @@ index 44c64b8..192af1f 100644
          })
  
          for !done {
-@@ -4294,11 +4296,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
+@@ -4294,11 +4303,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
      defer game.Music.PopSong()
  
      if len(encounter.Units) == 0 {
@@ -1410,7 +1424,7 @@ index 44c64b8..192af1f 100644
  }
  
  func (game *Game) doEncounter(yield coroutine.YieldFunc, player *playerlib.Player, stack *playerlib.UnitStack, encounter *maplib.ExtraEncounter, mapUse *maplib.Map, x int, y int) combat.CombatState {
-@@ -5084,7 +5086,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+@@ -5084,7 +5093,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
  
      textOffset := 70
  
@@ -1419,7 +1433,7 @@ index 44c64b8..192af1f 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
-@@ -5644,7 +5646,7 @@ func (game *Game) doPlanarTraval() {
+@@ -5644,7 +5653,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
                      select {
@@ -1428,7 +1442,7 @@ index 44c64b8..192af1f 100644
                          default:
                      }
                  } else {
-@@ -5705,6 +5707,25 @@ func (game *Game) DumpInfo(x int, y int) {
+@@ -5705,6 +5714,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
  
@@ -1454,7 +1468,7 @@ index 44c64b8..192af1f 100644
  func (game *Game) MakeHudUI() *uilib.UI {
      type TrackKey struct {
          Key ebiten.Key
-@@ -5815,6 +5836,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5815,6 +5843,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
      ui.AddGroup(group)
  
      // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
@@ -1464,7 +1478,7 @@ index 44c64b8..192af1f 100644
      makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
          buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
          rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
-@@ -5853,6 +5877,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5853,6 +5884,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
                  options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
                  options.ColorScale.ScaleWithColorScale(colorScale)
                  scale.DrawScaled(screen, buttons[index], &options)
@@ -1474,7 +1488,7 @@ index 44c64b8..192af1f 100644
              },
          }
      }
-@@ -6145,6 +6172,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6145,6 +6179,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
                      scale.DrawScaled(screen, doneImages[doneIndex], &options)
@@ -1482,7 +1496,7 @@ index 44c64b8..192af1f 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      doneCounter += 1
-@@ -6185,6 +6213,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6185,6 +6220,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
@@ -1490,7 +1504,7 @@ index 44c64b8..192af1f 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      patrolCounter += 1
-@@ -6229,6 +6258,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6229,6 +6265,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, waitImages[waitIndex], &options)
@@ -1498,7 +1512,7 @@ index 44c64b8..192af1f 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      waitCounter += 1
-@@ -6310,6 +6340,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6310,6 +6347,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      }
  
                      colorm.DrawImage(screen, use, matrix, &options)
@@ -1513,7 +1527,7 @@ index 44c64b8..192af1f 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
-@@ -6364,7 +6402,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6364,7 +6409,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
          elements = append(elements, &uilib.UIElement{
              Draw: func(element *uilib.UIElement, screen *ebiten.Image){
                  if !minMoves.IsZero() {
@@ -1522,7 +1536,7 @@ index 44c64b8..192af1f 100644
  
                      sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
                      swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
-@@ -6474,21 +6512,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6474,21 +6519,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
  
                      if goldPerTurn < 0 {
@@ -1550,7 +1564,7 @@ index 44c64b8..192af1f 100644
                      }
  
                      if conjunction != "" {
-@@ -6738,7 +6776,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6738,7 +6783,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
                      log.Printf("Disband %v due to lack of gold", unit)
@@ -1559,7 +1573,7 @@ index 44c64b8..192af1f 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6746,7 +6784,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6746,7 +6791,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if foodIssue && unit.GetUpkeepFood() > 0 {
                      log.Printf("Disband %v due to lack of food", unit)
@@ -1568,7 +1582,7 @@ index 44c64b8..192af1f 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6754,7 +6792,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6754,7 +6799,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if manaIssue && unit.GetUpkeepMana() > 0 {
                      log.Printf("Disband %v due to lack of mana", unit)
@@ -1577,7 +1591,7 @@ index 44c64b8..192af1f 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -7020,7 +7058,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7020,7 +7065,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
  
                          scrollEvent := GameEventScroll{
                              Title: "CITY GROWTH",
@@ -1586,7 +1600,7 @@ index 44c64b8..192af1f 100644
                          }
  
                          select {
-@@ -7032,7 +7070,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7032,7 +7077,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -1595,7 +1609,7 @@ index 44c64b8..192af1f 100644
                              default:
                          }
                      }
-@@ -7051,14 +7089,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7051,14 +7096,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {

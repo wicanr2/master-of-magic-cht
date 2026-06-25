@@ -41,7 +41,12 @@
   - 修:`input_default.go` 的 `IsQuitKey`/`IsQuitPressed` 移除 CapsLock(保留 Escape)。根因一處修好 5 畫面。
   - 驗:`IsQuitKey(CapsLock)=false, Escape=true`(xvfb 確定性)。
 - [ ] #1 走進怪物點直接判敗、無法開打(戰鬥初始化/自動結算)
-- [ ] #9 召喚第七英雄靜默失效(缺上限警告 + 靜默吞掉)
+- [x] **#9 召喚第七英雄靜默失效** (2026-06-25)
+  - 根因:`doHireHero`(召喚 cost 0 與雇用共用此路徑,經 `GameEventHireHero`)的 `if added {...}`
+    沒有 else——英雄滿 6(`AddHero` 找不到空 slot 回 false)時靜默吞掉。上限本身有強制(維持 6),只缺警告。
+  - 原版會警告「無空間,需先解僱」(對上玩家記憶 = oracle)。
+  - 修:`added==false && IsHuman()` 時 `GameEventNotice` 警告「你沒有空間容納更多英雄,請先解僱一位。」
+    一處修好召喚 + 雇用兩條路徑。純 UX bug → 兩模式都修。misc-ui.tsv +1。
 
 ### T2 經典規則未強制(經典模式新增)
 - [ ] #6/#8 Life/Death 書系互斥 + 法術依書色 gate(召喚英雄、戰鬥法術可用性)

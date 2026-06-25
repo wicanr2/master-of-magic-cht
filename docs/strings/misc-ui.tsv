@@ -37,3 +37,5 @@ Damage %v	傷害 %v	戰鬥單位
 Cost %v	花費 %v	建造畫面
 Building	建造中	勘查/築路
 Upkeep	維護	單位詳情
+# === T1 #9 英雄上限警告 ===
+You have no room for another hero. Dismiss one first.	你沒有空間容納更多英雄,請先解僱一位。	召喚/雇用英雄
