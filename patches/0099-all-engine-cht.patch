@@ -1150,10 +1150,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..cca2919
+index 0000000..9deeda1
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,21 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1166,12 +1166,14 @@ index 0000000..cca2919
 +    SoundEffects        bool // #1 介面音效開關
 +    RandomEvents        bool // #9 隨機事件(火山/地震/好月壞月等)
 +    StrategicCombatOnly bool // #11 所有戰鬥自動結算,不進戰術戰鬥畫面(仍顯示勝負結果)
++    SpellAnimations     bool // #16 法術成功施放後的特效動畫(關閉=直接套用效果、跳過動畫)
 +}
 +
 +var Settings = GameSettings{
 +    SoundEffects:        true,
 +    RandomEvents:        true,
 +    StrategicCombatOnly: false,
++    SpellAnimations:     true,
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -1268,7 +1270,7 @@ index e264af3..b4eb973 100644
                              getAlpha = group.MakeFadeOut(fadeSpeed)
                              group.AddDelay(7, func(){
 diff --git a/game/magic/game/cast.go b/game/magic/game/cast.go
-index 92ed88e..0484cad 100644
+index 92ed88e..1b50cf4 100644
 --- a/game/magic/game/cast.go
 +++ b/game/magic/game/cast.go
 @@ -1081,7 +1081,7 @@ func (game *Game) MakeSpellBindingUI(caster *playerlib.Player, spell spellbook.S
@@ -1367,7 +1369,27 @@ index 92ed88e..0484cad 100644
              game.Events <- &GameEventSelectLocationForSpell{Spell: spell, Player: player, LocationType: locationType, SelectedFunc: selected}
              return
          }
-@@ -2496,7 +2496,7 @@ func (game *Game) doCastCruelUnminding(player *playerlib.Player, spell spellbook
+@@ -2308,6 +2308,19 @@ func (game *Game) doCastCityEnchantment(spell spellbook.Spell, player *playerlib
+ type UpdateMapFunction func (tileX int, tileY int, animationFrame int)
+ 
+ func (game *Game) doCastOnMap(yield coroutine.YieldFunc, tileX int, tileY int, animationIndex int, soundIndex int, update UpdateMapFunction) {
++    // #16 法術動畫關閉:跳過鏡頭移動與特效幀動畫,但仍把 update 回呼套到最終幀(保留逐幀效果的最終狀態)
++    // 並播放音效(音效另由 #1 控制)。多數 spell 的實際效果由 caller 在本函式回傳後套用,故跳過動畫安全。
++    if !data.Settings.SpellAnimations {
++        pics, _ := game.ImageCache.GetImages("specfx.lbx", animationIndex)
++        if len(pics) > 0 {
++            update(tileX, tileY, len(pics)-1)
++        }
++        if sound, err := audio.LoadSound(game.Cache, soundIndex); err == nil {
++            sound.Play()
++        }
++        return
++    }
++
+     game.Camera.Zoom = camera.ZoomDefault
+     game.doMoveCamera(yield, tileX, tileY)
+ 
+@@ -2496,7 +2509,7 @@ func (game *Game) doCastCruelUnminding(player *playerlib.Player, spell spellbook
          reductionRandomSpread := max(maxReduction - minReduction, 1) // It should never be zero, or rand.N will crash
          reduction := minReduction + rand.N(reductionRandomSpread)
          actuallyReduced := targetPlayer.ReduceCastingSkill(reduction)
@@ -1376,7 +1398,7 @@ index 92ed88e..0484cad 100644
      }
      playersInGame := len(game.Model.Players)
      quit, cancel := context.WithCancel(context.Background())
-@@ -2514,7 +2514,7 @@ func (game *Game) doCastDrainPower(player *playerlib.Player, spell spellbook.Spe
+@@ -2514,7 +2527,7 @@ func (game *Game) doCastDrainPower(player *playerlib.Player, spell spellbook.Spe
          }
          drainAmount := min(targetPlayer.Mana, 50 + rand.N(101)) // random 50-150, but don't drain more than the target has
          targetPlayer.Mana -= drainAmount
@@ -1385,7 +1407,22 @@ index 92ed88e..0484cad 100644
      }
      playersInGame := len(game.Model.Players)
      quit, cancel := context.WithCancel(context.Background())
-@@ -2668,7 +2668,7 @@ func (game *Game) doCastGlobalEnchantment(yield coroutine.YieldFunc, player *pla
+@@ -2555,6 +2568,14 @@ func MakeGlobalEnchantmentFonts(cache *lbx.LbxCache) *GlobalEnchantmentFonts {
+ 
+ func (game *Game) doCastGlobalEnchantment(yield coroutine.YieldFunc, player *playerlib.Player, enchantment data.Enchantment, after func()) {
+ 
++    // #16 法術動畫關閉:跳過巫師施法/全域附魔的特效動畫,直接套用效果(after 於原本動畫結束後呼叫)。
++    if !data.Settings.SpellAnimations {
++        if after != nil {
++            after()
++        }
++        return
++    }
++
+     song := music.SongNone
+ 
+     switch enchantment {
+@@ -2668,7 +2689,7 @@ func (game *Game) doCastGlobalEnchantment(yield coroutine.YieldFunc, player *pla
  
              text := "You have finished casting"
              if !player.IsHuman() {
@@ -3366,7 +3403,7 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..03899dd 100644
+index 556d824..9861473 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3387,7 +3424,7 @@ index 556d824..03899dd 100644
          },
      })
  
-@@ -103,6 +105,72 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,79 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
@@ -3455,6 +3492,13 @@ index 556d824..03899dd 100644
 +        return onOff("Random Events", data.Settings.RandomEvents)
 +    }, func(){
 +        data.Settings.RandomEvents = !data.Settings.RandomEvents
++    })
++
++    // #16 法術特效動畫開關(關閉=直接套效果、跳過動畫,加速遊玩)。
++    addToggle(150, func() string {
++        return onOff("Spell Animations", data.Settings.SpellAnimations)
++    }, func(){
++        data.Settings.SpellAnimations = !data.Settings.SpellAnimations
 +    })
 +
      return group, quit

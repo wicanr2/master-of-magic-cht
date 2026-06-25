@@ -155,6 +155,32 @@
 
 > 註:閃退(穩定性)獨立追,不在規則範疇。
 
+## 設定畫面(原版 Settings 18 項;手冊 pp.22-24)
+
+引擎原本的設定畫面只有音量 + 縮放。逐步補回原版 Settings 的可切換項。全域 runtime 偏好(放
+`data.Settings`,避免 import cycle),目前不隨存檔序列化(重啟重置,同音量模式)。設定畫面切換鈕全中文。
+
+| # | 設定 | 狀態 | 接線 |
+|---|---|---|---|
+| 15 | Spell Book Ordering | ✅ | `spellbook.SpellBookOrderByColor` + `computeHalfPages` 分支 |
+| 11 | Strategic Combat Only | ✅ | doCombat `autoResolve`:human 戰鬥也走 `combat.Run`,跳過戰術畫面但保留結果畫面 |
+| 2 | Background Music | ✅ | toggle `music.Enabled`,關閉 `music.Stop()` |
+| 1 | Sound Effects | ✅ | `audio.GetSoundMaker` 一處 guard(關閉回空 player),覆蓋全部音效 |
+| 9 | Random Events | ✅ | `model.go` 事件擲骰前 guard |
+| 16 | Spell Animations | ✅ | `doCastOnMap`(定點特效)+ `doCastGlobalEnchantment`(全域附魔)guard,關閉直接套效果 |
+| — | End of Turn Wait | 評估中 | OFF=全部單位行動完自動推進(引擎只有 ON/手動點)。需 `stack.OutOfMoves()` 全檢 + idle 偵測 + 自動 `doNextTurn`。中偏難,需 playtest |
+| 3 | Event Music | 跳過 | 要區分事件曲 vs 背景曲,低價值 |
+| 4/5/6/14 | Spell/Enemy 事件通知 | 高難 | 引擎無「他玩家施法通知」;`GameEventNotice` 基建在,需跨玩家施法 chokepoint(一套解 4 項)|
+| 17 | Show Node Owners | 高難(可先做) | 節點 owner 已載入,overworld 有 DrawOverworld;加旗色光環渲染,純視覺低風險 |
+| 12 | Additional Unit Information | 高難 | 戰鬥單位資訊窗,自包含 combat UI |
+| 7 | End of Turn Summary | 高難 | 彙整 ScrollEvents 成回合總結卷軸 |
+| 8 | Automatic Advice | 高難(低價值) | 需 AI 建議引擎 |
+| 13 | Enemy Moves | 高難 | 需敵軍移動動畫 |
+| 18 | Expanding Help | 低價值 | help 即時顯示,無展開動畫 |
+
+> 翻譯:各設定名 + `%v:開/關` 在 `docs/strings/ui.tsv`;所需 CJK 逐字確認已在字型子集,不需重生字型。
+> 驗證:behavior toggle 多為 UI/runtime,以 `go build ./...` + 全 cht 回歸 + 邏輯審查為據;runtime 行為需 playtest。
+
 ## 進度
 
 (逐項回填)

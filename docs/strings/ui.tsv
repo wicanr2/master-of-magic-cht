@@ -308,6 +308,7 @@ Strategic Combat Only	全自動戰鬥
 Sound Effects	音效
 Background Music	背景音樂
 Random Events	隨機事件
+Spell Animations	法術動畫
 # 施法書取消/確認對話 (格式字串 template,走 TranslateFormat → fmt.Sprintf)
 Do you wish to abort your %v spell?	您確定要中止施放 %v 嗎?
 # 施法書 overland tooltip
