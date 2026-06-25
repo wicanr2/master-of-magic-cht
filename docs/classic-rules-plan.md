@@ -174,7 +174,7 @@
 | 17 | Show Node Owners | ✅ | 光環渲染早已存在(map.go DrawLayer2 已用旗色畫 sparkle);加設定 guard 即可 |
 | 12 | Additional Unit Information | ✅ | 戰場左上角浮動窗(半透明底)顯示當前單位彈藥/法力/血量;截圖驗證 |
 | 7 | End of Turn Summary（回合總結）| ✅ | 內容同 Chancellor(DoChancellor 顯示 ScrollEvents);hook 在人類 StartPlayerTurn 後,有事件才自動彈,預設關 |
-| 8 | Automatic Advice | 高難(低價值) | 需 AI 建議引擎 |
+| 8 | Automatic Advice（自動建議）| ✅ | 規則由 5+ 份 MoM 攻略歸納(docs/mom-strategy-notes.md);結構化 player.GenerateAdvice + 單元測試;回合開始彈卷軸,預設關 |
 | 13 | Enemy Moves（顯示敵軍移動）| ✅ | 功能早已存在(model.go:1810 視野內 AI 移動有 ShowMovement 動畫);只加設定 guard,預設開 |
 | 18 | Expanding Help | 低價值 | help 即時顯示,無展開動畫 |
 

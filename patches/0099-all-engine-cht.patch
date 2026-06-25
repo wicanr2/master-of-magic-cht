@@ -1184,10 +1184,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..5362839
+index 0000000..e451949
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,48 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1216,6 +1216,8 @@ index 0000000..5362839
 +    EndOfTurnSummary bool
 +    // #13 顯示敵軍移動:AI 單位移動到人類視野內時播放移動動畫。預設開(維持引擎現況)。
 +    EnemyMoves bool
++    // #8 自動建議:人類回合開始時提示該注意的事(規則由 MoM 攻略歸納)。預設關(進階玩家會關掉)。
++    AutomaticAdvice bool
 +}
 +
 +var Settings = GameSettings{
@@ -1232,6 +1234,7 @@ index 0000000..5362839
 +    AutoEndTurn:         false, // 預設關:維持手動點下一回合
 +    EndOfTurnSummary:    false, // 預設關:不自動彈總結
 +    EnemyMoves:          true,  // 預設開:維持引擎現況(視野內敵軍移動有動畫)
++    AutomaticAdvice:     false, // 預設關:進階玩家會關掉(手冊語)
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -1306,6 +1309,73 @@ index a2dd539..1ca091b 100644
              if counter % 7 == 0 {
                  if animating && wizardAnimation.Done() {
                      // 0 = happy, 1 = angry, 2 = neutral
+diff --git a/game/magic/game/advice.go b/game/magic/game/advice.go
+new file mode 100644
+index 0000000..ae73d63
+--- /dev/null
++++ b/game/magic/game/advice.go
+@@ -0,0 +1,61 @@
++package game
++
++// 自動建議(Automatic Advice)顯示層:把 player.GenerateAdvice 產生的結構化建議轉成中文訊息,
++// 在人類回合開始時(設定開啟)以卷軸彈出。建議規則由 MoM 玩家攻略歸納(見 player/advice.go)。
++
++import (
++    "fmt"
++    "strings"
++
++    "github.com/kazzmir/master-of-magic/lib/font"
++    playerlib "github.com/kazzmir/master-of-magic/game/magic/player"
++)
++
++func adviceMessage(advice playerlib.Advice) string {
++    switch advice.Type {
++        case playerlib.AdviceNegativeGold:
++            return font.TranslateFormat("You are losing gold each turn. Raise taxes, build a marketplace, or dismiss costly units.")
++        case playerlib.AdviceNegativeFood:
++            return font.TranslateFormat("You are short of food. Your troops will starve - add farmers in your cities.")
++        case playerlib.AdviceNegativeMana:
++            return font.TranslateFormat("You are losing mana each turn. Adjust your magic, meld nodes, or build religious buildings.")
++        case playerlib.AdviceNoResearch:
++            return font.TranslateFormat("You are not researching any spell. Choose one in your spell book.")
++        case playerlib.AdviceCityRebels:
++            if advice.City != nil {
++                return fmt.Sprintf(font.TranslateFormat("%v has rebels. Add a garrison, build religious buildings, or lower taxes."), advice.City.Name)
++            }
++        case playerlib.AdviceCityNoGarrison:
++            if advice.City != nil {
++                return fmt.Sprintf(font.TranslateFormat("%v has no garrison and cannot defend itself."), advice.City.Name)
++            }
++    }
++    return ""
++}
++
++// maybeShowAdvice:設定開啟時,依目前狀態產生建議並以卷軸彈給人類玩家(無建議則不彈)。
++func (game *Game) maybeShowAdvice(player *playerlib.Player) {
++    gold := player.GoldPerTurn()
++    food := player.FoodPerTurn()
++    mana := player.ManaPerTurn(game.Model.ComputePower(player), game.Model)
++
++    advice := player.GenerateAdvice(gold, food, mana)
++    if len(advice) == 0 {
++        return
++    }
++
++    var lines []string
++    for _, item := range advice {
++        if message := adviceMessage(item); message != "" {
++            lines = append(lines, message)
++        }
++    }
++    if len(lines) == 0 {
++        return
++    }
++
++    select {
++        case game.Events <- &GameEventScroll{Title: "ADVICE", Text: strings.Join(lines, "\n")}:
++        default:
++    }
++}
 diff --git a/game/magic/game/cast-select-wizard.go b/game/magic/game/cast-select-wizard.go
 index e264af3..b4eb973 100644
 --- a/game/magic/game/cast-select-wizard.go
@@ -1706,7 +1776,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..0b492cd 100644
+index 44c64b8..73d0040 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -2191,7 +2261,7 @@ index 44c64b8..0b492cd 100644
                              default:
                          }
                      }
-@@ -7521,6 +7635,13 @@ func (game *Game) DoNextTurn(){
+@@ -7521,6 +7635,17 @@ func (game *Game) DoNextTurn(){
  
          if player.Wizard.Banner != data.BannerBrown {
              game.StartPlayerTurn(player)
@@ -2201,6 +2271,10 @@ index 44c64b8..0b492cd 100644
 +            // 預設關 → 不改變現況;有事件才彈,避免每回合「本月無事件」洗版。
 +            if player.IsHuman() && data.Settings.EndOfTurnSummary && len(game.Model.ScrollEvents) > 0 {
 +                game.DoChancellor()
++            }
++            // #8 自動建議(對應原版 Automatic Advice):規則由 MoM 攻略歸納,設定開啟時於人類回合開始彈出。
++            if player.IsHuman() && data.Settings.AutomaticAdvice {
++                game.maybeShowAdvice(player)
 +            }
          } else {
              // neutral enemies should reset their moves each turn
@@ -3339,6 +3413,160 @@ index d6b0ef4..75a46e2 100644
  
              heroX := cornerX + 13
              heroY := cornerY + 142
+diff --git a/game/magic/player/advice.go b/game/magic/player/advice.go
+new file mode 100644
+index 0000000..7833963
+--- /dev/null
++++ b/game/magic/player/advice.go
+@@ -0,0 +1,60 @@
++package player
++
++// 自動建議(對應原版 Automatic Advice)。規則由《Master of Magic》玩家攻略(GameFAQs/the-spoiler、
++// MoM Fandom/StrategyWiki 機制頁、Steam/Reddit 社群指南、lilura1)跨多份歸納而來——皆為「可由遊戲
++// 狀態機械判斷」的核心建議。本層只產生「結構化建議」(AdviceType + 相關城市),不碰文字/翻譯,方便
++// 不跑遊戲就單元測試;訊息文字與顯示在 game 套件處理。
++//
++// 收支三項(金幣/食物/法力 per turn)由呼叫端先算好傳入(game 已有對應計算),避免本函式依賴
++// power/enchantment provider,讓判斷邏輯純粹可測。
++
++import (
++    citylib "github.com/kazzmir/master-of-magic/game/magic/city"
++)
++
++type AdviceType int
++
++const (
++    AdviceNegativeGold AdviceType = iota // 帝國金幣每回合為負 → 將強制解散單位
++    AdviceNegativeFood                   // 帝國食物每回合為負 → 部隊將餓死/解散
++    AdviceNegativeMana                   // 帝國法力每回合為負 → 結界/召喚將消失
++    AdviceNoResearch                     // 沒有研究中的法術(研究空轉)
++    AdviceCityRebels                     // 某城市有叛亂人口
++    AdviceCityNoGarrison                 // 某城市無守軍(無法防禦)
++)
++
++// Advice:一條建議。City 僅在城市相關建議時非 nil。
++type Advice struct {
++    Type AdviceType
++    City *citylib.City
++}
++
++// GenerateAdvice 依目前狀態產生建議清單。goldPerTurn/foodPerTurn/manaPerTurn 為帝國每回合淨收支。
++func (player *Player) GenerateAdvice(goldPerTurn int, foodPerTurn int, manaPerTurn int) []Advice {
++    var advice []Advice
++
++    if goldPerTurn < 0 {
++        advice = append(advice, Advice{Type: AdviceNegativeGold})
++    }
++    if foodPerTurn < 0 {
++        advice = append(advice, Advice{Type: AdviceNegativeFood})
++    }
++    if manaPerTurn < 0 {
++        advice = append(advice, Advice{Type: AdviceNegativeMana})
++    }
++    if !player.ResearchingSpell.Valid() {
++        advice = append(advice, Advice{Type: AdviceNoResearch})
++    }
++
++    for _, city := range player.GetCities() {
++        if city.Rebels > 0 {
++            advice = append(advice, Advice{Type: AdviceCityRebels, City: city})
++        }
++        // 守軍:該城所在格沒有本玩家的 stack = 無守軍。攻略:至少 1 單位才能嘗試防禦。
++        if player.FindStack(city.X, city.Y, city.Plane) == nil {
++            advice = append(advice, Advice{Type: AdviceCityNoGarrison, City: city})
++        }
++    }
++
++    return advice
++}
+diff --git a/game/magic/player/cht_advice_test.go b/game/magic/player/cht_advice_test.go
+new file mode 100644
+index 0000000..9737901
+--- /dev/null
++++ b/game/magic/player/cht_advice_test.go
+@@ -0,0 +1,82 @@
++package player
++
++// 驗證自動建議規則(由 MoM 攻略歸納):各觸發條件是否正確產生對應建議。不需跑遊戲。
++
++import (
++    "testing"
++
++    citylib "github.com/kazzmir/master-of-magic/game/magic/city"
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    herolib "github.com/kazzmir/master-of-magic/game/magic/hero"
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++    "github.com/kazzmir/master-of-magic/game/magic/spellbook"
++    "github.com/kazzmir/master-of-magic/game/magic/units"
++)
++
++func hasAdvice(list []Advice, t AdviceType) bool {
++    for _, a := range list {
++        if a.Type == t {
++            return true
++        }
++    }
++    return false
++}
++
++func TestChtGenerateAdvice(test *testing.T) {
++    player := MakePlayer(setup.WizardCustom{Banner: data.BannerRed}, true, 1, 1, make(map[herolib.HeroType]string), &NoGlobalEnchantments{})
++    player.ResearchingSpell = spellbook.Spell{Name: "Fireball"} // 有研究 → 不觸發 NoResearch
++
++    // 健康狀態:正收支、有研究、無城市 → 無建議
++    if advice := player.GenerateAdvice(5, 5, 5); len(advice) != 0 {
++        test.Errorf("健康狀態不應有建議,得 %d 條", len(advice))
++    }
++
++    // 三項收支為負 → 三條建議
++    advice := player.GenerateAdvice(-1, -1, -1)
++    if !hasAdvice(advice, AdviceNegativeGold) {
++        test.Errorf("金幣為負應建議")
++    }
++    if !hasAdvice(advice, AdviceNegativeFood) {
++        test.Errorf("食物為負應建議")
++    }
++    if !hasAdvice(advice, AdviceNegativeMana) {
++        test.Errorf("法力為負應建議")
++    }
++
++    // 沒有研究中的法術 → 建議
++    player.ResearchingSpell = spellbook.Spell{}
++    if !hasAdvice(player.GenerateAdvice(5, 5, 5), AdviceNoResearch) {
++        test.Errorf("無研究應建議")
++    }
++    player.ResearchingSpell = spellbook.Spell{Name: "Fireball"}
++
++    // 城市有叛亂 + 無守軍 → 兩條城市建議
++    city := &citylib.City{Name: "Testville", X: 5, Y: 5, Plane: data.PlaneArcanus, Rebels: 2}
++    player.AddCity(city)
++    advice = player.GenerateAdvice(5, 5, 5)
++    if !hasAdvice(advice, AdviceCityRebels) {
++        test.Errorf("城市有叛亂應建議")
++    }
++    if !hasAdvice(advice, AdviceCityNoGarrison) {
++        test.Errorf("城市無守軍應建議")
++    }
++
++    // 在城市放守軍 → 不再建議無守軍(但仍有叛亂建議)
++    unit := units.MakeOverworldUnit(units.HighMenSpearmen, 5, 5, data.PlaneArcanus)
++    player.AddUnit(unit)
++    advice = player.GenerateAdvice(5, 5, 5)
++    if hasAdvice(advice, AdviceCityNoGarrison) {
++        test.Errorf("已有守軍不應再建議無守軍")
++    }
++    if !hasAdvice(advice, AdviceCityRebels) {
++        test.Errorf("仍有叛亂應持續建議")
++    }
++
++    // 叛亂清零 → 不再建議叛亂
++    city.Rebels = 0
++    if hasAdvice(player.GenerateAdvice(5, 5, 5), AdviceCityRebels) {
++        test.Errorf("無叛亂不應建議")
++    }
++
++    test.Logf("自動建議規則:收支三負、無研究、城市叛亂/無守軍 皆正確觸發與解除")
++}
 diff --git a/game/magic/player/cht_books_test.go b/game/magic/player/cht_books_test.go
 new file mode 100644
 index 0000000..b55121f
@@ -3651,7 +3879,7 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..816067a 100644
+index 556d824..3f5da9c 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3672,7 +3900,7 @@ index 556d824..816067a 100644
          },
      })
  
-@@ -103,6 +105,150 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,157 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
@@ -3818,6 +4046,13 @@ index 556d824..816067a 100644
 +        return onOff("Enemy Moves", data.Settings.EnemyMoves)
 +    }, func(){
 +        data.Settings.EnemyMoves = !data.Settings.EnemyMoves
++    })
++
++    // #8 自動建議(回合開始提示該注意的事,預設關)。
++    addToggle(func() string {
++        return onOff("Automatic Advice", data.Settings.AutomaticAdvice)
++    }, func(){
++        data.Settings.AutomaticAdvice = !data.Settings.AutomaticAdvice
 +    })
 +
      return group, quit

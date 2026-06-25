@@ -179,6 +179,7 @@ patch-only。本 repo **不 vendor 引擎本體、不散布任何版權遊戲檔
 | [`PLAN.md`](PLAN.md) | 單一真實計畫來源,階段規劃與進度回填 |
 | [`docs/strings/`](docs/strings/) | 13 個英文 → 繁中譯文表(3,200+ 條,英文原文即 key) |
 | [`docs/worklist.md`](docs/worklist.md) | 玩家實測回報的未翻項追蹤與修正紀錄 |
+| [`docs/mom-strategy-notes.md`](docs/mom-strategy-notes.md) | MoM 策略筆記(5+ 份攻略歸納)+ 自動建議規則依據 |
 | [`docs/localization-methodology.md`](docs/localization-methodology.md) | **Go/Ebiten 老遊戲繁中化方法論 + 踩雷清單**(可重用 playbook) |
 | [`CONTEXT.md`](CONTEXT.md) | 專案術語表(ubiquitous language) |
 | [`docs/phase1-cjk-prototype.md`](docs/phase1-cjk-prototype.md) | Phase 1 渲染驗證全紀錄(含真實引擎截圖與必修項) |

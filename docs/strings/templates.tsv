@@ -142,3 +142,5 @@ Champion Summoned	勇者召喚	summon標題
 Ammo: %v	彈藥:%v	戰鬥單位資訊
 Mana: %v	法力:%v	戰鬥單位資訊
 HP: %v/%v	血量:%v/%v	戰鬥單位資訊
+%v has rebels. Add a garrison, build religious buildings, or lower taxes.	「%v」有叛亂人口。增加守軍、興建宗教建築,或降低稅率。	自動建議
+%v has no garrison and cannot defend itself.	「%v」沒有守軍,無法防禦。	自動建議

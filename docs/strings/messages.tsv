@@ -47,3 +47,7 @@ Gold Surplus %v	金幣盈餘 %v	資源tooltip
 Power %v	魔力 %v	資源tooltip
 Research %v	研究 %v	資源tooltip
 Magic Power	魔力	資源對話框標題
+You are losing gold each turn. Raise taxes, build a marketplace, or dismiss costly units.	你每回合損失金幣。可提高稅率、興建市場,或解僱昂貴部隊。	自動建議
+You are short of food. Your troops will starve - add farmers in your cities.	食物不足,部隊將餓死——請到城市增派農民。	自動建議
+You are losing mana each turn. Adjust your magic, meld nodes, or build religious buildings.	你每回合損失法力。可調整法力分配、融合節點,或興建宗教建築。	自動建議
+You are not researching any spell. Choose one in your spell book.	你目前沒有研究任何法術。請到法術書選擇研究目標。	自動建議
