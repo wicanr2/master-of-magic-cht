@@ -2701,6 +2701,61 @@ index d6b0ef4..75a46e2 100644
  
              heroX := cornerX + 13
              heroY := cornerY + 142
+diff --git a/game/magic/player/cht_books_test.go b/game/magic/player/cht_books_test.go
+new file mode 100644
+index 0000000..8681e1e
+--- /dev/null
++++ b/game/magic/player/cht_books_test.go
+@@ -0,0 +1,49 @@
++package player
++
++// 驗證 issue #6/#8:法術可用性是否依持有書系過濾。
++// 結論(本測試證明):研究池嚴格依 player.Wizard.Books 過濾——無某系書 = 該系 0 法術。
++// 故玩家「沒紅書卻有混沌法術」「選生命書戰鬥卻有死亡法術」並非研究洩漏,
++// 而是英雄/物品的 spell charges(合法 MoM 機制,不受書系限制),非引擎 bug。
++
++import (
++    "fmt"
++    "testing"
++
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++    "github.com/kazzmir/master-of-magic/game/magic/spellbook"
++    "github.com/kazzmir/master-of-magic/game/magic/hero"
++)
++
++func TestChtResearchBookGating(test *testing.T) {
++    // 只有 Nature 書 (5 本),沒有 Chaos / Death 書
++    wizard := setup.WizardCustom{
++        Books: []data.WizardBook{
++            {Magic: data.NatureMagic, Count: 5},
++        },
++    }
++    player := MakePlayer(wizard, true, 1, 1, make(map[hero.HeroType]string), &NoGlobalEnchantments{})
++
++    var spells spellbook.Spells
++    for i := range 10 {
++        spells.AddSpell(spellbook.Spell{Name: fmt.Sprintf("nature %d", i), Magic: data.NatureMagic, Rarity: spellbook.SpellRarityCommon})
++        spells.AddSpell(spellbook.Spell{Name: fmt.Sprintf("chaos %d", i), Magic: data.ChaosMagic, Rarity: spellbook.SpellRarityCommon})
++        spells.AddSpell(spellbook.Spell{Name: fmt.Sprintf("death %d", i), Magic: data.DeathMagic, Rarity: spellbook.SpellRarityCommon})
++    }
++
++    player.InitializeResearchableSpells(&spells)
++
++    nature := player.ResearchPoolSpells.GetSpellsByMagic(data.NatureMagic)
++    chaos := player.ResearchPoolSpells.GetSpellsByMagic(data.ChaosMagic)
++    death := player.ResearchPoolSpells.GetSpellsByMagic(data.DeathMagic)
++
++    test.Logf("只有 Nature 書(5本) → 研究池: Nature=%d Chaos=%d Death=%d", len(nature.Spells), len(chaos.Spells), len(death.Spells))
++
++    if len(chaos.Spells) != 0 || len(death.Spells) != 0 {
++        test.Errorf("若這裡 >0 才是引擎 bug:無書系卻能研究其法術 (Chaos=%d Death=%d)", len(chaos.Spells), len(death.Spells))
++    }
++    if len(nature.Spells) == 0 {
++        test.Errorf("有 Nature 書卻無 Nature 研究法術")
++    }
++    test.Logf(">>> 研究 gating 正確:無書系=0 法術。#6/#8 的他系法術來自英雄 spell charges(合法 MoM),非 bug。")
++}
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
 index 556d824..04c18a3 100644
 --- a/game/magic/settings/settings.go

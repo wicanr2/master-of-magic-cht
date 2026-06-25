@@ -56,8 +56,15 @@
   - 修:`added==false && IsHuman()` 時 `GameEventNotice` 警告「你沒有空間容納更多英雄,請先解僱一位。」
     一處修好召喚 + 雇用兩條路徑。純 UX bug → 兩模式都修。misc-ui.tsv +1。
 
-### T2 經典規則未強制(經典模式新增)
-- [ ] #6/#8 Life/Death 書系互斥 + 法術依書色 gate(召喚英雄、戰鬥法術可用性)
+### T2 經典規則
+- [x] **#6/#8 書系限制 — 經查證為正常 MoM 行為,非 bug**(2026-06-25)
+  - 測試 `cht_books_test.go` 證明:`InitializeResearchableSpells` 只迭代 `player.Wizard.Books`,
+    只有 Nature 書 → 研究池 Nature=8、**Chaos=0、Death=0**。研究 gating 嚴格依書系,正確。
+  - 玩家 KnownSpells 唯一增長路徑 `LearnSpell` 只在研究完成時呼叫(game.go:7041),與英雄無關 →
+    玩家法術書不可能沒研究就有他系法術。
+  - 他系法術來自**英雄/物品 spell charges**(`hero.GetSpellChargeSpells`,合法 MoM,不受書系限制);
+    MoM 中**召喚英雄不依書系 gate**(可同時有 Roland+Mortu)。Life/Death 互斥已在建角強制(new-wizard.go:1213)。
+  - **結論**:正常 MoM 行為被誤記。柵欄原則 + 別猜——不對正確機制加錯誤限制。`cht_books_test.go` 留作證明。
 - [ ] #2 製造神器/施法成本與法力強制(分回合扣、不足不能施)
 
 ### T3 需先對照 1.31 oracle 再決策(可能 bug 也可能 CP1.60 故意改)
