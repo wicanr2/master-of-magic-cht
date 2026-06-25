@@ -2134,6 +2134,25 @@ index f429e7b..0153ead 100644
      }
  
      return improvements
+diff --git a/game/magic/inputmanager/input_default.go b/game/magic/inputmanager/input_default.go
+index 93061ba..19a05bc 100644
+--- a/game/magic/inputmanager/input_default.go
++++ b/game/magic/inputmanager/input_default.go
+@@ -6,10 +6,12 @@ import (
+     "github.com/hajimehoshi/ebiten/v2/inpututil"
+ )
+ 
++// #5 修正:移除 CapsLock 當取消鍵。原版把 CapsLock 視為退出,導致玩家在建角
++// (尤其打名字)時按大小寫切換就被踢回上一頁。CapsLock 是正常輸入鍵,不該取消。
+ func IsQuitKey(key ebiten.Key) bool {
+-    return key == ebiten.KeyEscape || key == ebiten.KeyCapsLock
++    return key == ebiten.KeyEscape
+ }
+ 
+ func IsQuitPressed() bool {
+-    return inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsKeyJustPressed(ebiten.KeyCapsLock)
++    return inpututil.IsKeyJustPressed(ebiten.KeyEscape)
+ }
 diff --git a/game/magic/load/convert.go b/game/magic/load/convert.go
 index d7055ef..707c0b1 100644
 --- a/game/magic/load/convert.go

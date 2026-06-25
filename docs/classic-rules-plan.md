@@ -32,8 +32,14 @@
 > `if RuleSet==Classic { 新 } else { 原 }` 包住 + 註解標記,收進權威 `0099` patch;
 > RuleSetRemake 為預設,重製路徑零改動。
 
-### T1 明確 bug(經典模式修正;重製模式維持原狀供對照)
-- [ ] #5 創角名字輸入打一半被踢回(`setup/new-wizard.go` key handler;最高日常影響)
+### T1 明確 bug(純 bug → 兩模式都修;非「規則差異」不值得留著對照)
+- [x] **#5 創角名字輸入打一半被踢回** (2026-06-25)
+  - 根因:`inputmanager.IsQuitKey` 誤含 `CapsLock`(`Escape || CapsLock`)→ 打名字按大小寫切換
+    被當取消,`HandleKeys` 呼 `previousUI()` 退回選擇畫面。影響全部 5 個建角子畫面(都用此 handler)。
+  - 柵欄檢查(Chesterton):web 版 `input_js.go` 刻意 return false「避免誤觸退出」=作者已知誤觸是問題;
+    CapsLock 全碼庫無其他用途;柵欄正當目的是「Escape 取消」,CapsLock 是搭便車意外。
+  - 修:`input_default.go` 的 `IsQuitKey`/`IsQuitPressed` 移除 CapsLock(保留 Escape)。根因一處修好 5 畫面。
+  - 驗:`IsQuitKey(CapsLock)=false, Escape=true`(xvfb 確定性)。
 - [ ] #1 走進怪物點直接判敗、無法開打(戰鬥初始化/自動結算)
 - [ ] #9 召喚第七英雄靜默失效(缺上限警告 + 靜默吞掉)
 
