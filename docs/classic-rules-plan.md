@@ -65,7 +65,15 @@
   - 他系法術來自**英雄/物品 spell charges**(`hero.GetSpellChargeSpells`,合法 MoM,不受書系限制);
     MoM 中**召喚英雄不依書系 gate**(可同時有 Roland+Mortu)。Life/Death 互斥已在建角強制(new-wizard.go:1213)。
   - **結論**:正常 MoM 行為被誤記。柵欄原則 + 別猜——不對正確機制加錯誤限制。`cht_books_test.go` 留作證明。
-- [ ] #2 製造神器/施法成本與法力強制(分回合扣、不足不能施)
+- [~] **#2 製造神器/施法成本**(調查中,需確認測試)
+  - 多回合施法邏輯**正確**(game.go:7002-7023):`manaSpent = min(mana, RemainingCastingSkill, 剩餘成本)`,
+    每回合受施法技能上限;4000 成本 / 技能 46 ≈ 87 回合。所以不是這條路徑。
+  - 成本來源:`ComputeEffectiveSpellCost`→`ComputeSpellCost`,有 `Spell.OverrideCost` 機制;
+    spell.go:1295 註解「casting Create Artifact 時 override cost 存在 currentSpell」= 成本**該**= 物品成本(4000)。
+  - **假說**:Create Artifact 的 `OverrideCost`(=物品成本)沒正確流進 `player.CastingSpell`,
+    使多回合施法用 base cost(遠小於 4000)→ 貴物品便宜快速做出 + 法力不足照做。
+  - **待辦**:寫測試(如 #1)確認 OverrideCost 是否流進 CastingSpellProgress 的成本判定 → 確定根因再修。
+    不在沒確認測試下倉促改施法成本系統(會影響所有施法)。
 
 ### T3 需先對照 1.31 oracle 再決策(可能 bug 也可能 CP1.60 故意改)
 - [ ] #3 英雄戰死、我方獲勝後是否該復活(查原版規則)
