@@ -950,6 +950,33 @@ index fefc1a9..d084285 100644
          case AbilityCharmed: return "Charmed"
          case AbilityConstitution: return plusValue("Constitution")
          case AbilitySuperConstitution: return plusValue("Super Constitution")
+diff --git a/game/magic/data/data.go b/game/magic/data/data.go
+index b0430fc..3c28720 100644
+--- a/game/magic/data/data.go
++++ b/game/magic/data/data.go
+@@ -350,6 +350,22 @@ const (
+     MagicSettingPowerful
+ )
+ 
++// RuleSet 規則組:重現經典 vs 重製原版。中文化 fork 新增,供主選單切換、
++// 隨 NewGameSettings 序列化進存檔。各規則改動以 `if RuleSet == RuleSetClassic` 保護,
++// RuleSetRemake 路徑維持 kazzmir 引擎原行為(零改動、可對照)。
++type RuleSet int
++const (
++    RuleSetRemake RuleSet = iota // 重製原版:引擎現狀(預設)
++    RuleSetClassic               // 經典強化:bug 修正 + 還原 vanilla 1.31 規則
++)
++
++func (r RuleSet) String() string {
++    switch r {
++        case RuleSetClassic: return "Classic Rules"
++        default: return "Remake"
++    }
++}
++
+ type DifficultySetting int
+ const (
+     DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
 --- a/game/magic/diplomacy/diplomacy.go
@@ -2261,6 +2288,137 @@ index 07d2243..009cc90 100644
                          ui.AddGroup(group)
                      }
                  },
+diff --git a/game/magic/main.go b/game/magic/main.go
+index 4d2b7f7..7652560 100644
+--- a/game/magic/main.go
++++ b/game/magic/main.go
+@@ -64,6 +64,9 @@ type MagicGame struct {
+     Drawer DrawFunc
+ 
+     Music *musiclib.Music
++
++    RuleSet data.RuleSet // 中文化 fork:規則組 (主選單切換,seed 進新局 NewGameSettings)
++    SkipIntro bool       // 中文化 fork:-skipintro 跳過長片頭 (測試 + 玩家 QoL)
+ }
+ 
+ func randomChoose[T any](choices... T) T {
+@@ -110,6 +113,7 @@ func runNewGame(yield coroutine.YieldFunc, game *MagicGame) (bool, setup.NewGame
+         state = newGame.Update()
+     }
+ 
++    newGame.Settings.RuleSet = game.RuleSet // 中文化 fork:帶入主選單所選規則組
+     return state == setup.NewGameStateCancel, newGame.Settings
+ }
+ 
+@@ -130,7 +134,7 @@ func runNewWizard(yield coroutine.YieldFunc, game *MagicGame) (bool, setup.Wizar
+ }
+ 
+ func runMainMenu(yield coroutine.YieldFunc, game *MagicGame, gameLoader *OriginalGameLoader) (*gamelib.Game, mainview.MainScreenState) {
+-    menu := mainview.MakeMainScreen(game.Cache, gameLoader, game.Music)
++    menu := mainview.MakeMainScreen(game.Cache, gameLoader, game.Music, &game.RuleSet)
+ 
+     game.Drawer = func(screen *ebiten.Image) {
+         menu.Draw(screen)
+@@ -662,6 +666,7 @@ func startQuickGame(yield coroutine.YieldFunc, game *MagicGame, gameLoader *Orig
+         Difficulty: data.DifficultyAverage,
+         Magic: data.MagicSettingNormal,
+         LandSize: rand.N(3),
++        RuleSet: game.RuleSet, // 中文化 fork:帶入主選單所選規則組
+     }
+ 
+     spells, err := spellbook.ReadSpellsFromCache(game.Cache)
+@@ -712,7 +717,9 @@ func runGame(yield coroutine.YieldFunc, game *MagicGame, dataPath string, startG
+ 
+     if loadSave == "" {
+         game.Music.PlaySong(musiclib.SongIntro)
+-        runIntro(yield, game)
++        if !game.SkipIntro {
++            runIntro(yield, game)
++        }
+ 
+         yield()
+ 
+@@ -858,6 +865,8 @@ func main() {
+     var enableMusic bool
+     var loadSave string
+     var watchMode bool
++    var skipIntro bool
++    flag.BoolVar(&skipIntro, "skipintro", false, "skip the intro animation")
+     flag.StringVar(&dataPath, "data", "", "path to master of magic lbx data files. Give either a directory or a zip file. Data is searched for in the current directory if not given.")
+     flag.BoolVar(&enableMusic, "music", true, "enable music playback")
+     flag.BoolVar(&startGame, "start", false, "start the game immediately with a random wizard")
+@@ -893,6 +902,7 @@ func main() {
+         log.Printf("Error: unable to load game: %v", err)
+         return
+     }
++    game.SkipIntro = skipIntro
+ 
+     err = ebiten.RunGame(game)
+     if err != nil {
+diff --git a/game/magic/mainview/view.go b/game/magic/mainview/view.go
+index d306987..01229ed 100644
+--- a/game/magic/mainview/view.go
++++ b/game/magic/mainview/view.go
+@@ -49,9 +49,10 @@ type MainScreen struct {
+     GameLoader gamemenu.GameLoader
+     Events chan MainScreenEvent
+     Drawer func(screen *ebiten.Image)
++    RuleSet *data.RuleSet // 中文化 fork:指向 app 層規則組,主選單切換鈕直接改它
+ }
+ 
+-func MakeMainScreen(cache *lbx.LbxCache, gameLoader gamemenu.GameLoader, music *musiclib.Music) *MainScreen {
++func MakeMainScreen(cache *lbx.LbxCache, gameLoader gamemenu.GameLoader, music *musiclib.Music, ruleSet *data.RuleSet) *MainScreen {
+     main := &MainScreen{
+         Counter: 0,
+         Cache: cache,
+@@ -60,6 +61,7 @@ func MakeMainScreen(cache *lbx.LbxCache, gameLoader gamemenu.GameLoader, music *
+         State: MainScreenStateRunning,
+         GameLoader: gameLoader,
+         Events: make(chan MainScreenEvent, 10),
++        RuleSet: ruleSet,
+     }
+ 
+     main.Drawer = func(screen *ebiten.Image) {
+@@ -317,6 +319,39 @@ func (main *MainScreen) MakeUI() *uilib.UI {
+         main.State = MainScreenStateQuit
+     }))
+ 
++    // 中文化 fork:規則組切換 (重製原版 ↔ 經典強化)。放左上角深色天空,點一下切換,隨新局帶入並存檔。
++    {
++        ruleX := 3
++        ruleY := 3
++        ruleRect := image.Rect(ruleX, ruleY, ruleX + 150, ruleY + titleFont.Height())
++        ruleInside := false
++        elements = append(elements, &uilib.UIElement{
++            Rect: ruleRect,
++            LeftClick: func(element *uilib.UIElement){
++                if main.RuleSet != nil {
++                    if *main.RuleSet == data.RuleSetClassic {
++                        *main.RuleSet = data.RuleSetRemake
++                    } else {
++                        *main.RuleSet = data.RuleSetClassic
++                    }
++                }
++            },
++            Inside: func(element *uilib.UIElement, x, y int){ ruleInside = true },
++            NotInside: func(element *uilib.UIElement){ ruleInside = false },
++            Draw: func(element *uilib.UIElement, screen *ebiten.Image){
++                label := "規則:重製原版"
++                if main.RuleSet != nil && *main.RuleSet == data.RuleSetClassic {
++                    label = "規則:經典強化"
++                }
++                use := titleFont
++                if ruleInside {
++                    use = titleFontHighlight
++                }
++                use.PrintOptions(screen, float64(ruleX), float64(ruleY), font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount, Justify: font.FontJustifyLeft}, label)
++            },
++        })
++    }
++
+     ui.SetElementsFromArray(elements)
+ 
+     return ui
 diff --git a/game/magic/mastery/mastery.go b/game/magic/mastery/mastery.go
 index 120f892..56732de 100644
 --- a/game/magic/mastery/mastery.go
@@ -2378,7 +2536,7 @@ index 556d824..04c18a3 100644
      })
  
 diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
-index f0917fe..d44cebc 100644
+index f0917fe..0c4897c 100644
 --- a/game/magic/setup/new-game.go
 +++ b/game/magic/setup/new-game.go
 @@ -2,6 +2,8 @@ package setup
@@ -2390,7 +2548,24 @@ index f0917fe..d44cebc 100644
  
      "github.com/kazzmir/master-of-magic/lib/lbx"
      "github.com/kazzmir/master-of-magic/lib/font"
-@@ -151,6 +153,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+@@ -24,6 +26,16 @@ type NewGameSettings struct {
+     Opponents int
+     LandSize int
+     Magic data.MagicSetting
++    RuleSet data.RuleSet // 中文化 fork:重製原版 / 經典強化 (主選單切換,隨存檔序列化)
++}
++
++// RuleSetNext 在「重製原版 ↔ 經典強化」之間切換 (主選單用)。
++func (settings *NewGameSettings) RuleSetNext() {
++    if settings.RuleSet == data.RuleSetClassic {
++        settings.RuleSet = data.RuleSetRemake
++    } else {
++        settings.RuleSet = data.RuleSetClassic
++    }
+ }
+ 
+ func (settings *NewGameSettings) DifficultyNext() {
+@@ -151,6 +163,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
              var options ebiten.DrawImageOptions
              options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
              scale.DrawScaled(screen, okButtons[okIndex], &options)
@@ -2398,7 +2573,7 @@ index f0917fe..d44cebc 100644
          },
      })
  
-@@ -172,6 +175,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+@@ -172,6 +185,7 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
              var options ebiten.DrawImageOptions
              options.GeoM.Translate(float64(this.Rect.Min.X), float64(this.Rect.Min.Y))
              scale.DrawScaled(screen, cancelButtons[cancelIndex], &options)
@@ -2406,7 +2581,7 @@ index f0917fe..d44cebc 100644
          },
      })
  
-@@ -275,6 +279,13 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
+@@ -275,6 +289,13 @@ func (newGameScreen *NewGameScreen) MakeUI() *uilib.UI {
              optionsImage, _ := newGameScreen.ImageCache.GetImage("newgame.lbx", 1, 0)
              scale.DrawScaled(screen, optionsImage, &options)
  
