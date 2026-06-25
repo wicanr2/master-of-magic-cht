@@ -171,7 +171,7 @@
 | — | End of Turn Wait | 評估中 | OFF=全部單位行動完自動推進(引擎只有 ON/手動點)。需 `stack.OutOfMoves()` 全檢 + idle 偵測 + 自動 `doNextTurn`。中偏難,需 playtest |
 | 3 | Event Music | 跳過 | 要區分事件曲 vs 背景曲,低價值 |
 | 4/5/6/14 | Spell/Enemy 事件通知 | 高難 | 引擎無「他玩家施法通知」;`GameEventNotice` 基建在,需跨玩家施法 chokepoint(一套解 4 項)|
-| 17 | Show Node Owners | 高難(可先做) | 節點 owner 已載入,overworld 有 DrawOverworld;加旗色光環渲染,純視覺低風險 |
+| 17 | Show Node Owners | ✅ | 光環渲染早已存在(map.go DrawLayer2 已用旗色畫 sparkle);加設定 guard 即可 |
 | 12 | Additional Unit Information | 高難 | 戰鬥單位資訊窗,自包含 combat UI |
 | 7 | End of Turn Summary | 高難 | 彙整 ScrollEvents 成回合總結卷軸 |
 | 8 | Automatic Advice | 高難(低價值) | 需 AI 建議引擎 |

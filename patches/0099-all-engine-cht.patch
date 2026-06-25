@@ -1150,10 +1150,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..9deeda1
+index 0000000..196aea4
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,23 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1167,6 +1167,7 @@ index 0000000..9deeda1
 +    RandomEvents        bool // #9 隨機事件(火山/地震/好月壞月等)
 +    StrategicCombatOnly bool // #11 所有戰鬥自動結算,不進戰術戰鬥畫面(仍顯示勝負結果)
 +    SpellAnimations     bool // #16 法術成功施放後的特效動畫(關閉=直接套用效果、跳過動畫)
++    ShowNodeOwners      bool // #17 已控魔法節點周圍顯示控制巫師旗色的光環(sparkle 影響範圍)
 +}
 +
 +var Settings = GameSettings{
@@ -1174,6 +1175,7 @@ index 0000000..9deeda1
 +    RandomEvents:        true,
 +    StrategicCombatOnly: false,
 +    SpellAnimations:     true,
++    ShowNodeOwners:      true,
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -3073,6 +3075,21 @@ index d306987..01229ed 100644
      ui.SetElementsFromArray(elements)
  
      return ui
+diff --git a/game/magic/maplib/map.go b/game/magic/maplib/map.go
+index f45f4b6..3d20ee2 100644
+--- a/game/magic/maplib/map.go
++++ b/game/magic/maplib/map.go
+@@ -470,8 +470,8 @@ func (node *ExtraMagicNode) DrawLayer1(screen *ebiten.Image, imageCache *util.Im
+ 
+ func (node *ExtraMagicNode) DrawLayer2(screen *ebiten.Image, imageCache *util.ImageCache, options *ebiten.DrawImageOptions, counter uint64, tileWidth int, tileHeight int){
+     // if the node is melded then show the zone of influence with the sparkly images
+-
+-    if node.MeldingWizard != nil {
++    // #17 Show Node Owners:此光環(以控制巫師旗色顯示節點影響範圍)由設定開關;關閉時不繪。
++    if node.MeldingWizard != nil && data.Settings.ShowNodeOwners {
+         index := 63
+         switch node.MeldingWizard.GetBanner() {
+             case data.BannerBlue: index = 63
 diff --git a/game/magic/mastery/mastery.go b/game/magic/mastery/mastery.go
 index 120f892..56732de 100644
 --- a/game/magic/mastery/mastery.go
@@ -3403,7 +3420,7 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..9861473 100644
+index 556d824..e74b1ab 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3424,12 +3441,15 @@ index 556d824..9861473 100644
          },
      })
  
-@@ -103,6 +105,79 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,89 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
-+    // 設定切換鈕共用 helper:在 (30, y) 顯示一行可點擊的文字,點擊執行 onClick;文字由 label() 即時取得。
-+    addToggle := func(y int, label func() string, onClick func()){
++    // 設定切換鈕共用 helper:自上而下逐列排版(避免 y 座標硬寫、撞到 OK 鈕),顯示一行可點擊文字。
++    toggleY := 72
++    addToggle := func(label func() string, onClick func()){
++        y := toggleY
++        toggleY += 13 // 列距;OptionFont 小字,7 列 72→~150 仍在 OK 鈕(y=176)之上
 +        group.AddElement(&uilib.UIElement{
 +            Layer: settingsLayer,
 +            Rect: image.Rect(30, y, 30 + 240, y + 12),
@@ -3454,7 +3474,7 @@ index 556d824..9861473 100644
 +    }
 +
 +    // #7 法術書排序:按類別 ↔ 按顏色(對應原版 Spell Book Ordering)。
-+    addToggle(75, func() string {
++    addToggle(func() string {
 +        if spellbook.SpellBookOrderByColor {
 +            return font.TranslateFormat("Spell Book Ordering: By Color")
 +        }
@@ -3464,21 +3484,21 @@ index 556d824..9861473 100644
 +    })
 +
 +    // #11 戰略戰鬥(全自動):開啟時所有戰鬥自動結算、不進戰術畫面(仍顯示勝負結果)。
-+    addToggle(90, func() string {
++    addToggle(func() string {
 +        return onOff("Strategic Combat Only", data.Settings.StrategicCombatOnly)
 +    }, func(){
 +        data.Settings.StrategicCombatOnly = !data.Settings.StrategicCombatOnly
 +    })
 +
 +    // #1 介面/戰鬥音效開關。
-+    addToggle(105, func() string {
++    addToggle(func() string {
 +        return onOff("Sound Effects", data.Settings.SoundEffects)
 +    }, func(){
 +        data.Settings.SoundEffects = !data.Settings.SoundEffects
 +    })
 +
 +    // #2 背景音樂開關(關閉時立即停止目前播放)。
-+    addToggle(120, func() string {
++    addToggle(func() string {
 +        return onOff("Background Music", music.Enabled)
 +    }, func(){
 +        music.Enabled = !music.Enabled
@@ -3488,17 +3508,24 @@ index 556d824..9861473 100644
 +    })
 +
 +    // #9 隨機事件開關(火山/地震/好月壞月等)。
-+    addToggle(135, func() string {
++    addToggle(func() string {
 +        return onOff("Random Events", data.Settings.RandomEvents)
 +    }, func(){
 +        data.Settings.RandomEvents = !data.Settings.RandomEvents
 +    })
 +
 +    // #16 法術特效動畫開關(關閉=直接套效果、跳過動畫,加速遊玩)。
-+    addToggle(150, func() string {
++    addToggle(func() string {
 +        return onOff("Spell Animations", data.Settings.SpellAnimations)
 +    }, func(){
 +        data.Settings.SpellAnimations = !data.Settings.SpellAnimations
++    })
++
++    // #17 顯示節點擁有者光環(已控魔法節點周圍以控制巫師旗色顯示影響範圍)。
++    addToggle(func() string {
++        return onOff("Show Node Owners", data.Settings.ShowNodeOwners)
++    }, func(){
++        data.Settings.ShowNodeOwners = !data.Settings.ShowNodeOwners
 +    })
 +
      return group, quit
