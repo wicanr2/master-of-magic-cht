@@ -293,6 +293,14 @@ Enchantment	附魔
 City Spells	城市法術
 Unit Spells	單位法術
 Combat Spells	戰鬥法術
+# 施法書「按顏色排序」時的系別頁標題 (MagicType.String);Chaos→混沌、Death→死亡 已在 item-powers.tsv
+Nature	自然
+Sorcery	巫術
+Life	生命
+Arcane	奧術
+# #7 法術書排序切換 (settings.go,對應原版 Spell Book Ordering)
+Spell Book Ordering: By Category	法術書排序:按分類
+Spell Book Ordering: By Color	法術書排序:按顏色
 # 施法書取消/確認對話 (格式字串 template,走 TranslateFormat → fmt.Sprintf)
 Do you wish to abort your %v spell?	您確定要中止施放 %v 嗎?
 # 施法書 overland tooltip

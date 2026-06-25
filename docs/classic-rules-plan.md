@@ -131,7 +131,21 @@
     既有 `TestPathBasic` 無 regression;`TestWaterBodies` 柵欄保留;全引擎 `go build ./...` 通過。
     註:精確「不對稱水體切分」的最小單元重現難構造(讓地圖可航的 ocean 格本身會讓 flood-fill 合併),
     故以根因分析 + 柵欄保留 + 尋路回歸 + 全 build 為據(同 #10 的 UI seam 取捨)。
-- [ ] #7 法術書顏色排序選項 + 設定畫面補項
+- [x] **#7 法術書按顏色排序(Spell Book Ordering)**(2026-06-25;經與使用者確認採有界切片)
+  - **手冊 oracle**(p.24):原版 MoM 設定「Spell Book Ordering」—— 開啟=按法術類別分節(城市結界/召喚…),
+    關閉=按顏色分節(生命/死亡/混沌/自然/秘術)。本地化早已譯 headline「法術書排序」+ help 文,只是引擎沒實作。
+  - **範圍決策**:完整設定畫面(手冊 18 項 toggle)多數需接實際遊戲行為,跨多模組;經詢問使用者,本次只做
+    使用者具體所問的「法術書顏色排序」有界切片(toggle + 渲染 + 翻譯),不做完整設定畫面。
+  - **實作(純顯示偏好,不碰遊戲邏輯)**:
+    - `spellbook.SpellBookOrderByColor`(套件層旗標,預設 false=按類別,與原行為一致)。
+    - `computeHalfPages` 分支:true 時改以魔法色(magicToOrder 序:自然/秘術/混沌/生命/死亡/秘法)分節;
+      抽出 `paginateSpells` 共用分頁邏輯。三個既有 call site 不動。
+    - `settings.go` 加切換鈕(顯示目前模式、點擊即切換),沿用既有音量設定畫面的全域 runtime 模式。
+    - 翻譯:ui.tsv 補系別頁標題(Nature/Sorcery/Life/Arcane;Chaos/Death 已在 item-powers.tsv)+ 切換鈕標籤
+      「法術書排序:按分類/按顏色」。所需 CJK 字逐一確認已在現有譯文 → 字型子集無需重生。
+  - **驗證**:`cht_spellorder_test.go` 證明兩模式分組互斥(色模式每頁同 Magic、類別模式每頁同 Section)、
+    Nature 跨 Section 合併、總數守恆 → PASS;全引擎 `go build ./...` 通過(settings↔spellbook 無 import cycle)。
+  - **未做(超出本次有界範圍)**:完整 18 項設定畫面、設定隨存檔序列化(目前同音量為全域 runtime,重啟重置)。
 
 > 註:閃退(穩定性)獨立追,不在規則範疇。
 

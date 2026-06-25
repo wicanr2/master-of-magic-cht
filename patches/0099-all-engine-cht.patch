@@ -3184,10 +3184,18 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..04c18a3 100644
+index 556d824..80f0be5 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
-@@ -63,7 +63,7 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -13,6 +13,7 @@ import (
+     "github.com/kazzmir/master-of-magic/game/magic/scale"
+     uilib "github.com/kazzmir/master-of-magic/game/magic/ui"
+     musiclib "github.com/kazzmir/master-of-magic/game/magic/music"
++    "github.com/kazzmir/master-of-magic/game/magic/spellbook"
+ 
+     "github.com/hajimehoshi/ebiten/v2"
+     "github.com/hajimehoshi/ebiten/v2/vector"
+@@ -63,7 +64,7 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          Draw: func(element *uilib.UIElement, screen *ebiten.Image){
              var options ebiten.DrawImageOptions
              options.ColorScale.ScaleAlpha(getAlpha())
@@ -3196,6 +3204,37 @@ index 556d824..04c18a3 100644
          },
      })
  
+@@ -103,6 +104,30 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+         },
+     })
+ 
++    // #7:法術書排序切換(對應原版 MoM「Spell Book Ordering」設定,手冊 p.24)。
++    // 顯示目前模式並可點擊切換:按類別(召喚/城市/附魔…)↔ 按顏色(自然/秘術/混沌/生命/死亡)。
++    // 純顯示偏好,點擊立即生效於法術書渲染(spellbook.SpellBookOrderByColor)。
++    spellOrderText := func() string {
++        if spellbook.SpellBookOrderByColor {
++            return font.TranslateFormat("Spell Book Ordering: By Color")
++        }
++        return font.TranslateFormat("Spell Book Ordering: By Category")
++    }
++
++    group.AddElement(&uilib.UIElement{
++        Layer: settingsLayer,
++        Rect: image.Rect(30, 75, 30 + 220, 75 + 12),
++        PlaySoundLeftClick: true,
++        LeftClick: func(element *uilib.UIElement){
++            spellbook.SpellBookOrderByColor = !spellbook.SpellBookOrderByColor
++        },
++        Draw: func(element *uilib.UIElement, screen *ebiten.Image){
++            var options ebiten.DrawImageOptions
++            options.ColorScale.ScaleAlpha(getAlpha())
++            fonts.OptionFont.PrintOptions(screen, 30, 75, font.FontOptions{Scale: scale.ScaleAmount, DropShadow: true, Options: &options}, spellOrderText())
++        },
++    })
++
+     return group, quit
+ 
+     /*
 diff --git a/game/magic/setup/new-game.go b/game/magic/setup/new-game.go
 index f0917fe..0c4897c 100644
 --- a/game/magic/setup/new-game.go
@@ -3405,11 +3444,174 @@ index 7eb793b..5ceea71 100644
      }
  
      err := out.Load(cache)
+diff --git a/game/magic/spellbook/cht_spellorder_test.go b/game/magic/spellbook/cht_spellorder_test.go
+new file mode 100644
+index 0000000..2a93c3d
+--- /dev/null
++++ b/game/magic/spellbook/cht_spellorder_test.go
+@@ -0,0 +1,77 @@
++package spellbook
++
++// 驗證 issue #7:法術書可按「顏色」排序而非「類別」(對應原版 MoM「Spell Book Ordering」設定,手冊 p.24)。
++// SpellBookOrderByColor=false(預設)→ 按 Section 分節;=true → 按 Magic 顏色分節。純顯示偏好。
++
++import (
++    "testing"
++
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++)
++
++func TestChtSpellBookOrdering(test *testing.T) {
++    defer func() { SpellBookOrderByColor = false }() // 還原全域偏好
++
++    var spells Spells
++    // 跨顏色 + 跨類別的混合法術
++    spells.AddSpell(Spell{Name: "Nature A", Magic: data.NatureMagic, Section: SectionSummoning})
++    spells.AddSpell(Spell{Name: "Chaos A", Magic: data.ChaosMagic, Section: SectionSummoning})
++    spells.AddSpell(Spell{Name: "Nature B", Magic: data.NatureMagic, Section: SectionCitySpell})
++    spells.AddSpell(Spell{Name: "Sorcery A", Magic: data.SorceryMagic, Section: SectionCombatSpell})
++    spells.AddSpell(Spell{Name: "Chaos B", Magic: data.ChaosMagic, Section: SectionCombatSpell})
++
++    // === 預設:按類別(Section)分節 → 每頁法術同 Section ===
++    SpellBookOrderByColor = false
++    byCategory := computeHalfPages(spells, 6)
++    if len(byCategory) == 0 {
++        test.Fatalf("按類別分頁不應為空")
++    }
++    for _, page := range byCategory {
++        first := page.Spells.Spells[0].Section
++        for _, s := range page.Spells.Spells {
++            if s.Section != first {
++                test.Errorf(">>> 按類別模式:同一頁出現不同 Section(%v vs %v)", s.Section, first)
++            }
++        }
++    }
++
++    // === 切換:按顏色(Magic)分節 → 每頁法術同 Magic ===
++    SpellBookOrderByColor = true
++    byColor := computeHalfPages(spells, 6)
++    if len(byColor) == 0 {
++        test.Fatalf("按顏色分頁不應為空")
++    }
++    for _, page := range byColor {
++        first := page.Spells.Spells[0].Magic
++        for _, s := range page.Spells.Spells {
++            if s.Magic != first {
++                test.Errorf(">>> 按顏色模式:同一頁出現不同 Magic(%v vs %v)", s.Magic, first)
++            }
++        }
++    }
++
++    // 按顏色模式下,Nature 那一頁應含兩個 Nature 法術(原本分屬不同 Section,現合併)
++    natureCount := 0
++    for _, page := range byColor {
++        if page.Spells.Spells[0].Magic == data.NatureMagic {
++            natureCount += len(page.Spells.Spells)
++        }
++    }
++    if natureCount != 2 {
++        test.Errorf(">>> 按顏色模式:Nature 法術數應為 2(跨 Section 合併),得 %d", natureCount)
++    }
++
++    // 兩種模式的法術總數應一致(只是分組方式不同)
++    countPages := func(pages []Page) int {
++        n := 0
++        for _, p := range pages {
++            n += len(p.Spells.Spells)
++        }
++        return n
++    }
++    if countPages(byCategory) != countPages(byColor) {
++        test.Errorf(">>> 兩模式法術總數不一致:類別=%d 顏色=%d", countPages(byCategory), countPages(byColor))
++    }
++
++    test.Logf("法術書排序:按類別/按顏色切換正確,分組互斥、總數守恆 → #7 Spell Book Ordering 可用")
++}
 diff --git a/game/magic/spellbook/spell.go b/game/magic/spellbook/spell.go
-index 4bc65bc..2557d1d 100644
+index 4bc65bc..f380252 100644
 --- a/game/magic/spellbook/spell.go
 +++ b/game/magic/spellbook/spell.go
-@@ -598,7 +598,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+@@ -46,32 +46,60 @@ func magicToOrder(magic data.MagicType) int {
+     return -1
+ }
+ 
++// #7:法術書排序偏好。對應原版 MoM 設定「Spell Book Ordering」(手冊 p.24):
++// 開啟(預設,= false)→ 按法術類別(召喚/特殊/城市/附魔/單位/戰鬥)分節;
++// 關閉(= true)→ 按法術顏色(自然/秘術/混沌/生命/死亡/秘法)分節。
++// 純顯示偏好,不影響任何遊戲邏輯。由設定畫面切換、隨存檔持久化。
++var SpellBookOrderByColor bool
++
++// 把一組已排序的法術依每頁上限切成多個 Page(共用分頁邏輯)。
++func paginateSpells(title string, sectionSpells Spells, max int) []Page {
++    var pages []Page
++    numSpells := len(sectionSpells.Spells)
++
++    for i := 0; i < int(math.Ceil(float64(numSpells) / float64(max))); i++ {
++        var pageSpells Spells
++
++        for j := 0; j < max; j++ {
++            index := i * max + j
++            if index < numSpells {
++                pageSpells.AddSpell(sectionSpells.Spells[index])
++            }
++        }
++
++        if len(pageSpells.Spells) > 0 {
++            pages = append(pages, Page{
++                Title: title,
++                Spells: pageSpells,
++            })
++        }
++    }
++
++    return pages
++}
++
+ func computeHalfPages(spells Spells, max int) []Page {
++    // #7:按顏色排序時改以魔法色分節(順序同 magicToOrder:自然/秘術/混沌/生命/死亡/秘法)。
++    if SpellBookOrderByColor {
++        var halfPages []Page
++
++        colors := []data.MagicType{data.NatureMagic, data.SorceryMagic, data.ChaosMagic, data.LifeMagic, data.DeathMagic, data.ArcaneMagic}
++
++        for _, color := range colors {
++            colorSpells := spells.GetSpellsByMagic(color)
++            halfPages = append(halfPages, paginateSpells(color.String(), colorSpells, max)...)
++        }
++
++        return halfPages
++    }
++
+     var halfPages []Page
+ 
+     sections := []Section{SectionSummoning, SectionSpecial, SectionCitySpell, SectionEnchantment, SectionUnitSpell, SectionCombatSpell}
+ 
+     for _, section := range sections {
+         sectionSpells := spells.GetSpellsBySection(section)
+-        numSpells := len(sectionSpells.Spells)
+-
+-        for i := 0; i < int(math.Ceil(float64(numSpells) / float64(max))); i++ {
+-            var pageSpells Spells
+-
+-            for j := 0; j < max; j++ {
+-                index := i * max + j
+-                if index < numSpells {
+-                    pageSpells.AddSpell(sectionSpells.Spells[index])
+-                }
+-            }
+-
+-            if len(pageSpells.Spells) > 0 {
+-                halfPages = append(halfPages, Page{
+-                    Title: section.Name(),
+-                    Spells: pageSpells,
+-                })
+-            }
+-        }
++        halfPages = append(halfPages, paginateSpells(section.Name(), sectionSpells, max)...)
+     }
+ 
+     return halfPages
+@@ -598,7 +626,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
                          if turns > 1 {
                              turnString = "turns"
                          }
@@ -3418,7 +3620,7 @@ index 4bc65bc..2557d1d 100644
                          y += float64(spellTextNormalFont.Height())
                      } else {
                          spellCost := caster.ComputeEffectiveSpellCost(spell, true)
-@@ -611,7 +611,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+@@ -611,7 +639,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
                          if turns > 1 {
                              turnString = "turns"
                          }
@@ -3427,7 +3629,7 @@ index 4bc65bc..2557d1d 100644
                          y += float64(spellTextNormalFont.Height())
                      }
  
-@@ -1417,7 +1417,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -1417,7 +1445,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
              textColorOptions.ColorScale = textColorScale
  
              infoFont.PrintOptions(screen, spellX, spellY, font.FontOptions{Options: &textColorOptions, Scale: scale.ScaleAmount}, spell.Name)
@@ -3436,7 +3638,7 @@ index 4bc65bc..2557d1d 100644
              icon := getMagicIcon(spell)
  
              nameLength := infoFont.MeasureTextWidth(spell.Name, 1) + 1
-@@ -1577,7 +1577,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -1577,7 +1605,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
                  },
                  Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
                      if overland {
@@ -3445,7 +3647,7 @@ index 4bc65bc..2557d1d 100644
                      }
                      return "", nil
                  },
-@@ -1600,7 +1600,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -1600,7 +1628,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
  
                              ui.RemoveGroup(group)
                          }
