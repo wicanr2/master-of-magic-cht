@@ -138,3 +138,4 @@ Volume: %02d%%	音量：%02d%%	template
 Artifact Summoned	神器召喚	summon標題
 Hero Summoned	英雄召喚	summon標題
 Champion Summoned	勇者召喚	summon標題
+%v has cast %v.	「%v」施放了「%v」。	施法事件通知

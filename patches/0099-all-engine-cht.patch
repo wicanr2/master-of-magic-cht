@@ -1150,10 +1150,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..196aea4
+index 0000000..26356a8
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,32 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1168,6 +1168,11 @@ index 0000000..196aea4
 +    StrategicCombatOnly bool // #11 所有戰鬥自動結算,不進戰術戰鬥畫面(仍顯示勝負結果)
 +    SpellAnimations     bool // #16 法術成功施放後的特效動畫(關閉=直接套用效果、跳過動畫)
 +    ShowNodeOwners      bool // #17 已控魔法節點周圍顯示控制巫師旗色的光環(sparkle 影響範圍)
++    // 施法事件通知(對手玩家施法完成時通知人類玩家;依法術類別分別開關)
++    CitySpellEvents     bool // #4 城市結界類法術
++    OverlandSpellEvents bool // #5 戰略地圖(全域)結界類法術
++    SummoningEvents     bool // #6 召喚類法術
++    EnemySpells         bool // #14 其餘對手法術(catch-all)
 +}
 +
 +var Settings = GameSettings{
@@ -1176,6 +1181,10 @@ index 0000000..196aea4
 +    StrategicCombatOnly: false,
 +    SpellAnimations:     true,
 +    ShowNodeOwners:      true,
++    CitySpellEvents:     true,
++    OverlandSpellEvents: true,
++    SummoningEvents:     true,
++    EnemySpells:         true,
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -1650,7 +1659,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..eddc51d 100644
+index 44c64b8..ee92107 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1742,7 +1751,43 @@ index 44c64b8..eddc51d 100644
          }
      }
  
-@@ -2112,7 +2124,7 @@ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Playe
+@@ -2107,12 +2119,43 @@ func (game *Game) maybeBuyFromMerchant(player *playerlib.Player) {
+     }
+ }
+ 
++// maybeNotifySpellCast:對手玩家(非人類)完成一個戰略法術時,依法術類別與對應設定通知人類玩家。
++// 對應原版《魔法大帝》Settings 的 City/Overland/Summoning Spell Events 與 Enemy Spells。
++// 自己施法不通知(避免洗版);每個類別由各自的設定獨立開關,其餘法術由 EnemySpells 總管。
++func (game *Game) maybeNotifySpellCast(caster *playerlib.Player, spell spellbook.Spell) {
++    if caster.IsHuman() {
++        return
++    }
++
++    notify := false
++    switch spell.Section {
++        case spellbook.SectionSummoning:
++            notify = data.Settings.SummoningEvents
++        case spellbook.SectionCitySpell:
++            notify = data.Settings.CitySpellEvents
++        case spellbook.SectionEnchantment:
++            notify = data.Settings.OverlandSpellEvents
++        default:
++            notify = data.Settings.EnemySpells
++    }
++
++    if !notify {
++        return
++    }
++
++    message := fmt.Sprintf(font.TranslateFormat("%v has cast %v."), caster.Wizard.Name, font.TranslateFormat(spell.Name))
++    select {
++        case game.Events <- &GameEventNotice{Message: message}:
++        default:
++    }
++}
++
+ // FIXME: add a "reason" of fizzling, like "Spell X was fizzled because of Y"
+ func (game *Game) ShowFizzleSpell(spell spellbook.Spell, caster *playerlib.Player) {
      if caster.IsHuman() {
          game.Events <- &GameEventNotice{
              // FIXME: align this message with how dos mom does it
@@ -1751,7 +1796,7 @@ index 44c64b8..eddc51d 100644
          }
      }
  }
-@@ -2451,7 +2463,7 @@ func (game *Game) ProcessEvents(yield coroutine.YieldFunc) {
+@@ -2451,7 +2494,7 @@ func (game *Game) ProcessEvents(yield coroutine.YieldFunc) {
                      case *GameEventVault:
                          vaultEvent := event.(*GameEventVault)
                          if vaultEvent.Player.IsHuman() {
@@ -1760,7 +1805,7 @@ index 44c64b8..eddc51d 100644
                          } else {
                              // FIXME: give item to AI
                          }
-@@ -3426,7 +3438,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
+@@ -3426,7 +3469,7 @@ func (game *Game) doMoveSelectedUnit(yield coroutine.YieldFunc, player *playerli
              for _, unit := range stack.ActiveUnits() {
                  if !city.CanEnter(unit) {
                      stopMoving = true
@@ -1769,7 +1814,7 @@ index 44c64b8..eddc51d 100644
                      break quitMoving
                  }
              }
-@@ -3660,7 +3672,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
+@@ -3660,7 +3703,7 @@ func (game *Game) doPlayerUpdate(yield coroutine.YieldFunc, player *playerlib.Pl
                              for _, unit := range stack.ActiveUnits() {
                                  if !newCity.CanEnter(unit) {
                                      canMove = false
@@ -1778,7 +1823,7 @@ index 44c64b8..eddc51d 100644
                                      break
                                  }
                              }
-@@ -3921,7 +3933,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
+@@ -3921,7 +3964,7 @@ func (game *Game) doAiUpdate(yield coroutine.YieldFunc, player *playerlib.Player
  
              options.ColorScale = ebiten.ColorScale{}
              options.ColorScale.ScaleAlpha(getAlpha())
@@ -1787,7 +1832,7 @@ index 44c64b8..eddc51d 100644
          })
  
          for !done {
-@@ -4294,11 +4306,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
+@@ -4294,11 +4337,11 @@ func (game *Game) confirmLairEncounter(yield coroutine.YieldFunc, encounter *map
      defer game.Music.PopSong()
  
      if len(encounter.Units) == 0 {
@@ -1801,7 +1846,7 @@ index 44c64b8..eddc51d 100644
  }
  
  func (game *Game) doEncounter(yield coroutine.YieldFunc, player *playerlib.Player, stack *playerlib.UnitStack, encounter *maplib.ExtraEncounter, mapUse *maplib.Map, x int, y int) combat.CombatState {
-@@ -4488,7 +4500,9 @@ func (game *Game) ApplyTreasure(yield coroutine.YieldFunc, player *playerlib.Pla
+@@ -4488,7 +4531,9 @@ func (game *Game) ApplyTreasure(yield coroutine.YieldFunc, player *playerlib.Pla
              case *TreasureMagicalItem:
                  magicalItem := item.(*TreasureMagicalItem)
                  if player.IsHuman() {
@@ -1812,7 +1857,7 @@ index 44c64b8..eddc51d 100644
                  } else {
                      if player.AIBehavior != nil {
                          // there is a light impedance mismatch between giving a treasure item and invoking the merchant item function
-@@ -4606,25 +4620,45 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+@@ -4606,25 +4651,45 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
      // do graphic combat only if a human is involved
      useHuman := attacker.IsHuman() || defender.IsHuman()
  
@@ -1858,7 +1903,7 @@ index 44c64b8..eddc51d 100644
          }
  
          return &army
-@@ -4663,7 +4697,7 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+@@ -4663,7 +4728,7 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
  
      popCombatScreen := false
  
@@ -1867,7 +1912,7 @@ index 44c64b8..eddc51d 100644
          defer mouse.Mouse.SetImage(game.MouseData.Normal)
  
          controllingPlayer := optional.Of[combat.ArmyPlayer](game.Model.GetHumanPlayer())
-@@ -5084,7 +5118,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+@@ -5084,7 +5149,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
  
      textOffset := 70
  
@@ -1876,7 +1921,7 @@ index 44c64b8..eddc51d 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
-@@ -5644,7 +5678,7 @@ func (game *Game) doPlanarTraval() {
+@@ -5644,7 +5709,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
                      select {
@@ -1885,7 +1930,7 @@ index 44c64b8..eddc51d 100644
                          default:
                      }
                  } else {
-@@ -5705,6 +5739,25 @@ func (game *Game) DumpInfo(x int, y int) {
+@@ -5705,6 +5770,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
  
@@ -1911,7 +1956,7 @@ index 44c64b8..eddc51d 100644
  func (game *Game) MakeHudUI() *uilib.UI {
      type TrackKey struct {
          Key ebiten.Key
-@@ -5815,6 +5868,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5815,6 +5899,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
      ui.AddGroup(group)
  
      // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
@@ -1921,7 +1966,7 @@ index 44c64b8..eddc51d 100644
      makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
          buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
          rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
-@@ -5853,6 +5909,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5853,6 +5940,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
                  options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
                  options.ColorScale.ScaleWithColorScale(colorScale)
                  scale.DrawScaled(screen, buttons[index], &options)
@@ -1931,7 +1976,7 @@ index 44c64b8..eddc51d 100644
              },
          }
      }
-@@ -6145,6 +6204,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6145,6 +6235,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
                      scale.DrawScaled(screen, doneImages[doneIndex], &options)
@@ -1939,7 +1984,7 @@ index 44c64b8..eddc51d 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      doneCounter += 1
-@@ -6185,6 +6245,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6185,6 +6276,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
@@ -1947,7 +1992,7 @@ index 44c64b8..eddc51d 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      patrolCounter += 1
-@@ -6229,6 +6290,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6229,6 +6321,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, waitImages[waitIndex], &options)
@@ -1955,7 +2000,7 @@ index 44c64b8..eddc51d 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      waitCounter += 1
-@@ -6310,6 +6372,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6310,6 +6403,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      }
  
                      colorm.DrawImage(screen, use, matrix, &options)
@@ -1970,7 +2015,7 @@ index 44c64b8..eddc51d 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
-@@ -6364,7 +6434,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6364,7 +6465,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
          elements = append(elements, &uilib.UIElement{
              Draw: func(element *uilib.UIElement, screen *ebiten.Image){
                  if !minMoves.IsZero() {
@@ -1979,7 +2024,7 @@ index 44c64b8..eddc51d 100644
  
                      sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
                      swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
-@@ -6474,21 +6544,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6474,21 +6575,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
  
                      if goldPerTurn < 0 {
@@ -2007,7 +2052,7 @@ index 44c64b8..eddc51d 100644
                      }
  
                      if conjunction != "" {
-@@ -6738,7 +6808,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6738,7 +6839,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
                      log.Printf("Disband %v due to lack of gold", unit)
@@ -2016,7 +2061,7 @@ index 44c64b8..eddc51d 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6746,7 +6816,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6746,7 +6847,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if foodIssue && unit.GetUpkeepFood() > 0 {
                      log.Printf("Disband %v due to lack of food", unit)
@@ -2025,7 +2070,7 @@ index 44c64b8..eddc51d 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6754,7 +6824,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6754,7 +6855,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if manaIssue && unit.GetUpkeepMana() > 0 {
                      log.Printf("Disband %v due to lack of mana", unit)
@@ -2034,7 +2079,20 @@ index 44c64b8..eddc51d 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -7020,7 +7090,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -6956,9 +7057,12 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+         player.Mana -= manaSpent
+ 
+         if spellCost <= player.CastingSpellProgress {
++            castedSpell := player.CastingSpell
+             game.doCastSpell(player, player.CastingSpell)
+             player.CastingSpell = spellbook.Spell{}
+             player.CastingSpellProgress = 0
++            // #4/#5/#6/#14 施法事件通知:對手玩家(非人類)完成一個戰略法術時,依其類別 + 設定通知人類玩家。
++            game.maybeNotifySpellCast(player, castedSpell)
+         }
+     }
+ 
+@@ -7020,7 +7124,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
  
                          scrollEvent := GameEventScroll{
                              Title: "CITY GROWTH",
@@ -2043,7 +2101,7 @@ index 44c64b8..eddc51d 100644
                          }
  
                          select {
-@@ -7032,7 +7102,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7032,7 +7136,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -2052,7 +2110,7 @@ index 44c64b8..eddc51d 100644
                              default:
                          }
                      }
-@@ -7051,14 +7121,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7051,14 +7155,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -3420,7 +3478,7 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..e74b1ab 100644
+index 556d824..53136e9 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3441,18 +3499,23 @@ index 556d824..e74b1ab 100644
          },
      })
  
-@@ -103,6 +105,89 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,122 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
-+    // 設定切換鈕共用 helper:自上而下逐列排版(避免 y 座標硬寫、撞到 OK 鈕),顯示一行可點擊文字。
-+    toggleY := 72
++    // 設定切換鈕共用 helper:雙欄自動排版(避免硬寫座標、撞到 OK 鈕)。每欄 7 列,共可容 14 項;
++    // 目前 11 項。左欄 x=18、右欄 x=165,列距 13,自 y=66 起,最後一列 y≈144 仍在 OK 鈕(y=176)之上。
++    toggleIndex := 0
++    const togglePerColumn = 7
 +    addToggle := func(label func() string, onClick func()){
-+        y := toggleY
-+        toggleY += 13 // 列距;OptionFont 小字,7 列 72→~150 仍在 OK 鈕(y=176)之上
++        col := toggleIndex / togglePerColumn
++        row := toggleIndex % togglePerColumn
++        toggleIndex++
++        x := 18 + col*147
++        y := 66 + row*13
 +        group.AddElement(&uilib.UIElement{
 +            Layer: settingsLayer,
-+            Rect: image.Rect(30, y, 30 + 240, y + 12),
++            Rect: image.Rect(x, y, x + 143, y + 12),
 +            PlaySoundLeftClick: true,
 +            LeftClick: func(element *uilib.UIElement){
 +                onClick()
@@ -3526,6 +3589,34 @@ index 556d824..e74b1ab 100644
 +        return onOff("Show Node Owners", data.Settings.ShowNodeOwners)
 +    }, func(){
 +        data.Settings.ShowNodeOwners = !data.Settings.ShowNodeOwners
++    })
++
++    // #6 召喚事件通知(對手施放召喚法術時)。
++    addToggle(func() string {
++        return onOff("Summoning Events", data.Settings.SummoningEvents)
++    }, func(){
++        data.Settings.SummoningEvents = !data.Settings.SummoningEvents
++    })
++
++    // #4 城市結界事件通知。
++    addToggle(func() string {
++        return onOff("City Spell Events", data.Settings.CitySpellEvents)
++    }, func(){
++        data.Settings.CitySpellEvents = !data.Settings.CitySpellEvents
++    })
++
++    // #5 戰略地圖結界事件通知。
++    addToggle(func() string {
++        return onOff("Overland Spell Events", data.Settings.OverlandSpellEvents)
++    }, func(){
++        data.Settings.OverlandSpellEvents = !data.Settings.OverlandSpellEvents
++    })
++
++    // #14 其餘對手法術通知(總開關)。
++    addToggle(func() string {
++        return onOff("Enemy Spells", data.Settings.EnemySpells)
++    }, func(){
++        data.Settings.EnemySpells = !data.Settings.EnemySpells
 +    })
 +
      return group, quit

@@ -170,7 +170,7 @@
 | 16 | Spell Animations | ✅ | `doCastOnMap`(定點特效)+ `doCastGlobalEnchantment`(全域附魔)guard,關閉直接套效果 |
 | — | End of Turn Wait | 評估中 | OFF=全部單位行動完自動推進(引擎只有 ON/手動點)。需 `stack.OutOfMoves()` 全檢 + idle 偵測 + 自動 `doNextTurn`。中偏難,需 playtest |
 | 3 | Event Music | 跳過 | 要區分事件曲 vs 背景曲,低價值 |
-| 4/5/6/14 | Spell/Enemy 事件通知 | 高難 | 引擎無「他玩家施法通知」;`GameEventNotice` 基建在,需跨玩家施法 chokepoint(一套解 4 項)|
+| 4/5/6/14 | Spell/Enemy 事件通知 | ✅ | 一套 `maybeNotifySpellCast`:7028(`CastingSpell` 完成)是所有玩家施法 chokepoint;對手施法依 Section 分類 + 各設定通知。設定畫面改雙欄容納 |
 | 17 | Show Node Owners | ✅ | 光環渲染早已存在(map.go DrawLayer2 已用旗色畫 sparkle);加設定 guard 即可 |
 | 12 | Additional Unit Information | 高難 | 戰鬥單位資訊窗,自包含 combat UI |
 | 7 | End of Turn Summary | 高難 | 彙整 ScrollEvents 成回合總結卷軸 |

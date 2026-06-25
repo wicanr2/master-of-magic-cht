@@ -310,6 +310,10 @@ Background Music	背景音樂
 Random Events	隨機事件
 Spell Animations	法術動畫
 Show Node Owners	顯示節點擁有者
+Summoning Events	召喚事件
+City Spell Events	城市結界事件
+Overland Spell Events	戰略結界事件
+Enemy Spells	對手法術
 # 施法書取消/確認對話 (格式字串 template,走 TranslateFormat → fmt.Sprintf)
 Do you wish to abort your %v spell?	您確定要中止施放 %v 嗎?
 # 施法書 overland tooltip
