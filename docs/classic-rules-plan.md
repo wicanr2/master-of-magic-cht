@@ -172,7 +172,7 @@
 | 3 | Event Music | 跳過 | 要區分事件曲 vs 背景曲,低價值 |
 | 4/5/6/14 | Spell/Enemy 事件通知 | ✅ | 一套 `maybeNotifySpellCast`:7028(`CastingSpell` 完成)是所有玩家施法 chokepoint;對手施法依 Section 分類 + 各設定通知。設定畫面改雙欄容納 |
 | 17 | Show Node Owners | ✅ | 光環渲染早已存在(map.go DrawLayer2 已用旗色畫 sparkle);加設定 guard 即可 |
-| 12 | Additional Unit Information | 高難 | 戰鬥單位資訊窗,自包含 combat UI |
+| 12 | Additional Unit Information | ✅ | 戰場左上角浮動窗(半透明底)顯示當前單位彈藥/法力/血量;截圖驗證 |
 | 7 | End of Turn Summary | 高難 | 彙整 ScrollEvents 成回合總結卷軸 |
 | 8 | Automatic Advice | 高難(低價值) | 需 AI 建議引擎 |
 | 13 | Enemy Moves | 高難 | 需敵軍移動動畫 |
