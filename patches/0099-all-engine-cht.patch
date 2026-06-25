@@ -634,6 +634,110 @@ index 6d3cde2..e96cf75 100644
  
              geom2 := geom
              geom2.Translate(5, 27)
+diff --git a/game/magic/combat/cht_repro_test.go b/game/magic/combat/cht_repro_test.go
+new file mode 100644
+index 0000000..795c383
+--- /dev/null
++++ b/game/magic/combat/cht_repro_test.go
+@@ -0,0 +1,98 @@
++package combat
++
++// 重現 issue #1:玩家走進有怪物的據點,直接「你已戰敗」,連擺陣開打都沒有。
++// 假說:doCombat.createArmy (game.go:4618) 的地形過濾在特定戰場把玩家單位全濾掉 → 空軍隊 → 秒敗。
++// 本測試複製該過濾邏輯,用數值+地形直接驗,不需遊玩。
++
++import (
++    "testing"
++
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    "github.com/kazzmir/master-of-magic/game/magic/units"
++    playerlib "github.com/kazzmir/master-of-magic/game/magic/player"
++    herolib "github.com/kazzmir/master-of-magic/game/magic/hero"
++    "github.com/kazzmir/master-of-magic/game/magic/setup"
++)
++
++func chtMakeOW(u units.Unit) units.StackUnit {
++    return units.MakeOverworldUnitFromUnit(u, 0, 0, data.PlaneArcanus, data.BannerBlue, &units.NoExperienceInfo{}, &units.NoEnchantments{})
++}
++
++// 複製 game.go doCombat.createArmy 的地形過濾
++func chtBuildArmy(player *playerlib.Player, stack []units.Unit, landscape CombatLandscape) *Army {
++    army := &Army{Player: player}
++    for _, u := range stack {
++        ow := chtMakeOW(u)
++        if !ow.IsFlying() {
++            if landscape == CombatLandscapeWater && ow.IsLandWalker() {
++                continue
++            }
++            if landscape != CombatLandscapeWater && ow.IsSailing() {
++                continue
++            }
++        }
++        army.AddUnit(ow)
++    }
++    return army
++}
++
++func TestChtEncounterArmyFilter(test *testing.T) {
++    human := playerlib.MakePlayer(setup.WizardCustom{}, true, 1, 1, map[herolib.HeroType]string{}, &playerlib.NoGlobalEnchantments{})
++
++    for _, u := range []units.Unit{units.BarbarianSpearmen, units.HighMenSpearmen, units.Trireme, units.Galley} {
++        ow := chtMakeOW(u)
++        test.Logf("單位 %-18s IsFlying=%-5v IsLandWalker=%-5v IsSailing=%v", u.Name, ow.IsFlying(), ow.IsLandWalker(), ow.IsSailing())
++    }
++
++    land := []units.Unit{units.BarbarianSpearmen, units.BarbarianSpearmen}
++    grass := chtBuildArmy(human, land, CombatLandscapeGrass)
++    water := chtBuildArmy(human, land, CombatLandscapeWater)
++    test.Logf("陸軍(矛兵x2) → grass 戰場: %d 單位 / water 戰場: %d 單位", len(grass.units), len(water.units))
++
++    // 船運陸軍:船 + 陸軍,攻水上據點
++    shipPlusLand := []units.Unit{units.Trireme, units.BarbarianSpearmen, units.BarbarianSpearmen}
++    waterMixed := chtBuildArmy(human, shipPlusLand, CombatLandscapeWater)
++    test.Logf("船+陸軍 → water 戰場: %d 單位 (船是否還在)", len(waterMixed.units))
++
++    if len(water.units) == 0 {
++        test.Logf(">>> #1 重現:純陸軍在水域戰場被全濾掉 → 空軍隊 → 必秒敗")
++    }
++    if len(grass.units) == 0 {
++        test.Errorf("意外:陸軍在 grass 戰場也被濾空(這才是廣泛 bug)")
++    }
++
++    // 驗證修正邏輯(Classic):過濾若導致空軍隊,保留被濾單位讓其開打。
++    classicWater := chtBuildArmyClassic(human, land, CombatLandscapeWater)
++    test.Logf("修正後(Classic)陸軍 → water 戰場: %d 單位 (應 >0,不再秒敗)", len(classicWater.units))
++    if len(classicWater.units) == 0 {
++        test.Errorf("修正失敗:Classic 模式陸軍在 water 仍被濾空")
++    }
++}
++
++// chtBuildArmyClassic 複製 game.go 修正後的 createArmy (Classic:濾空則保留)。
++func chtBuildArmyClassic(player *playerlib.Player, stack []units.Unit, landscape CombatLandscape) *Army {
++    army := &Army{Player: player}
++    added := 0
++    var filtered []units.StackUnit
++    for _, u := range stack {
++        ow := chtMakeOW(u)
++        if !ow.IsFlying() {
++            if landscape == CombatLandscapeWater && ow.IsLandWalker() {
++                filtered = append(filtered, ow)
++                continue
++            }
++            if landscape != CombatLandscapeWater && ow.IsSailing() {
++                filtered = append(filtered, ow)
++                continue
++            }
++        }
++        army.AddUnit(ow)
++        added += 1
++    }
++    if added == 0 && len(filtered) > 0 {
++        for _, ow := range filtered {
++            army.AddUnit(ow)
++        }
++    }
++    return army
++}
 diff --git a/game/magic/combat/combat-screen.go b/game/magic/combat/combat-screen.go
 index 6e8929e..849b368 100644
 --- a/game/magic/combat/combat-screen.go
@@ -1314,7 +1418,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..6fef536 100644
+index 44c64b8..8ed816e 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -1424,7 +1528,49 @@ index 44c64b8..6fef536 100644
  }
  
  func (game *Game) doEncounter(yield coroutine.YieldFunc, player *playerlib.Player, stack *playerlib.UnitStack, encounter *maplib.ExtraEncounter, mapUse *maplib.Map, x int, y int) combat.CombatState {
-@@ -5084,7 +5093,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
+@@ -4606,25 +4615,41 @@ func (game *Game) doCombat(yield coroutine.YieldFunc, attacker *playerlib.Player
+     // do graphic combat only if a human is involved
+     useHuman := attacker.IsHuman() || defender.IsHuman()
+ 
++    classicRules := game.Model.Settings.RuleSet == data.RuleSetClassic
++
+     createArmy := func (player *playerlib.Player, stack *playerlib.UnitStack) *combat.Army {
+         army := combat.Army{
+             Player: player,
+         }
+ 
++        added := 0
++        var filtered []units.StackUnit
+         for _, unit := range stack.Units() {
+             // flying units always get added to battle
+             if !unit.IsFlying() {
+                 if landscape == combat.CombatLandscapeWater && unit.IsLandWalker() {
++                    filtered = append(filtered, unit)
+                     continue
+                 }
+ 
+                 // dont add sailing units to non-water combat
+                 if landscape != combat.CombatLandscapeWater && unit.IsSailing() {
++                    filtered = append(filtered, unit)
+                     continue
+                 }
+             }
+ 
+             army.AddUnit(unit)
++            added += 1
++        }
++
++        // #1 修正 (Classic):地形過濾把整支軍隊濾空 → 戰鬥開始即判敗、完全不開打。
++        // 原版 MoM 載於運輸船的陸軍會在海戰中作戰,不會憑空消失。經典模式下,若過濾
++        // 導致空軍隊但原本有單位,則保留被濾單位讓其開打(避免無開打的秒敗)。
++        if classicRules && added == 0 && len(filtered) > 0 {
++            for _, unit := range filtered {
++                army.AddUnit(unit)
++            }
+         }
+ 
+         return &army
+@@ -5084,7 +5109,7 @@ func (game *Game) makeTranquilityFizzleUI(tranquilityOwner *playerlib.Player, ca
  
      textOffset := 70
  
@@ -1433,7 +1579,7 @@ index 44c64b8..6fef536 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
-@@ -5644,7 +5653,7 @@ func (game *Game) doPlanarTraval() {
+@@ -5644,7 +5669,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
                      select {
@@ -1442,7 +1588,7 @@ index 44c64b8..6fef536 100644
                          default:
                      }
                  } else {
-@@ -5705,6 +5714,25 @@ func (game *Game) DumpInfo(x int, y int) {
+@@ -5705,6 +5730,25 @@ func (game *Game) DumpInfo(x int, y int) {
      }
  }
  
@@ -1468,7 +1614,7 @@ index 44c64b8..6fef536 100644
  func (game *Game) MakeHudUI() *uilib.UI {
      type TrackKey struct {
          Key ebiten.Key
-@@ -5815,6 +5843,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5815,6 +5859,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
      ui.AddGroup(group)
  
      // onClick - true to perform the action when the left click occurs, false to perform the action when the left click is released
@@ -1478,7 +1624,7 @@ index 44c64b8..6fef536 100644
      makeButton := func(lbxIndex int, x int, y int, onClick bool, action func()) *uilib.UIElement {
          buttons, _ := game.ImageCache.GetImages("main.lbx", lbxIndex)
          rect := image.Rect(x, y, x + buttons[0].Bounds().Dx(), y + buttons[0].Bounds().Dy())
-@@ -5853,6 +5884,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -5853,6 +5900,9 @@ func (game *Game) MakeHudUI() *uilib.UI {
                  options.GeoM.Translate(float64(rect.Min.X), float64(rect.Min.Y))
                  options.ColorScale.ScaleWithColorScale(colorScale)
                  scale.DrawScaled(screen, buttons[index], &options)
@@ -1488,7 +1634,7 @@ index 44c64b8..6fef536 100644
              },
          }
      }
-@@ -6145,6 +6179,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6145,6 +6195,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      options.GeoM.Translate(float64(doneRect.Min.X), float64(doneRect.Min.Y))
                      scale.DrawScaled(screen, doneImages[doneIndex], &options)
@@ -1496,7 +1642,7 @@ index 44c64b8..6fef536 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      doneCounter += 1
-@@ -6185,6 +6220,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6185,6 +6236,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(patrolRect.Min.X), float64(patrolRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, patrolImages[patrolIndex], &options)
@@ -1504,7 +1650,7 @@ index 44c64b8..6fef536 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      patrolCounter += 1
-@@ -6229,6 +6265,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6229,6 +6281,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      options.GeoM.Translate(float64(waitRect.Min.X), float64(waitRect.Min.Y))
                      options.ColorScale.ScaleWithColorScale(colorScale)
                      scale.DrawScaled(screen, waitImages[waitIndex], &options)
@@ -1512,7 +1658,7 @@ index 44c64b8..6fef536 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      waitCounter += 1
-@@ -6310,6 +6347,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6310,6 +6363,14 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      }
  
                      colorm.DrawImage(screen, use, matrix, &options)
@@ -1527,7 +1673,7 @@ index 44c64b8..6fef536 100644
                  },
                  Inside: func(this *uilib.UIElement, x int, y int){
                      buildCounter += 1
-@@ -6364,7 +6409,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6364,7 +6425,7 @@ func (game *Game) MakeHudUI() *uilib.UI {
          elements = append(elements, &uilib.UIElement{
              Draw: func(element *uilib.UIElement, screen *ebiten.Image){
                  if !minMoves.IsZero() {
@@ -1536,7 +1682,7 @@ index 44c64b8..6fef536 100644
  
                      sailingIcon, _ := game.ImageCache.GetImage("main.lbx", 18, 0)
                      swimmingIcon, _ := game.ImageCache.GetImage("main.lbx", 19, 0)
-@@ -6474,21 +6519,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
+@@ -6474,21 +6535,21 @@ func (game *Game) MakeHudUI() *uilib.UI {
                      normalOptions := font.FontOptions{Justify: font.FontJustifyCenter, Options: &options, Scale: scale.ScaleAmount}
  
                      if goldPerTurn < 0 {
@@ -1564,7 +1710,7 @@ index 44c64b8..6fef536 100644
                      }
  
                      if conjunction != "" {
-@@ -6738,7 +6783,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6738,7 +6799,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
                      log.Printf("Disband %v due to lack of gold", unit)
@@ -1573,7 +1719,7 @@ index 44c64b8..6fef536 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6746,7 +6791,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6746,7 +6807,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if foodIssue && unit.GetUpkeepFood() > 0 {
                      log.Printf("Disband %v due to lack of food", unit)
@@ -1582,7 +1728,7 @@ index 44c64b8..6fef536 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -6754,7 +6799,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
+@@ -6754,7 +6815,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
  
                  if manaIssue && unit.GetUpkeepMana() > 0 {
                      log.Printf("Disband %v due to lack of mana", unit)
@@ -1591,7 +1737,7 @@ index 44c64b8..6fef536 100644
                      player.RemoveUnit(unit)
                      disbanded = true
                      break
-@@ -7020,7 +7065,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7020,7 +7081,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
  
                          scrollEvent := GameEventScroll{
                              Title: "CITY GROWTH",
@@ -1600,7 +1746,7 @@ index 44c64b8..6fef536 100644
                          }
  
                          select {
-@@ -7032,7 +7077,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7032,7 +7093,7 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
@@ -1609,7 +1755,7 @@ index 44c64b8..6fef536 100644
                              default:
                          }
                      }
-@@ -7051,14 +7096,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
+@@ -7051,14 +7112,14 @@ func (game *Game) StartPlayerTurn(player *playerlib.Player) {
                      removeCities = append(removeCities, city)
                      if player.IsHuman() {
                          select {
