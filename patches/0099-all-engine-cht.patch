@@ -1184,10 +1184,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..baaa5de
+index 0000000..5362839
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,45 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1212,6 +1212,10 @@ index 0000000..baaa5de
 +    // 自動結束回合:開啟時所有單位用完移動即自動推進回合。對應原版 End of Turn Wait(關=自動推進);
 +    // 此處用正向旗標(開=自動),預設關 → 維持手動點下一回合的現況。
 +    AutoEndTurn bool
++    // #7 回合總結:人類新回合開始時自動彈出總結卷軸(內容同 Chancellor 顧問)。預設關。
++    EndOfTurnSummary bool
++    // #13 顯示敵軍移動:AI 單位移動到人類視野內時播放移動動畫。預設開(維持引擎現況)。
++    EnemyMoves bool
 +}
 +
 +var Settings = GameSettings{
@@ -1226,6 +1230,8 @@ index 0000000..baaa5de
 +    EnemySpells:         true,
 +    AdditionalUnitInformation: true,
 +    AutoEndTurn:         false, // 預設關:維持手動點下一回合
++    EndOfTurnSummary:    false, // 預設關:不自動彈總結
++    EnemyMoves:          true,  // 預設開:維持引擎現況(視野內敵軍移動有動畫)
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -1700,7 +1706,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..7dc3725 100644
+index 44c64b8..0b492cd 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -2185,6 +2191,20 @@ index 44c64b8..7dc3725 100644
                              default:
                          }
                      }
+@@ -7521,6 +7635,13 @@ func (game *Game) DoNextTurn(){
+ 
+         if player.Wizard.Banner != data.BannerBrown {
+             game.StartPlayerTurn(player)
++
++            // #7 回合總結(對應原版 End of Turn Summary,手冊 p.23,內容同 Chancellor 顧問):
++            // 人類新回合開始、設定開啟且本回合有事件時,自動彈出總結卷軸(平常需手動點 Chancellor)。
++            // 預設關 → 不改變現況;有事件才彈,避免每回合「本月無事件」洗版。
++            if player.IsHuman() && data.Settings.EndOfTurnSummary && len(game.Model.ScrollEvents) > 0 {
++                game.DoChancellor()
++            }
+         } else {
+             // neutral enemies should reset their moves each turn
+             for _, stack := range player.Stacks {
 diff --git a/game/magic/game/hero.go b/game/magic/game/hero.go
 index 0a73645..be15591 100644
 --- a/game/magic/game/hero.go
@@ -2333,7 +2353,7 @@ index ce51df7..40ef521 100644
      })
  
 diff --git a/game/magic/game/model.go b/game/magic/game/model.go
-index eba3455..51683c7 100644
+index eba3455..8766fc6 100644
 --- a/game/magic/game/model.go
 +++ b/game/magic/game/model.go
 @@ -219,21 +219,21 @@ func (model *GameModel) FindPath(oldX int, oldY int, newX int, newY int, player
@@ -2379,6 +2399,16 @@ index eba3455..51683c7 100644
      if rand.N(512) < int(eventProbability.ToFloat()) {
          choices := set.NewSet[RandomEventType](
              RandomEventBadMoon,
+@@ -1802,7 +1807,8 @@ func (model *GameModel) doAiMoveUnit(handlers MovementHandler, player *playerlib
+ 
+         stack.Move(to.X - stack.X(), to.Y - stack.Y(), terrainCost, model.GetNormalizeCoordinateFunc())
+ 
+-        if model.GetHumanPlayer().IsVisible(oldX, oldY, stack.Plane()) {
++        // #13 顯示敵軍移動(對應原版 Enemy Moves):AI 單位移動到人類視野內時播放動畫;設定關閉則直接移動不顯示。
++        if data.Settings.EnemyMoves && model.GetHumanPlayer().IsVisible(oldX, oldY, stack.Plane()) {
+             handlers.ShowMovement(oldX, oldY, stack, false)
+         }
+ 
 diff --git a/game/magic/game/road.go b/game/magic/game/road.go
 index f5ef5e5..fb024b3 100644
 --- a/game/magic/game/road.go
@@ -3621,7 +3651,7 @@ index 56f9721..9741d4c 100644
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..ad46a37 100644
+index 556d824..816067a 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3642,14 +3672,14 @@ index 556d824..ad46a37 100644
          },
      })
  
-@@ -103,6 +105,136 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,150 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
 +    // 設定切換鈕共用 helper:雙欄自動排版(避免硬寫座標、撞到 OK 鈕)。每欄 7 列,共可容 14 項;
 +    // 目前 11 項。左欄 x=18、右欄 x=165,列距 13,自 y=66 起,最後一列 y≈144 仍在 OK 鈕(y=176)之上。
 +    toggleIndex := 0
-+    const togglePerColumn = 7
++    const togglePerColumn = 8
 +    addToggle := func(label func() string, onClick func()){
 +        col := toggleIndex / togglePerColumn
 +        row := toggleIndex % togglePerColumn
@@ -3774,6 +3804,20 @@ index 556d824..ad46a37 100644
 +        return onOff("Auto End Turn", data.Settings.AutoEndTurn)
 +    }, func(){
 +        data.Settings.AutoEndTurn = !data.Settings.AutoEndTurn
++    })
++
++    // #7 回合總結(人類新回合自動彈出總結卷軸,預設關)。
++    addToggle(func() string {
++        return onOff("End of Turn Summary", data.Settings.EndOfTurnSummary)
++    }, func(){
++        data.Settings.EndOfTurnSummary = !data.Settings.EndOfTurnSummary
++    })
++
++    // #13 顯示敵軍移動(視野內 AI 移動動畫,預設開)。
++    addToggle(func() string {
++        return onOff("Enemy Moves", data.Settings.EnemyMoves)
++    }, func(){
++        data.Settings.EnemyMoves = !data.Settings.EnemyMoves
 +    })
 +
      return group, quit

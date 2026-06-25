@@ -173,9 +173,9 @@
 | 4/5/6/14 | Spell/Enemy 事件通知 | ✅ | 一套 `maybeNotifySpellCast`:7028(`CastingSpell` 完成)是所有玩家施法 chokepoint;對手施法依 Section 分類 + 各設定通知。設定畫面改雙欄容納 |
 | 17 | Show Node Owners | ✅ | 光環渲染早已存在(map.go DrawLayer2 已用旗色畫 sparkle);加設定 guard 即可 |
 | 12 | Additional Unit Information | ✅ | 戰場左上角浮動窗(半透明底)顯示當前單位彈藥/法力/血量;截圖驗證 |
-| 7 | End of Turn Summary | 高難 | 彙整 ScrollEvents 成回合總結卷軸 |
+| 7 | End of Turn Summary（回合總結）| ✅ | 內容同 Chancellor(DoChancellor 顯示 ScrollEvents);hook 在人類 StartPlayerTurn 後,有事件才自動彈,預設關 |
 | 8 | Automatic Advice | 高難(低價值) | 需 AI 建議引擎 |
-| 13 | Enemy Moves | 高難 | 需敵軍移動動畫 |
+| 13 | Enemy Moves（顯示敵軍移動）| ✅ | 功能早已存在(model.go:1810 視野內 AI 移動有 ShowMovement 動畫);只加設定 guard,預設開 |
 | 18 | Expanding Help | 低價值 | help 即時顯示,無展開動畫 |
 
 > 翻譯:各設定名 + `%v:開/關` 在 `docs/strings/ui.tsv`;所需 CJK 逐字確認已在字型子集,不需重生字型。
