@@ -83,8 +83,13 @@
   - 已查:`ArmyUnit.TakeDamage`(model.go:1782)有 `unit.Unit.AdjustHealth(-damage)` 打進底層;
     戰後存活判定 game.go:4779 `unit.Unit.GetHealth()>0` 保留。`killUnits`(model.go:4393)勝利時只有
     **Regeneration 能力**單位治療(正確,英雄無此特例)。亡靈升起 4423 排除英雄。
-  - **未定位**:英雄死亡是否正確進 `army.KilledUnits` / 戰後 health 是否異常 >0。需追 KilledUnits 填入 +
-    寫 test 重現(建一個 hero 被打到 0、跑勝利結算、驗 GetHealth)。下一輪做。
+  - 進一步查:`KillUnit`(model.go:2210)正確把死亡單位進 KilledUnits;戰後 `killUnits`(game.go:4911)
+    iterate `stack.Units()`,`GetHealth()<=0` → `player.RemoveUnit` + 英雄裝備重分配(4933)。引擎**有**英雄死亡
+    處理(game.go:5012 通知)。但戰鬥↔持久 stack↔player.Heroes 狀態互動複雜(存活 re-add 4779、killUnits、
+    recall 4907、undead 多路徑),**靜態無法確定復活的確切機制**。
+  - **下一步**:寫 integration test(game 套件):建一場 human attacker vs 怪物的 combat、把某 hero 打到
+    health 0、跑到 AttackerWin、檢查戰後 `player.Heroes`(該 slot=nil / Status=Dead,而非仍在名冊滿血)。
+    確定根因(survivor re-add 漏掉 / player.RemoveUnit 沒清 Heroes slot / 戰後異常 heal)再修。不下推測性 combat 補丁。
 - [ ] #4 船斜向/長程海上尋路錯誤聲(pathfinding)
 - [ ] #10 打怪英雄當場穿裝備是否免 20 傳送法力(查原版 Enchant Item move 規則)
 - [ ] #7 法術書顏色排序選項 + 設定畫面補項
