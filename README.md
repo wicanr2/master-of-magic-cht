@@ -132,11 +132,23 @@ Ebiten 原生支援 Windows / macOS / Linux / Android / iOS / Web,而且上游**
 隨打包,出包零外部依賴。20+ 畫面用「擦底色 + 疊銳利中文」處理烘進背景的英文按鈕與標題。
 每一批都用 dist AppImage 在 headless 下逐畫面截圖驗證。
 
+**重現經典 + 設定補完(2026-06)**
+不只翻譯,也修玩法。玩家回報的 10 個問題逐項處理(6 修 4 證偽,見下方「不只翻譯,也修對遊戲」),
+原版設定畫面缺的選項補回 16 項(全自動戰鬥、音效/音樂、隨機事件、法術動畫、敵方施法通知、自動結束回合、
+回合總結、自動建議…,全中文),並加了閃退記錄。逐項根因/手冊 oracle/測試見
+[`docs/classic-rules-plan.md`](docs/classic-rules-plan.md)。
+
+**三平台打包 + 公開 Release**
+Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
+[GitHub Release v0.1](https://github.com/wicanr2/master-of-magic-cht/releases) 提供三平台的 **data-free** 安裝包
+(不含版權遊戲檔,玩家自備),白話版說明見 [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md)。
+
 ### 待辦
 
-- **Windows / macOS 包同步**:Linux AppImage 已是最新;Windows(`CGO_ENABLED=0` 免 DLL 交叉編譯)
-  與 macOS(GitHub Actions 建 arm64)需重新打包以含上最新譯文。
 - **次要邊角**:極少數動態列舉引數、純數值 tooltip,以及城市名池外的玩家自訂名(本就保留原文)。
+- **原版觀感(可選)**:重製引擎用方形像素整數倍放大,未做 DOS 的 4:3 長寬比校正、也無 CRT 質感,
+  這是「沒 DOS 感」的主因(屬引擎層、與中文化無關)。分析見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。
+- **剩餘設定**:Event Music、Expanding Help 兩項原版設定未做(低價值)。
 - **跨平台延伸**:Web WASM / Android,順序與理由見 `docs/porting-difficulty.md`。
 
 ---
@@ -180,7 +192,9 @@ patch-only。本 repo **不 vendor 引擎本體、不散布任何版權遊戲檔
 | [`docs/strings/`](docs/strings/) | 13 個英文 → 繁中譯文表(3,200+ 條,英文原文即 key) |
 | [`docs/worklist.md`](docs/worklist.md) | 玩家實測回報的未翻項追蹤與修正紀錄 |
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 版本說明(白話:修了什麼、補了哪些設定、怎麼安裝) |
+| [`docs/classic-rules-plan.md`](docs/classic-rules-plan.md) | 重現經典:10 個玩法 issue 處理 + 原版 18 項設定狀態(逐項根因/oracle/測試) |
 | [`docs/mom-strategy-notes.md`](docs/mom-strategy-notes.md) | MoM 策略筆記(5+ 份攻略歸納)+ 自動建議規則依據 |
+| [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md) | 原版 DOS vs 重製引擎的介面差異分析(為何「沒 DOS 感」)|
 | [`docs/localization-methodology.md`](docs/localization-methodology.md) | **Go/Ebiten 老遊戲繁中化方法論 + 踩雷清單**(可重用 playbook) |
 | [`CONTEXT.md`](CONTEXT.md) | 專案術語表(ubiquitous language) |
 | [`docs/phase1-cjk-prototype.md`](docs/phase1-cjk-prototype.md) | Phase 1 渲染驗證全紀錄(含真實引擎截圖與必修項) |

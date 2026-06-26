@@ -4,7 +4,7 @@
 > 跑在 Go 重製引擎 [kazzmir/master-of-magic](https://github.com/kazzmir/master-of-magic) 上。
 > 本 repo 為 **patch-only / 譯文資產 repo**:不 vendor 引擎本體、不散布任何版權遊戲檔。
 
-最後更新:2026-06-21。本檔是專案的單一真實計畫來源 (single source of truth),隨進度回填。
+最後更新:2026-06-25。本檔是專案的單一真實計畫來源 (single source of truth),隨進度回填。
 
 ---
 
@@ -97,10 +97,21 @@
 - [ ] 翻譯表逐類完成:item powers ✅ → 神器名 ✅ (250 筆,`artifacts.tsv`,真實引擎驗證) → 法術 → 建築 → help → 單位名
 - [ ] 單位名 hardcode (`units/unit.go`) 改查表
 
-### Phase 3 — 版面與打包
-- [ ] 破版修正 (`mapX/mapY`、密集面板自動縮字)
-- [ ] 跨平台打包,順序見 [`docs/porting-difficulty.md`](docs/porting-difficulty.md):Linux/Windows (🟢) → Web WASM (🟢,上游已通) → macOS (🟡,GitHub Actions runner) → Android (🟠,觸控 UX)
-- [ ] README 升級成「給玩家的信」(套 rule `80-retro-cht-readme-polish`)
+### Phase 3 — 版面與打包(已完成主體)
+- [x] 破版修正、密集面板字級對齊
+- [x] 跨平台打包:Linux AppImage / Windows(CGO=0 免 DLL)/ macOS(GitHub Actions arm64)三平台皆已建,
+      公開 GitHub Release v0.1 提供 data-free 包(玩家自備遊戲檔)。
+- [x] README 升級成「給玩家的信」
+
+### Phase 4 — 重現經典 + 設定補完(2026-06,已完成主體)
+專案目標從「純中文化」擴展為「**也修對遊戲、補回原版設定**」。詳見 [`docs/classic-rules-plan.md`](docs/classic-rules-plan.md)。
+- [x] 玩家回報 10 個 issue:6 修(水上秒敗 / 神器成本存讀檔 / 海上尋路 / 創角被踢 / 召喚第七英雄 / 裝備傳送)
+      + 4 證偽(英雄復活 / 三色書他系法術,以資料層 + 手冊 oracle 佐證)。每項 `cht_*_test.go`。
+- [x] 原版 Settings 18 項補回 16(`data.Settings` 全域 runtime + 雙欄設定畫面),含「自動建議」
+      (規則由 5+ 份攻略歸納,見 [`docs/mom-strategy-notes.md`](docs/mom-strategy-notes.md))。跳過 Event Music、Expanding Help。
+- [x] 閃退記錄(crash.log + panic 攔截)。
+- [x] 紀律:修正用旗標守護、預設維持原版行為;單元測試 + headless 截圖雙驗。
+- [ ] (可選)原版觀感:長寬比校正 / CRT shader,分析見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。
 
 ---
 
