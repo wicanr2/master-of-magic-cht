@@ -146,8 +146,8 @@ Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
 ### 待辦
 
 - **次要邊角**:極少數動態列舉引數、純數值 tooltip,以及城市名池外的玩家自訂名(本就保留原文)。
-- **原版觀感(可選)**:重製引擎用方形像素整數倍放大,未做 DOS 的 4:3 長寬比校正、也無 CRT 質感,
-  這是「沒 DOS 感」的主因(屬引擎層、與中文化無關)。分析見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。
+- **原版觀感**:設定畫面已加「**DOS 原版長寬比**」開關(畫面垂直拉伸 1.2 倍還原 4:3,讓老玩家更有年代感);
+  CRT 質感 shader 仍可選做。分析與對比圖見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。
 - **剩餘設定**:Event Music、Expanding Help 兩項原版設定未做(低價值)。
 - **跨平台延伸**:Web WASM / Android,順序與理由見 `docs/porting-difficulty.md`。
 

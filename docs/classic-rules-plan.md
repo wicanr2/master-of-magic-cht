@@ -177,6 +177,7 @@
 | 8 | Automatic Advice（自動建議）| ✅ | 規則由 5+ 份 MoM 攻略歸納(docs/mom-strategy-notes.md);結構化 player.GenerateAdvice + 單元測試;回合開始彈卷軸,預設關 |
 | 13 | Enemy Moves（顯示敵軍移動）| ✅ | 功能早已存在(model.go:1810 視野內 AI 移動有 ShowMovement 動畫);只加設定 guard,預設開 |
 | 18 | Expanding Help | 低價值 | help 即時顯示,無展開動畫 |
+| ＋ | **DOS 原版長寬比**（原 18 項外的額外項）| ✅ | 畫面 Y×1.2 還原 4:3 CRT 觀感(讓老玩家更有年代感)。`Layout` 改 4:3 + Draw 離屏拉伸 + `scale.CursorPosition` 校正滑鼠 Y;`-dosaspect` flag;對比圖見 `docs/dos-vs-remake-ui.md` |
 
 > 翻譯:各設定名 + `%v:開/關` 在 `docs/strings/ui.tsv`;所需 CJK 逐字確認已在字型子集,不需重生字型。
 > 驗證:behavior toggle 多為 UI/runtime,以 `go build ./...` + 全 cht 回歸 + 邏輯審查為據;runtime 行為需 playtest。

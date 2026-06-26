@@ -319,7 +319,7 @@ index 77232f2..60c5239 100644
  
      yellSound, err := audio.LoadSound(cache, 35)
 diff --git a/game/magic/cartographer/cartographer.go b/game/magic/cartographer/cartographer.go
-index a87b038..9de3ab2 100644
+index a87b038..cc8dca1 100644
 --- a/game/magic/cartographer/cartographer.go
 +++ b/game/magic/cartographer/cartographer.go
 @@ -234,9 +234,9 @@ func MakeCartographer(cache *lbx.LbxCache, cities []*citylib.City, stacks []*pla
@@ -347,6 +347,15 @@ index a87b038..9de3ab2 100644
          },
      }
  
+@@ -304,7 +310,7 @@ func MakeCartographer(cache *lbx.LbxCache, cities []*citylib.City, stacks []*pla
+         for !quit {
+             counter += 1
+ 
+-            mouseX, mouseY = ebiten.CursorPosition()
++            mouseX, mouseY = scale.CursorPosition()
+             mouseX, mouseY = scale.Unscale2(mouseX, mouseY)
+ 
+             usePlane := data.PlaneArcanus
 diff --git a/game/magic/citylistview/view.go b/game/magic/citylistview/view.go
 index 8ffae1b..b0843fd 100644
 --- a/game/magic/citylistview/view.go
@@ -1184,10 +1193,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..e451949
+index 0000000..3a039f3
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,56 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1218,7 +1227,14 @@ index 0000000..e451949
 +    EnemyMoves bool
 +    // #8 自動建議:人類回合開始時提示該注意的事(規則由 MoM 攻略歸納)。預設關(進階玩家會關掉)。
 +    AutomaticAdvice bool
++    // DOS 原版觀感:把畫面垂直拉伸 1.2 倍還原原版 320×200 在 4:3 CRT 上的長寬比(見 docs/dos-vs-remake-ui.md)。
++    // 預設關(維持方形像素 16:10)。純顯示層,不影響遊戲邏輯;輸入座標會一併校正。
++    DosAspect bool
 +}
++
++// DosAspectStretch:DOS 原版 320×200 在 4:3 CRT 上的垂直拉伸係數(PAR 1:1.2)。
++// 機制見 docs/dos-vs-remake-ui.md:Mode 13h 實際掃 400 線、每列像素佔兩條掃描線。
++const DosAspectStretch = 1.2
 +
 +var Settings = GameSettings{
 +    SoundEffects:        true,
@@ -1235,6 +1251,7 @@ index 0000000..e451949
 +    EndOfTurnSummary:    false, // 預設關:不自動彈總結
 +    EnemyMoves:          true,  // 預設開:維持引擎現況(視野內敵軍移動有動畫)
 +    AutomaticAdvice:     false, // 預設關:進階玩家會關掉(手冊語)
++    DosAspect:           false, // 預設關:維持方形像素;開啟還原 DOS 4:3 觀感
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -2887,6 +2904,27 @@ index f429e7b..0153ead 100644
      }
  
      return improvements
+diff --git a/game/magic/inputmanager/input.go b/game/magic/inputmanager/input.go
+index d7124d7..6f83a22 100644
+--- a/game/magic/inputmanager/input.go
++++ b/game/magic/inputmanager/input.go
+@@ -5,6 +5,7 @@ import (
+ 
+     "github.com/hajimehoshi/ebiten/v2"
+     "github.com/hajimehoshi/ebiten/v2/inpututil"
++    "github.com/kazzmir/master-of-magic/game/magic/scale"
+ )
+ 
+ type InputManager struct {
+@@ -39,7 +40,7 @@ func (manager *InputManager) Update() {
+     manager.rightClick = false
+ 
+     if manager.lastTouchX == 0 && manager.lastTouchY == 0 {
+-        manager.mouseX, manager.mouseY = ebiten.CursorPosition()
++        manager.mouseX, manager.mouseY = scale.CursorPosition()
+     }
+ 
+     if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 diff --git a/game/magic/inputmanager/input_default.go b/game/magic/inputmanager/input_default.go
 index 93061ba..19a05bc 100644
 --- a/game/magic/inputmanager/input_default.go
@@ -3061,7 +3099,7 @@ index 07d2243..009cc90 100644
                      }
                  },
 diff --git a/game/magic/main.go b/game/magic/main.go
-index 4d2b7f7..5432786 100644
+index 4d2b7f7..4d8a0c5 100644
 --- a/game/magic/main.go
 +++ b/game/magic/main.go
 @@ -64,6 +64,9 @@ type MagicGame struct {
@@ -3127,7 +3165,22 @@ index 4d2b7f7..5432786 100644
      inputmanager.Update()
  
      if ebiten.IsWindowBeingClosed() {
-@@ -842,6 +857,14 @@ func (game *MagicGame) Layout(outsideWidth int, outsideHeight int) (int, int) {
+@@ -836,12 +851,47 @@ func (game *MagicGame) Update() error {
+ }
+ 
+ func (game *MagicGame) Layout(outsideWidth int, outsideHeight int) (int, int) {
+-    return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++    w, h := scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++    // DOS 原版觀感:邏輯畫面變 4:3(Y 拉伸 1.2 倍);遊戲內容仍畫在未拉伸的 w×h,於 Draw 時拉伸貼出。
++    if data.Settings.DosAspect {
++        h = int(float64(h) * data.DosAspectStretch)
++    }
++    return w, h
+ }
+ 
++// DOS 原版觀感用的離屏緩衝(遊戲以未拉伸的 960×600 畫進這裡,再 Y×1.2 貼到實際畫面)。
++var dosOffscreen *ebiten.Image
++
  func (game *MagicGame) Draw(screen *ebiten.Image) {
      // screen.Fill(color.RGBA{0x80, 0xa0, 0xc0, 0xff})
  
@@ -3139,10 +3192,29 @@ index 4d2b7f7..5432786 100644
 +        }
 +    }()
 +
++    // DOS 原版觀感:把遊戲畫到未拉伸的離屏 buffer,再垂直拉伸 1.2 倍貼到 4:3 的實際畫面。
++    // 遊戲邏輯/座標完全不變;輸入座標已在 scale.CursorPosition 一併校正。
++    if data.Settings.DosAspect {
++        ow, oh := scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++        if dosOffscreen == nil || dosOffscreen.Bounds().Dx() != ow || dosOffscreen.Bounds().Dy() != oh {
++            dosOffscreen = ebiten.NewImage(ow, oh)
++        }
++        dosOffscreen.Clear()
++        if game.Drawer != nil {
++            game.Drawer(dosOffscreen)
++        }
++        mouse.Mouse.Draw(dosOffscreen)
++
++        options := &ebiten.DrawImageOptions{}
++        options.GeoM.Scale(1, data.DosAspectStretch)
++        screen.DrawImage(dosOffscreen, options)
++        return
++    }
++
      if game.Drawer != nil {
          game.Drawer(screen)
      }
-@@ -851,6 +874,7 @@ func (game *MagicGame) Draw(screen *ebiten.Image) {
+@@ -851,6 +901,7 @@ func (game *MagicGame) Draw(screen *ebiten.Image) {
  
  func main() {
      log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
@@ -3150,20 +3222,25 @@ index 4d2b7f7..5432786 100644
  
      var dataPath string
      var startGame bool
-@@ -858,6 +882,8 @@ func main() {
+@@ -858,6 +909,10 @@ func main() {
      var enableMusic bool
      var loadSave string
      var watchMode bool
 +    var skipIntro bool
 +    flag.BoolVar(&skipIntro, "skipintro", false, "skip the intro animation")
++    var dosAspect bool
++    flag.BoolVar(&dosAspect, "dosaspect", false, "render with DOS 4:3 aspect ratio (vertical 1.2x stretch)")
      flag.StringVar(&dataPath, "data", "", "path to master of magic lbx data files. Give either a directory or a zip file. Data is searched for in the current directory if not given.")
      flag.BoolVar(&enableMusic, "music", true, "enable music playback")
      flag.BoolVar(&startGame, "start", false, "start the game immediately with a random wizard")
-@@ -893,6 +919,7 @@ func main() {
+@@ -893,6 +948,10 @@ func main() {
          log.Printf("Error: unable to load game: %v", err)
          return
      }
 +    game.SkipIntro = skipIntro
++    if dosAspect {
++        data.Settings.DosAspect = true
++    }
  
      err = ebiten.RunGame(game)
      if err != nil {
@@ -3878,8 +3955,33 @@ index 56f9721..9741d4c 100644
      player.HeroPool = reconstructHeroPool(serialized.HeroPool, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
      player.Heroes = reconstructHeroes(serialized.HeroUnits, allSpells, player.MakeUnitEnchantmentProvider(), player.MakeExperienceInfo())
  
+diff --git a/game/magic/scale/scale.go b/game/magic/scale/scale.go
+index 346c54e..c436d41 100644
+--- a/game/magic/scale/scale.go
++++ b/game/magic/scale/scale.go
+@@ -5,8 +5,20 @@ import (
+     "image"
+ 
+     "github.com/hajimehoshi/ebiten/v2"
++    "github.com/kazzmir/master-of-magic/game/magic/data"
+ )
+ 
++// CursorPosition 取代直接呼叫 ebiten.CursorPosition()。
++// DOS 原版觀感開啟時,最終畫面把 Y 拉伸 1.2 倍(Layout 變 4:3),滑鼠回報的 Y 落在拉伸後的視窗座標;
++// 這裡把 Y 除回 1.2,換算成遊戲內部(未拉伸)的 960×600 座標,讓所有命中判定/地圖選格維持正確。
++func CursorPosition() (int, int) {
++    x, y := ebiten.CursorPosition()
++    if data.Settings.DosAspect {
++        y = int(float64(y) / data.DosAspectStretch)
++    }
++    return x, y
++}
++
+ var ScaleAmount = 3.0
+ var ScaledGeom ebiten.GeoM
+ 
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..3f5da9c 100644
+index 556d824..590ae39 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -3900,20 +4002,20 @@ index 556d824..3f5da9c 100644
          },
      })
  
-@@ -103,6 +105,157 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,164 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
 +    // 設定切換鈕共用 helper:雙欄自動排版(避免硬寫座標、撞到 OK 鈕)。每欄 7 列,共可容 14 項;
 +    // 目前 11 項。左欄 x=18、右欄 x=165,列距 13,自 y=66 起,最後一列 y≈144 仍在 OK 鈕(y=176)之上。
 +    toggleIndex := 0
-+    const togglePerColumn = 8
++    const togglePerColumn = 9
 +    addToggle := func(label func() string, onClick func()){
 +        col := toggleIndex / togglePerColumn
 +        row := toggleIndex % togglePerColumn
 +        toggleIndex++
 +        x := 18 + col*147
-+        y := 66 + row*13
++        y := 64 + row*12
 +        group.AddElement(&uilib.UIElement{
 +            Layer: settingsLayer,
 +            Rect: image.Rect(x, y, x + 143, y + 12),
@@ -4053,6 +4155,13 @@ index 556d824..3f5da9c 100644
 +        return onOff("Automatic Advice", data.Settings.AutomaticAdvice)
 +    }, func(){
 +        data.Settings.AutomaticAdvice = !data.Settings.AutomaticAdvice
++    })
++
++    // DOS 原版觀感(畫面垂直拉伸 1.2 倍還原 4:3 長寬比,預設關)。
++    addToggle(func() string {
++        return onOff("DOS Aspect Ratio", data.Settings.DosAspect)
++    }, func(){
++        data.Settings.DosAspect = !data.Settings.DosAspect
 +    })
 +
      return group, quit
@@ -4492,6 +4601,19 @@ index 1d4a24d..f2df03b 100644
  }
  
  func MakeSummonArtifact(cache *lbx.LbxCache, wizard data.WizardBase, short bool) *Summon {
+diff --git a/game/magic/ui/ui.go b/game/magic/ui/ui.go
+index ad82d56..296ee0e 100644
+--- a/game/magic/ui/ui.go
++++ b/game/magic/ui/ui.go
+@@ -551,7 +551,7 @@ func (ui *UI) StandardUpdate() {
+     leftClickReleased := inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft)
+     rightClick := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight)
+ 
+-    mouseX, mouseY := ebiten.CursorPosition()
++    mouseX, mouseY := scale.CursorPosition()
+ 
+     /*
+     touchIds := inpututil.AppendJustPressedTouchIDs(nil)
 diff --git a/game/magic/unitview/ui.go b/game/magic/unitview/ui.go
 index fa66239..bfe65cf 100644
 --- a/game/magic/unitview/ui.go
