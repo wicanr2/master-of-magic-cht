@@ -166,6 +166,12 @@ Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
 
 **② CRT 質感 shader**:疊上老 CRT 的掃描線、RGB 子像素光罩、暗角。用 Ebiten/Kage 寫的後製 shader,
 把遊戲畫到離屏 buffer 再經 shader 貼出;只改顏色不影響遊戲邏輯與滑鼠。掃描線數綁原版 200 行避免摩爾紋。
+
+下圖左為關閉、右為開啟 CRT(整體偏暗、罩上掃描線紋理),下方是 6 倍放大特寫,清楚看到水平掃描線
+與 RGB 子像素直條光罩 —— 文字仍清晰可讀(這是 headless 下實跑 shader 的真實輸出,非後製貼圖):
+
+![CRT shader 前後對比:左關閉、右開啟掃描線+RGB 光罩,下方 6 倍放大可見掃描線與子像素直條,標題文字仍可讀](docs/img/crt-compare.png)
+
 從零實作的逐效果教學(第一性原理 + 可運行 Kage code)見 [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md)。
 
 > 關於「版面(layout)能不能切回 DOS」:經第一性原理覆核,重製版的版面**本來就是 DOS 原版**(讀原版 LBX
