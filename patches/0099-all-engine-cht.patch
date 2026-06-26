@@ -1193,10 +1193,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..3a039f3
+index 0000000..91a85b7
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,60 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1230,6 +1230,9 @@ index 0000000..3a039f3
 +    // DOS 原版觀感:把畫面垂直拉伸 1.2 倍還原原版 320×200 在 4:3 CRT 上的長寬比(見 docs/dos-vs-remake-ui.md)。
 +    // 預設關(維持方形像素 16:10)。純顯示層,不影響遊戲邏輯;輸入座標會一併校正。
 +    DosAspect bool
++    // CRT 質感 shader:掃描線 / 子像素光罩 / 暗角,模擬老 CRT 觀感(見 docs/crt-shader-guide.md)。
++    // 預設關。純顏色後製,不影響遊戲邏輯與滑鼠座標。
++    CrtShader bool
 +}
 +
 +// DosAspectStretch:DOS 原版 320×200 在 4:3 CRT 上的垂直拉伸係數(PAR 1:1.2)。
@@ -1252,6 +1255,7 @@ index 0000000..3a039f3
 +    EnemyMoves:          true,  // 預設開:維持引擎現況(視野內敵軍移動有動畫)
 +    AutomaticAdvice:     false, // 預設關:進階玩家會關掉(手冊語)
 +    DosAspect:           false, // 預設關:維持方形像素;開啟還原 DOS 4:3 觀感
++    CrtShader:           false, // 預設關:開啟疊 CRT 掃描線/光罩/暗角質感
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -3099,10 +3103,18 @@ index 07d2243..009cc90 100644
                      }
                  },
 diff --git a/game/magic/main.go b/game/magic/main.go
-index 4d2b7f7..4d8a0c5 100644
+index 4d2b7f7..f83e42d 100644
 --- a/game/magic/main.go
 +++ b/game/magic/main.go
-@@ -64,6 +64,9 @@ type MagicGame struct {
+@@ -14,6 +14,7 @@ import (
+     "compress/gzip"
+     "encoding/json"
+     "image"
++    _ "embed"
+     // "image/color"
+ 
+     // for trace/pprof
+@@ -64,6 +65,9 @@ type MagicGame struct {
      Drawer DrawFunc
  
      Music *musiclib.Music
@@ -3112,7 +3124,7 @@ index 4d2b7f7..4d8a0c5 100644
  }
  
  func randomChoose[T any](choices... T) T {
-@@ -110,6 +113,7 @@ func runNewGame(yield coroutine.YieldFunc, game *MagicGame) (bool, setup.NewGame
+@@ -110,6 +114,7 @@ func runNewGame(yield coroutine.YieldFunc, game *MagicGame) (bool, setup.NewGame
          state = newGame.Update()
      }
  
@@ -3120,7 +3132,7 @@ index 4d2b7f7..4d8a0c5 100644
      return state == setup.NewGameStateCancel, newGame.Settings
  }
  
-@@ -130,7 +134,7 @@ func runNewWizard(yield coroutine.YieldFunc, game *MagicGame) (bool, setup.Wizar
+@@ -130,7 +135,7 @@ func runNewWizard(yield coroutine.YieldFunc, game *MagicGame) (bool, setup.Wizar
  }
  
  func runMainMenu(yield coroutine.YieldFunc, game *MagicGame, gameLoader *OriginalGameLoader) (*gamelib.Game, mainview.MainScreenState) {
@@ -3129,7 +3141,7 @@ index 4d2b7f7..4d8a0c5 100644
  
      game.Drawer = func(screen *ebiten.Image) {
          menu.Draw(screen)
-@@ -662,6 +666,7 @@ func startQuickGame(yield coroutine.YieldFunc, game *MagicGame, gameLoader *Orig
+@@ -662,6 +667,7 @@ func startQuickGame(yield coroutine.YieldFunc, game *MagicGame, gameLoader *Orig
          Difficulty: data.DifficultyAverage,
          Magic: data.MagicSettingNormal,
          LandSize: rand.N(3),
@@ -3137,7 +3149,7 @@ index 4d2b7f7..4d8a0c5 100644
      }
  
      spells, err := spellbook.ReadSpellsFromCache(game.Cache)
-@@ -712,7 +717,9 @@ func runGame(yield coroutine.YieldFunc, game *MagicGame, dataPath string, startG
+@@ -712,7 +718,9 @@ func runGame(yield coroutine.YieldFunc, game *MagicGame, dataPath string, startG
  
      if loadSave == "" {
          game.Music.PlaySong(musiclib.SongIntro)
@@ -3148,7 +3160,7 @@ index 4d2b7f7..4d8a0c5 100644
  
          yield()
  
-@@ -816,7 +823,15 @@ func NewMagicGame(dataPath string, startGame bool, loadSave string, enableMusic
+@@ -816,7 +824,15 @@ func NewMagicGame(dataPath string, startGame bool, loadSave string, enableMusic
      return game, nil
  }
  
@@ -3165,7 +3177,7 @@ index 4d2b7f7..4d8a0c5 100644
      inputmanager.Update()
  
      if ebiten.IsWindowBeingClosed() {
-@@ -836,12 +851,47 @@ func (game *MagicGame) Update() error {
+@@ -836,12 +852,76 @@ func (game *MagicGame) Update() error {
  }
  
  func (game *MagicGame) Layout(outsideWidth int, outsideHeight int) (int, int) {
@@ -3176,11 +3188,25 @@ index 4d2b7f7..4d8a0c5 100644
 +        h = int(float64(h) * data.DosAspectStretch)
 +    }
 +    return w, h
- }
- 
-+// DOS 原版觀感用的離屏緩衝(遊戲以未拉伸的 960×600 畫進這裡,再 Y×1.2 貼到實際畫面)。
++}
++
++// DOS 原版觀感 / CRT shader 共用的離屏緩衝(遊戲以未拉伸的 960×600 畫進這裡,再後製貼到實際畫面)。
 +var dosOffscreen *ebiten.Image
 +
++// CRT 質感 shader(掃描線/光罩/暗角);啟動時編譯一次,失敗則停用。
++//go:embed crt.kage
++var crtShaderSrc []byte
++var crtShader *ebiten.Shader
++
++func loadCrtShader() {
++    shader, err := ebiten.NewShader(crtShaderSrc)
++    if err != nil {
++        log.Printf("warning: CRT shader 編譯失敗,停用 CRT 效果: %v", err)
++        return
++    }
++    crtShader = shader
+ }
+ 
  func (game *MagicGame) Draw(screen *ebiten.Image) {
      // screen.Fill(color.RGBA{0x80, 0xa0, 0xc0, 0xff})
  
@@ -3192,9 +3218,10 @@ index 4d2b7f7..4d8a0c5 100644
 +        }
 +    }()
 +
-+    // DOS 原版觀感:把遊戲畫到未拉伸的離屏 buffer,再垂直拉伸 1.2 倍貼到 4:3 的實際畫面。
-+    // 遊戲邏輯/座標完全不變;輸入座標已在 scale.CursorPosition 一併校正。
-+    if data.Settings.DosAspect {
++    useCrt := data.Settings.CrtShader && crtShader != nil
++    // DOS 原版觀感(Y×1.2)或 CRT shader 都先把遊戲畫到未拉伸的離屏 buffer,再做後製。
++    // 遊戲邏輯/座標完全不變;DOS 長寬比的輸入座標已在 scale.CursorPosition 校正,CRT 只改顏色不需校正。
++    if data.Settings.DosAspect || useCrt {
 +        ow, oh := scale.Scale2(data.ScreenWidth, data.ScreenHeight)
 +        if dosOffscreen == nil || dosOffscreen.Bounds().Dx() != ow || dosOffscreen.Bounds().Dy() != oh {
 +            dosOffscreen = ebiten.NewImage(ow, oh)
@@ -3205,16 +3232,30 @@ index 4d2b7f7..4d8a0c5 100644
 +        }
 +        mouse.Mouse.Draw(dosOffscreen)
 +
-+        options := &ebiten.DrawImageOptions{}
-+        options.GeoM.Scale(1, data.DosAspectStretch)
-+        screen.DrawImage(dosOffscreen, options)
++        if useCrt {
++            // CRT 後製:用 shader 把離屏畫到螢幕。若同時開 DOS 長寬比,GeoM 再做 Y×1.2。
++            op := &ebiten.DrawRectShaderOptions{}
++            op.Images[0] = dosOffscreen
++            if data.Settings.DosAspect {
++                op.GeoM.Scale(1, data.DosAspectStretch)
++            }
++            op.Uniforms = map[string]any{
++                "Scanlines": float32(data.ScreenHeight), // 模擬原版 200 條掃描線(非離屏高度,避免摩爾紋)
++            }
++            screen.DrawRectShader(ow, oh, crtShader, op)
++        } else {
++            // 只開 DOS 長寬比:直接 Y×1.2 貼出。
++            options := &ebiten.DrawImageOptions{}
++            options.GeoM.Scale(1, data.DosAspectStretch)
++            screen.DrawImage(dosOffscreen, options)
++        }
 +        return
 +    }
 +
      if game.Drawer != nil {
          game.Drawer(screen)
      }
-@@ -851,6 +901,7 @@ func (game *MagicGame) Draw(screen *ebiten.Image) {
+@@ -851,6 +931,7 @@ func (game *MagicGame) Draw(screen *ebiten.Image) {
  
  func main() {
      log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
@@ -3222,7 +3263,7 @@ index 4d2b7f7..4d8a0c5 100644
  
      var dataPath string
      var startGame bool
-@@ -858,6 +909,10 @@ func main() {
+@@ -858,6 +939,12 @@ func main() {
      var enableMusic bool
      var loadSave string
      var watchMode bool
@@ -3230,16 +3271,29 @@ index 4d2b7f7..4d8a0c5 100644
 +    flag.BoolVar(&skipIntro, "skipintro", false, "skip the intro animation")
 +    var dosAspect bool
 +    flag.BoolVar(&dosAspect, "dosaspect", false, "render with DOS 4:3 aspect ratio (vertical 1.2x stretch)")
++    var crtShaderFlag bool
++    flag.BoolVar(&crtShaderFlag, "crt", false, "render with CRT shader (scanlines / shadow mask / vignette)")
      flag.StringVar(&dataPath, "data", "", "path to master of magic lbx data files. Give either a directory or a zip file. Data is searched for in the current directory if not given.")
      flag.BoolVar(&enableMusic, "music", true, "enable music playback")
      flag.BoolVar(&startGame, "start", false, "start the game immediately with a random wizard")
-@@ -893,6 +948,10 @@ func main() {
+@@ -880,6 +967,7 @@ func main() {
+ 
+     audio.Initialize()
+     mouse.Initialize()
++    loadCrtShader()
+ 
+     ebiten.SetCursorMode(ebiten.CursorModeHidden)
+ 
+@@ -893,6 +981,13 @@ func main() {
          log.Printf("Error: unable to load game: %v", err)
          return
      }
 +    game.SkipIntro = skipIntro
 +    if dosAspect {
 +        data.Settings.DosAspect = true
++    }
++    if crtShaderFlag {
++        data.Settings.CrtShader = true
 +    }
  
      err = ebiten.RunGame(game)
@@ -3309,7 +3363,7 @@ index 0000000..0c8783e
 +    }
 +}
 diff --git a/game/magic/mainview/view.go b/game/magic/mainview/view.go
-index d306987..01229ed 100644
+index d306987..49a316b 100644
 --- a/game/magic/mainview/view.go
 +++ b/game/magic/mainview/view.go
 @@ -49,9 +49,10 @@ type MainScreen struct {
@@ -3332,7 +3386,7 @@ index d306987..01229ed 100644
      }
  
      main.Drawer = func(screen *ebiten.Image) {
-@@ -317,6 +319,39 @@ func (main *MainScreen) MakeUI() *uilib.UI {
+@@ -317,6 +319,66 @@ func (main *MainScreen) MakeUI() *uilib.UI {
          main.State = MainScreenStateQuit
      }))
  
@@ -3365,6 +3419,33 @@ index d306987..01229ed 100644
 +                    use = titleFontHighlight
 +                }
 +                use.PrintOptions(screen, float64(ruleX), float64(ruleY), font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount, Justify: font.FontJustifyLeft}, label)
++            },
++        })
++    }
++
++    // 中文化 fork:CRT 質感切換。放規則鈕下方,點一下開關掃描線/光罩/暗角(讓老玩家更有年代感)。
++    {
++        crtX := 3
++        crtY := 3 + titleFont.Height() + 2
++        crtRect := image.Rect(crtX, crtY, crtX + 150, crtY + titleFont.Height())
++        crtInside := false
++        elements = append(elements, &uilib.UIElement{
++            Rect: crtRect,
++            LeftClick: func(element *uilib.UIElement){
++                data.Settings.CrtShader = !data.Settings.CrtShader
++            },
++            Inside: func(element *uilib.UIElement, x, y int){ crtInside = true },
++            NotInside: func(element *uilib.UIElement){ crtInside = false },
++            Draw: func(element *uilib.UIElement, screen *ebiten.Image){
++                label := "CRT 質感:關"
++                if data.Settings.CrtShader {
++                    label = "CRT 質感:開"
++                }
++                use := titleFont
++                if crtInside {
++                    use = titleFontHighlight
++                }
++                use.PrintOptions(screen, float64(crtX), float64(crtY), font.FontOptions{DropShadow: true, Scale: scale.ScaleAmount, Justify: font.FontJustifyLeft}, label)
 +            },
 +        })
 +    }
@@ -3981,7 +4062,7 @@ index 346c54e..c436d41 100644
  var ScaledGeom ebiten.GeoM
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..590ae39 100644
+index 556d824..ee1764d 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -4002,7 +4083,7 @@ index 556d824..590ae39 100644
          },
      })
  
-@@ -103,6 +105,164 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,171 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
@@ -4162,6 +4243,13 @@ index 556d824..590ae39 100644
 +        return onOff("DOS Aspect Ratio", data.Settings.DosAspect)
 +    }, func(){
 +        data.Settings.DosAspect = !data.Settings.DosAspect
++    })
++
++    // CRT 質感 shader(掃描線/光罩/暗角,預設關)。
++    addToggle(func() string {
++        return onOff("CRT Shader", data.Settings.CrtShader)
++    }, func(){
++        data.Settings.CrtShader = !data.Settings.CrtShader
 +    })
 +
      return group, quit
@@ -5794,6 +5882,159 @@ index 368eecd..a1b3096 100644
  }
  
  func (engine *Engine) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+diff --git a/test/crt-verify/main.go b/test/crt-verify/main.go
+new file mode 100644
+index 0000000..6c3078e
+--- /dev/null
++++ b/test/crt-verify/main.go
+@@ -0,0 +1,147 @@
++package main
++
++// CRT shader headless 驗證 harness:把設定畫面(有 LBX 背景)渲染到離屏,經 game/magic/crt.kage
++// 後製後 dump PNG,證明 shader 在真實 xvfb GPU 下能編譯成功且產生掃描線/光罩/暗角效果。
++// 跑法:cwd 指向遊戲 LBX 目錄,xvfb 下執行。
++//   CRT=1 SHOT=/out/crt-on.png   → 套 shader
++//   CRT=0 SHOT=/out/crt-off.png  → 不套(對照組)
++// 著色器原始碼路徑由 KAGE 環境變數給(預設 /src/game/magic/crt.kage)。
++
++import (
++    "image"
++    "image/png"
++    "log"
++    "os"
++
++    "github.com/kazzmir/master-of-magic/lib/lbx"
++    "github.com/kazzmir/master-of-magic/game/magic/settings"
++    "github.com/kazzmir/master-of-magic/game/magic/audio"
++    musiclib "github.com/kazzmir/master-of-magic/game/magic/music"
++    "github.com/kazzmir/master-of-magic/game/magic/data"
++    "github.com/kazzmir/master-of-magic/game/magic/util"
++    "github.com/kazzmir/master-of-magic/game/magic/scale"
++    uilib "github.com/kazzmir/master-of-magic/game/magic/ui"
++    "github.com/kazzmir/master-of-magic/game/magic/mouse"
++
++    "github.com/hajimehoshi/ebiten/v2"
++)
++
++type Engine struct {
++    UI        *uilib.UI
++    counter   int
++    outPath   string
++    useCrt    bool
++    shader    *ebiten.Shader
++    offscreen *ebiten.Image
++}
++
++func NewEngine() (*Engine, error) {
++    cache := lbx.AutoCache()
++    imageCache := util.MakeImageCache(cache)
++    music := musiclib.MakeMusic(cache)
++
++    ui := &uilib.UI{
++        Draw: func(ui *uilib.UI, screen *ebiten.Image) {
++            ui.IterateElementsByLayer(func(element *uilib.UIElement) {
++                if element.Draw != nil {
++                    element.Draw(element, screen)
++                }
++            })
++        },
++    }
++    ui.SetElementsFromArray(nil)
++
++    group, _ := settings.MakeSettingsUI(cache, &imageCache, music)
++    ui.AddGroup(group)
++
++    out := os.Getenv("SHOT")
++    if out == "" {
++        out = "/out/crt.png"
++    }
++
++    engine := &Engine{UI: ui, outPath: out, useCrt: os.Getenv("CRT") == "1"}
++
++    if engine.useCrt {
++        kagePath := os.Getenv("KAGE")
++        if kagePath == "" {
++            kagePath = "/src/game/magic/crt.kage"
++        }
++        src, err := os.ReadFile(kagePath)
++        if err != nil {
++            log.Printf("read kage: %v", err)
++            os.Exit(1)
++        }
++        shader, err := ebiten.NewShader(src)
++        if err != nil {
++            log.Printf("FAIL: CRT shader 編譯失敗: %v", err)
++            os.Exit(2)
++        }
++        engine.shader = shader
++        log.Printf("CRT shader 編譯成功")
++    }
++
++    return engine, nil
++}
++
++func (engine *Engine) Update() error {
++    engine.UI.StandardUpdate()
++    engine.counter++
++    return nil
++}
++
++func (engine *Engine) Draw(screen *ebiten.Image) {
++    if engine.useCrt {
++        ow, oh := scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++        if engine.offscreen == nil {
++            engine.offscreen = ebiten.NewImage(ow, oh)
++        }
++        engine.offscreen.Clear()
++        engine.UI.Draw(engine.UI, engine.offscreen)
++
++        op := &ebiten.DrawRectShaderOptions{}
++        op.Images[0] = engine.offscreen
++        op.Uniforms = map[string]any{"Scanlines": float32(data.ScreenHeight)}
++        screen.DrawRectShader(ow, oh, engine.shader, op)
++    } else {
++        engine.UI.Draw(engine.UI, screen)
++    }
++
++    if engine.counter == 20 {
++        bounds := screen.Bounds()
++        buf := make([]byte, 4*bounds.Dx()*bounds.Dy())
++        screen.ReadPixels(buf)
++        img := &image.NRGBA{Pix: buf, Stride: 4 * bounds.Dx(), Rect: image.Rect(0, 0, bounds.Dx(), bounds.Dy())}
++        f, err := os.Create(engine.outPath)
++        if err != nil {
++            log.Printf("create png: %v", err)
++            os.Exit(1)
++        }
++        if err := png.Encode(f, img); err != nil {
++            log.Printf("encode png: %v", err)
++        }
++        f.Close()
++        log.Printf("wrote %v (%dx%d)", engine.outPath, bounds.Dx(), bounds.Dy())
++        os.Exit(0)
++    }
++}
++
++func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
++    return scale.Scale2(data.ScreenWidth, data.ScreenHeight)
++}
++
++func main() {
++    log.SetFlags(log.Lshortfile)
++    ebiten.SetWindowSize(data.ScreenWidth*3, data.ScreenHeight*3)
++    ebiten.SetWindowTitle("crt-verify")
++    audio.Initialize()
++    mouse.Initialize()
++
++    engine, err := NewEngine()
++    if err != nil {
++        log.Printf("init: %v", err)
++        return
++    }
++    if err := ebiten.RunGame(engine); err != nil {
++        log.Printf("run: %v", err)
++    }
++}
 diff --git a/test/main-screen/main.go b/test/main-screen/main.go
 index 850b02e..986b077 100644
 --- a/test/main-screen/main.go

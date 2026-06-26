@@ -146,7 +146,6 @@ Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
 ### 待辦
 
 - **次要邊角**:極少數動態列舉引數、純數值 tooltip,以及城市名池外的玩家自訂名(本就保留原文)。
-- **原版觀感**:CRT 質感 shader 仍可選做(掃描線/光罩/曲面),作法見下方「原版 DOS 觀感切換」。
 - **剩餘設定**:Event Music、Expanding Help 兩項原版設定未做(低價值)。
 - **跨平台延伸**:Web WASM / Android,順序與理由見 `docs/porting-difficulty.md`。
 
@@ -154,17 +153,24 @@ Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
 
 ## 原版 DOS 觀感切換(讓老玩家更有年代感)
 
-重製引擎用方形像素、16:10 視窗;原版《魔法大帝》是 320×200 在 4:3 CRT 上掃描倍增,像素其實**偏高 1.2 倍**。
-設定畫面新增「**DOS 原版長寬比**」開關(預設關),開啟後把畫面垂直拉伸 1.2 倍,還原當年的比例。
-這是純顯示層加工,遊戲邏輯與滑鼠座標都有對應校正(`scale.CursorPosition` 把滑鼠 Y 換算回遊戲座標,點擊不偏)。
+兩個獨立的觀感開關,預設都關(維持重製版現況),想要年代感就打開。**主選單左上角**直接有
+「規則」「CRT 質感」兩顆切換鈕;設定畫面(遊戲內)則有完整的「DOS 原版長寬比」「CRT 質感」等開關。
+
+**① DOS 原版長寬比**:重製引擎用方形像素、16:10 視窗;原版《魔法大帝》是 320×200 在 4:3 CRT 上掃描倍增,
+像素其實**偏高 1.2 倍**。開啟後把畫面垂直拉伸 1.2 倍還原當年比例。純顯示層,遊戲邏輯與滑鼠座標都有對應校正
+(`scale.CursorPosition` 把滑鼠 Y 換算回遊戲座標,點擊不偏)。
 
 下圖是同一張戰略地圖,左為重製版 16:10、右為開啟 DOS 長寬比後的 4:3 觀感(整體變高、回到 CRT 比例):
 
 ![重製版 16:10 vs DOS 原版長寬比 4:3 的並排對比:右側畫面整體變高,地形磚、單位、選單列都回到 CRT 比例](docs/img/ui-aspect-compare.png)
 
-更完整的差異分析(為何「沒 DOS 感」、第一性原理、My Abandonware 原版截圖比對)見
-[`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md);想再加 CRT 掃描線/光罩/曲面質感的人,
-可參考從零實作的 shader 教學 [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md)。
+**② CRT 質感 shader**:疊上老 CRT 的掃描線、RGB 子像素光罩、暗角。用 Ebiten/Kage 寫的後製 shader,
+把遊戲畫到離屏 buffer 再經 shader 貼出;只改顏色不影響遊戲邏輯與滑鼠。掃描線數綁原版 200 行避免摩爾紋。
+從零實作的逐效果教學(第一性原理 + 可運行 Kage code)見 [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md)。
+
+> 關於「版面(layout)能不能切回 DOS」:經第一性原理覆核,重製版的版面**本來就是 DOS 原版**(讀原版 LBX
+> 美術、按鈕硬定位對齊原版 HUD 框),沒有「重製版亂排」可切換。差異只在顯示層(長寬比/CRT/音色),
+> 細節見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md) 的更正說明。
 
 ---
 

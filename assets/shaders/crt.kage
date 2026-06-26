@@ -1,0 +1,49 @@
+//kage:unit pixels
+
+// CRT 後製 shader:把離屏的遊戲畫面(960×600,內容是 320×200 放大 3 倍)模擬成老 CRT 觀感。
+// 設計說明與逐效果第一性原理見 repo docs/crt-shader-guide.md。
+// 純顏色加工;滑鼠座標不受影響(shader 只改顏色不改 Layout)。
+package main
+
+// 由 Go 端傳入:模擬的掃描線條數(= 原版垂直解析度 200,而非離屏高度 600,避免摩爾紋)。
+var Scanlines float
+
+const scanDepth = 0.72 // 掃描線暗縫深度(越小越暗、CRT 味越重)
+const maskDark  = 0.85 // 子像素光罩暗色(越小直條紋越強)
+const vignette  = 0.28 // 暗角強度
+const brighten  = 1.28 // 亮度補償(補回掃描線+光罩壓暗)
+const crtGamma  = 1.10 // gamma 微調
+const Pi        = 3.14159265
+
+func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
+    size := imageSrc0Size()
+    uv := srcPos / size
+
+    rgb := imageSrc0At(srcPos).rgb
+
+    // 1) 掃描線:沿 Y,線數 = 原版 200;每條 = 一個 sin 週期的亮帶+暗縫。
+    scan := sin(uv.y*Scanlines*Pi)*0.5 + 0.5
+    rgb *= mix(scanDepth, 1.0, scan)
+
+    // 2) 子像素光罩:沿目的地 X,每 3 px 一組強化 R / G / B。
+    phase := mod(dstPos.x, 3.0)
+    mask := vec3(maskDark, maskDark, maskDark)
+    if phase < 1.0 {
+        mask.r = 1.0
+    } else if phase < 2.0 {
+        mask.g = 1.0
+    } else {
+        mask.b = 1.0
+    }
+    rgb *= mask
+
+    // 3) 暗角:離中心越遠越暗。
+    vig := smoothstep(0.0, 0.7, 0.78-length(uv-0.5))
+    rgb *= mix(1.0, vig, vignette)
+
+    // 4) 亮度補償 + gamma。
+    rgb *= brighten
+    rgb = pow(clamp(rgb, 0.0, 1.0), vec3(1.0/crtGamma))
+
+    return vec4(rgb, 1.0)
+}

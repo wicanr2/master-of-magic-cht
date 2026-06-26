@@ -20,7 +20,12 @@ cp "$REPO/assets/cht-subset.otf" "$DST/cht_font.otf"
 mkdir -p "$DST/cht_strings"
 cp "$REPO"/docs/strings/*.tsv "$DST/cht_strings/"
 
+# 3) CRT shader 原始碼 (game/magic/main.go 的 //go:embed crt.kage 需要它;
+#    .kage 非 *.go,無法由 patches/*.go 帶入,故在此複製)。
+cp "$REPO/assets/shaders/crt.kage" "$ENGINE/game/magic/crt.kage"
+
 echo "[prepare-embed] 已放置:"
 echo "  $DST/cht_font.otf ($(wc -c < "$DST/cht_font.otf") bytes)"
 echo "  $DST/cht_strings/ ($(ls "$DST/cht_strings" | wc -l) 個 tsv)"
+echo "  $ENGINE/game/magic/crt.kage ($(wc -c < "$ENGINE/game/magic/crt.kage") bytes)"
 echo "[prepare-embed] 接著:cd $ENGINE && go build -buildvcs=false ./game/magic"

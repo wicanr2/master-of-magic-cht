@@ -111,7 +111,7 @@
       (規則由 5+ 份攻略歸納,見 [`docs/mom-strategy-notes.md`](docs/mom-strategy-notes.md))。跳過 Event Music、Expanding Help。
 - [x] 閃退記錄(crash.log + panic 攔截)。
 - [x] 紀律:修正用旗標守護、預設維持原版行為;單元測試 + headless 截圖雙驗。
-- [x] 原版觀感:設定加「DOS 原版長寬比」開關(畫面 Y×1.2 還原 4:3),分析+對比圖見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。CRT shader 仍可選做。
+- [x] 原版觀感:設定 + 主選單加「DOS 原版長寬比」(Y×1.2 還原 4:3)與「CRT 質感」(Ebiten/Kage 後製掃描線/光罩/暗角)兩個切換鈕,預設關。分析+對比圖見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md),CRT 教學見 [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md)。版面(layout)經第一性原理覆核本來就是 DOS 原版,無可切換項。
 
 ---
 
