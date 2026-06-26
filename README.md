@@ -174,9 +174,12 @@ Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
 
 從零實作的逐效果教學(第一性原理 + 可運行 Kage code)見 [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md)。
 
-> 關於「版面(layout)能不能切回 DOS」:經第一性原理覆核,重製版的版面**本來就是 DOS 原版**(讀原版 LBX
-> 美術、按鈕硬定位對齊原版 HUD 框),沒有「重製版亂排」可切換。差異只在顯示層(長寬比/CRT/音色),
-> 細節見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md) 的更正說明。
+> 關於「版面(layout)能不能切回 DOS」:經逐處對照原始碼,重製版**遊戲內版面就是 DOS 原版**——讀原版 LBX
+> 美術、把元件畫在原版座標(頂部選單鈕、右側金/食/法力面板 + Next Turn 都對齊原版),沒有「重製版亂排」可切。
+> 兩個常見誤會:① 右側 HUD「不一樣」多半是拿「沒選單位」比「選了單位」的不同**狀態**;
+> ② 「開頭底圖不一樣」多半是拿原版**開場標題卡**(`intro.lbx`,重製版照播)比重製版**主選單**(`mainscrn.lbx`)。
+> **唯一**真正的非原版介面元素是主選單上重製版自己疊的製作群字幕(MASTER OF MAGIC 2025 / kazzmir…)。
+> 完整逐項對照與座標見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。
 
 ---
 
