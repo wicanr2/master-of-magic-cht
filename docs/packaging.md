@@ -3,8 +3,13 @@
 各平台從 patch-only repo 組成可執行包的流程。**完整包內含版權 1.60 遊戲檔,僅供自用,不入公開 repo**;
 本 repo 只放建置腳本與中文化資產。
 
-共同前置:`scripts/fetch-engine.sh`(取引擎,釘選 commit)→ `git -C engine apply patches/0001 patches/0002`
+共同前置:`scripts/fetch-engine.sh`(取引擎,釘選 commit)→ `git -C engine apply patches/0099-all-engine-cht.patch`
+(**權威完整 patch**:CJK 中文化 + 重現經典 bug 修正 + 16 項設定 + 閃退 log;分散的 0001~0017 已併入 0099,以 0099 為準)
 → `scripts/prepare-embed.sh engine`(放入字型子集 + 譯文表供 go:embed)。
+
+> **公開 Release(data-free)**:`dist/` 三平台包內含版權遊戲檔、僅供自用;對外發佈用 **data-free** 變體
+> (不 bundle 遊戲檔,玩家自備放「包旁邊的 `data` 資料夾」):`docker-scripts/build-{appimage,win}-nodata.sh`
+> + macOS workflow artifact。已上 [GitHub Release v0.1](https://github.com/wicanr2/master-of-magic-cht/releases)。
 
 ## Linux — AppImage ✅
 

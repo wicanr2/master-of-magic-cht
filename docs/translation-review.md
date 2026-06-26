@@ -3,6 +3,10 @@
 審查版本:1.60 實機截圖 + `docs/strings/` 譯文表(ui 111 / spells 213 / item-powers 64 / artifacts 248)。
 審查日期:2026-06-22。
 
+> ⚠️ **這是早期截圖快照,部分內容已被後續進度超越。** 當時截到「仍是英文」的項目——大地圖頂部選單列
+> (Game/Spells/…/Plane)、按鈕(DONE/PATROL/WAIT/BUILD)、魔法畫面標題等——**後續已陸續中文化**
+> (見 README 的 overworld 截圖)。本檔保留作審查方法與當時狀態的記錄;**專案現況以 `README.md` / `PLAN.md` 為準**。
+
 ---
 
 ## 總評
