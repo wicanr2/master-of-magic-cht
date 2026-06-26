@@ -146,10 +146,25 @@ Linux AppImage / Windows / macOS(arm64,GitHub Actions)都已建好最新版。
 ### 待辦
 
 - **次要邊角**:極少數動態列舉引數、純數值 tooltip,以及城市名池外的玩家自訂名(本就保留原文)。
-- **原版觀感**:設定畫面已加「**DOS 原版長寬比**」開關(畫面垂直拉伸 1.2 倍還原 4:3,讓老玩家更有年代感);
-  CRT 質感 shader 仍可選做。分析與對比圖見 [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md)。
+- **原版觀感**:CRT 質感 shader 仍可選做(掃描線/光罩/曲面),作法見下方「原版 DOS 觀感切換」。
 - **剩餘設定**:Event Music、Expanding Help 兩項原版設定未做(低價值)。
 - **跨平台延伸**:Web WASM / Android,順序與理由見 `docs/porting-difficulty.md`。
+
+---
+
+## 原版 DOS 觀感切換(讓老玩家更有年代感)
+
+重製引擎用方形像素、16:10 視窗;原版《魔法大帝》是 320×200 在 4:3 CRT 上掃描倍增,像素其實**偏高 1.2 倍**。
+設定畫面新增「**DOS 原版長寬比**」開關(預設關),開啟後把畫面垂直拉伸 1.2 倍,還原當年的比例。
+這是純顯示層加工,遊戲邏輯與滑鼠座標都有對應校正(`scale.CursorPosition` 把滑鼠 Y 換算回遊戲座標,點擊不偏)。
+
+下圖是同一張戰略地圖,左為重製版 16:10、右為開啟 DOS 長寬比後的 4:3 觀感(整體變高、回到 CRT 比例):
+
+![重製版 16:10 vs DOS 原版長寬比 4:3 的並排對比:右側畫面整體變高,地形磚、單位、選單列都回到 CRT 比例](docs/img/ui-aspect-compare.png)
+
+更完整的差異分析(為何「沒 DOS 感」、第一性原理、My Abandonware 原版截圖比對)見
+[`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md);想再加 CRT 掃描線/光罩/曲面質感的人,
+可參考從零實作的 shader 教學 [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md)。
 
 ---
 
@@ -194,7 +209,8 @@ patch-only。本 repo **不 vendor 引擎本體、不散布任何版權遊戲檔
 | [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) | 版本說明(白話:修了什麼、補了哪些設定、怎麼安裝) |
 | [`docs/classic-rules-plan.md`](docs/classic-rules-plan.md) | 重現經典:10 個玩法 issue 處理 + 原版 18 項設定狀態(逐項根因/oracle/測試) |
 | [`docs/mom-strategy-notes.md`](docs/mom-strategy-notes.md) | MoM 策略筆記(5+ 份攻略歸納)+ 自動建議規則依據 |
-| [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md) | 原版 DOS vs 重製引擎的介面差異分析(為何「沒 DOS 感」)|
+| [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md) | 原版 DOS vs 重製引擎的介面差異分析(為何「沒 DOS 感」)+ DOS 長寬比切換對比 |
+| [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md) | CRT shader 從零實作教學(Ebiten/Kage,逐效果第一性原理 + 接進本引擎)|
 | [`docs/localization-methodology.md`](docs/localization-methodology.md) | **Go/Ebiten 老遊戲繁中化方法論 + 踩雷清單**(可重用 playbook) |
 | [`CONTEXT.md`](CONTEXT.md) | 專案術語表(ubiquitous language) |
 | [`docs/phase1-cjk-prototype.md`](docs/phase1-cjk-prototype.md) | Phase 1 渲染驗證全紀錄(含真實引擎截圖與必修項) |
