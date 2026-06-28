@@ -1,4 +1,4 @@
-# PLAN — 工作魔法大帝 繁體中文化 (Master of Magic CHT)
+# PLAN — 魔法大帝 繁體中文化 (Master of Magic CHT)
 
 > 把 1994 年的奇幻 4X 經典《Master of Magic》(MicroProse) 做成**全程繁體中文**可玩,
 > 跑在 Go 重製引擎 [kazzmir/master-of-magic](https://github.com/kazzmir/master-of-magic) 上。

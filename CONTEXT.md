@@ -1,11 +1,11 @@
-# CONTEXT — 工作魔法大帝 (Master of Magic) 繁中化 Ubiquitous Language
+# CONTEXT — 魔法大帝 (Master of Magic) 繁中化 Ubiquitous Language
 
 本檔為專案 domain glossary。命名變數、寫文件、討論時優先使用以下術語;遇新概念先登錄再用。
 格式:`Term — definition. _Avoid_: forbidden synonyms`。
 
 ## 專案
 
-- **MoM / 工作魔法大帝** — Master of Magic (MicroProse, 1994),本專案中文化標的。奇幻 4X,巫師爭奪 Arcanus / Myrror 雙位面霸權。
+- **MoM / 魔法大帝** — Master of Magic (MicroProse, 1994),本專案中文化標的。奇幻 4X,巫師爭奪 Arcanus / Myrror 雙位面霸權。
 - **kazzmir 引擎** — [kazzmir/master-of-magic](https://github.com/kazzmir/master-of-magic),Go + Ebiten 重製引擎,直接讀原版 `.lbx` 執行。 _Avoid_: 「模擬器」(它是重製,非 emulator)。
 - **patch-only repo** — `master-of-magic-cht` 只放譯文表 + 字型 + patch + 文件 + 腳本,**不 vendor 引擎本體、不散布版權遊戲檔**。
 - **CHT / 繁中化** — 繁體中文化。範圍見 PLAN.md。

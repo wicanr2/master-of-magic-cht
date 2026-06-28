@@ -1,4 +1,4 @@
-# 工作魔法大帝 (Master of Magic) 中文化審查報告
+# 魔法大帝 (Master of Magic) 中文化審查報告
 
 審查版本:1.60 實機截圖 + `docs/strings/` 譯文表(ui 111 / spells 213 / item-powers 64 / artifacts 248)。
 審查日期:2026-06-22。
