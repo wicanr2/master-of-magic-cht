@@ -5496,10 +5496,10 @@ index 0000000..2c5d811
 +}
 diff --git a/test/cht-dump/main.go b/test/cht-dump/main.go
 new file mode 100644
-index 0000000..279f75a
+index 0000000..84ff70b
 --- /dev/null
 +++ b/test/cht-dump/main.go
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,107 @@
 +package main
 +
 +// 中文化 dumper:用引擎讀出建築名/描述 + help entries 的精確英文字串,供翻譯。
@@ -5513,6 +5513,7 @@ index 0000000..279f75a
 +	"github.com/kazzmir/master-of-magic/game/magic/building"
 +	citylib "github.com/kazzmir/master-of-magic/game/magic/city"
 +	helplib "github.com/kazzmir/master-of-magic/game/magic/help"
++	spelllib "github.com/kazzmir/master-of-magic/game/magic/spellbook"
 +)
 +
 +func esc(s string) string {
@@ -5562,6 +5563,23 @@ index 0000000..279f75a
 +		fmt.Printf("CITY NAMES: %d\n", len(names))
 +	} else {
 +		fmt.Println("cityname err:", err)
++	}
++
++	// desc.lbx 全法術描述(施法卷軸顯示的那段,Effects/Target/Casting Cost/Upkeep + 描述)
++	if descs, err := spelllib.ReadSpellDescriptionsFromCache(cache); err == nil {
++		sf, _ := os.Create("/out/spelldesc_en.tsv")
++		fmt.Fprintln(sf, "source\tzh\tnote")
++		n := 0
++		for _, d := range descs {
++			if strings.TrimSpace(d) != "" {
++				fmt.Fprintf(sf, "%s\t\t法術描述\n", esc(d))
++				n++
++			}
++		}
++		sf.Close()
++		fmt.Printf("SPELL DESCRIPTIONS: %d non-empty / %d total\n", n, len(descs))
++	} else {
++		fmt.Println("spelldesc err:", err)
 +	}
 +
 +	// help.lbx 全 entries
@@ -5701,6 +5719,94 @@ index 0000000..90254cb
 +    if err := ebiten.RunGame(engine); err != nil {
 +        log.Printf("run: %v", err)
 +    }
++}
+diff --git a/test/cht-verify-i18n/main.go b/test/cht-verify-i18n/main.go
+new file mode 100644
+index 0000000..17bee9b
+--- /dev/null
++++ b/test/cht-verify-i18n/main.go
+@@ -0,0 +1,82 @@
++package main
++
++// issue2 驗證:用引擎 reader 取出「遊戲實際會顯示」的建築描述 / 法術描述 / help 本體,
++// 逐條丟 font.TranslateFormat(走 translateForDisplay 查表),統計多少已翻成中文。
++// 跑法:xvfb + cwd=LBX 目錄。
++
++import (
++	"fmt"
++	"strings"
++
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++	"github.com/kazzmir/master-of-magic/lib/font"
++	"github.com/kazzmir/master-of-magic/game/magic/building"
++	helplib "github.com/kazzmir/master-of-magic/game/magic/help"
++	spelllib "github.com/kazzmir/master-of-magic/game/magic/spellbook"
++)
++
++func hasCJK(s string) bool {
++	for _, r := range s {
++		if r >= 0x4e00 && r <= 0x9fff {
++			return true
++		}
++	}
++	return false
++}
++
++func report(name string, sources []string) {
++	total, zh, sample := 0, 0, []string{}
++	seen := map[string]bool{}
++	for _, s := range sources {
++		if strings.TrimSpace(s) == "" || seen[s] {
++			continue
++		}
++		seen[s] = true
++		total++
++		out := font.TranslateFormat(s)
++		if hasCJK(out) {
++			zh++
++		} else if len(sample) < 5 {
++			one := s
++			if len(one) > 50 {
++				one = one[:50]
++			}
++			sample = append(sample, strings.ReplaceAll(one, "\x14", " "))
++		}
++	}
++	fmt.Printf("%s: %d/%d 已翻中文 (%.0f%%)\n", name, zh, total, float64(zh)*100/float64(total))
++	for _, s := range sample {
++		fmt.Printf("    未翻: %s\n", s)
++	}
++}
++
++func main() {
++	cache := lbx.AutoCache()
++
++	// 建築描述
++	if bd := building.MakeBuildDescriptions(cache); bd != nil {
++		var ds []string
++		for b := building.Building(1); b < building.BuildingLast; b++ {
++			ds = append(ds, bd.Get(b))
++		}
++		report("建築描述(buildesc.lbx)", ds)
++	}
++
++	// 法術描述
++	if sd, err := spelllib.ReadSpellDescriptionsFromCache(cache); err == nil {
++		report("法術描述(desc.lbx)", sd)
++	} else {
++		fmt.Println("spelldesc err:", err)
++	}
++
++	// help 本體
++	if lbxFile, err := cache.GetLbxFile("help.lbx"); err == nil {
++		if help, err := helplib.ReadHelp(lbxFile, 2); err == nil {
++			var hs []string
++			for _, e := range help.Entries {
++				hs = append(hs, e.Text)
++			}
++			report("help 本體(help.lbx)", hs)
++		}
++	}
 +}
 diff --git a/test/city-enchantment/main.go b/test/city-enchantment/main.go
 index 5d54df3..2a4f5c9 100644

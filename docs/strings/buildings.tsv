@@ -71,3 +71,16 @@ Housing	住宅	建築名
 This special setting builds new housing for the local populace to draw them into the city and increase the city's population growth rate.	此特殊設定為當地居民建造新住宅，以吸引人口遷入城市並提升城市人口成長率。	建築描述
 Trade Goods	貿易品	建築名
 This special setting produces trade goods and converts 2 production to 1 gold.	此特殊設定生產貿易品，將2生產轉換為1金幣。	建築描述
+A sawmill will turn wood into deadly weaponry. It increases the production of forest squares by 25%.	鋸木廠將木材加工為致命武器。它使森林格的生產提升25%。	建築描述
+The alchemists' guild equips all new troops with magical weapons (+1 to hit), and generates +3 mana as well.	鍊金術士公會為所有新兵配備魔法武器（命中+1），同時產生+3法力。	建築描述
+A wizard's guild acts as a center for the advancement of magic.  It adds +8 spell research points at an upkeep cost of 3 mana points a turn.	巫師公會作為魔法精進的中心。法術研究點數+8，每回合維護費3法力。	建築描述
+A shrine provides spiritual comfort to the citizenry.  It adds +1 mana, allows use of nightshade, and reduces the unrest level by 1.	神龕為市民提供心靈慰藉。法力+1、允許使用夜影草，動亂-1。	建築描述
+A temple serves as a center for basic religious instruction.  It adds +2 mana, allows use of nightshade, and reduces the unrest level by 1.	神殿作為基礎宗教教育的中心。法力+2、允許使用夜影草，動亂-1。	建築描述
+A parthenon provides the city with a central focus for the study and teaching of religion. It adds +3 mana and reduces the unrest by 1.	萬神殿為城市提供宗教研究與傳教的核心場所。法力+3，動亂-1。	建築描述
+A cathedral provides the city with a major cultural and religious center.  It adds +4 mana and reduces the unrest level by 1.	大教堂為城市提供重要的文化與宗教中心。法力+4，動亂-1。	建築描述
+A marketplace promotes the city's economic growth by increasing the taxable revenues of the city by +50%.	市集促進城市經濟成長，使城市的應稅收入提升+50%。	建築描述
+A bank increases the taxable revenues of a city by 50%, in addition to any gains from a marketplace.	銀行在市集收益的基礎上，再將城市的應稅收入提升50%。	建築描述
+A merchant's guild increases the taxable revenues of a city by +100%, in addition to the gains from the marketplace and bank.	商人公會在市集與銀行收益的基礎上，再將城市的應稅收入提升+100%。	建築描述
+A granary serves as a storehouse for the city's food surplus.  It adds +2 food and +20 people per turn.	穀倉作為城市糧食盈餘的儲藏所。每回合食物+2、人口+20。	建築描述
+A farmer's market is a focal point for the buying and selling of food surplus. It adds +3 food and +30 people per turn.	農夫市場是糧食盈餘買賣的集中場所。每回合食物+3、人口+30。	建築描述
+The builder's hall educates workers in skilled building techniques.	建築大廳教導工人精熟建造技術。	建築描述

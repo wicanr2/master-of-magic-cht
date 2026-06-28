@@ -1,0 +1,215 @@
+source	zh	note
+Turns a 5x5 area into thick sticky mud for the duration of a battle.	在戰鬥持續期間，將 5x5 範圍化為濃稠黏滑的泥地。	法術描述
+Gives increased resistance and defense to the elemental magics of Chaos and Nature.	提升對混沌與自然元素魔法的抗性與防禦。	法術描述
+Surrounds a target city with a sturdy wall of stone.	以堅固的石牆環繞目標城市。	法術描述
+Increases target unit's melee attack strength by 1.	使目標單位的近戰攻擊力提升 1。	法術描述
+Target unit is immobilized until web is destroyed and prevents flight for the rest of the battle.	目標單位被固定，直到蛛網被摧毀為止，並在該場戰鬥剩餘時間內無法飛行。	法術描述
+Summons a group of ferocious bears.	召喚一群兇猛的熊。	法術描述
+Causes the target's skin to harden increasing the unit's defense by 1.	使目標的皮膚硬化，令該單位的防禦提升 1。	法術描述
+Endows a unit with the ability to walk on water.	賦予單位水上行走的能力。	法術描述
+Summons a group of small, flying forest creatures.	召喚一群細小的飛行森林生物。	法術描述
+Fully reveals terrain, terrain specials, and cities on all squares in a targeted 'map window.'	完全揭示目標「地圖視窗」內所有格子的地形、地形特產與城市。	法術描述
+Destroys targeted wall and any unit in the square has a chance to fall in and be destroyed.	摧毀目標城牆，該格內的任何單位都有機會墜落並被消滅。	法術描述
+Extends the scouting range of a friendly city to 4 squares in all directions.	將友方城市的偵察範圍向各方向延伸至 4 格。	法術描述
+A 5 strength magical cold attack +1 damage for each extra point of mana spent.	一次 5 強度的魔法寒冷攻擊，每額外消耗 1 點法力便增加 +1 傷害。	法術描述
+Summons two giant, poisonous, web-casting spiders.	召喚兩隻巨大、有毒、能吐絲結網的蜘蛛。	法術描述
+Changes most terrain to grasslands and grasslands to forests.	將大多數地形變為草原，並將草原變為森林。	法術描述
+Gives a non-flying unit the ability to cross any land terrain at a cost of 1/2 movement point.	賦予非飛行單位以 1/2 移動力的代價穿越任何陸地地形的能力。	法術描述
+Summons a group of flying cockatrices whose slightest touch can turn a creature to stone.	召喚一群飛行的雞蛇獸，其輕微觸碰便能將生物化為石頭。	法術描述
+Transforms ores in mountains and hills: coal to gems, iron to gold and silver to mithril.	轉化山脈與丘陵中的礦石：煤變寶石、鐵變黃金、銀變秘銀。	法術描述
+Completely heals all units that are stacked in a target land square.	完全治療堆疊在目標陸地格中的所有單位。	法術描述
+Summons a giant basilisk.  Basilisk can turn their enemies to stone with a glance.	召喚一隻巨大的石化蜥。石化蜥能以一瞥將敵人化為石頭。	法術描述
+Gives greatly increased resistance and defense to the elemental magics of Chaos and Nature.	顯著提升對混沌與自然元素魔法的抗性與防禦。	法術描述
+Attempts to turn an entire enemy unit into stone.	嘗試將整支敵方單位化為石頭。	法術描述
+Summons an enormous wall-crushing stone giant.	召喚一隻巨大、能擊碎城牆的石巨人。	法術描述
+Fuses iron with a target unit's skin, making it able to withstand most attacks.	將鐵融入目標單位的皮膚，使其能承受大多數攻擊。	法術描述
+Causes an icy hail storm to attack all figures in a target square with a 6 strength attack.	召來冰冷的冰雹風暴，以 6 強度攻擊目標格中的所有角色。	法術描述
+Causes considerable damage to a city and the units that garrison it.	對城市及駐守其中的單位造成可觀的傷害。	法術描述
+Summons a gorgon.  Any who see a gorgon can be turned into stone.	召喚一隻蛇髮女妖。任何看見蛇髮女妖的人都可能被化為石頭。	法術描述
+Moves a wizard's enchanted fortress to a new city.	將巫師的附魔堡壘遷移至新的城市。	法術描述
+Increases a city's food harvest and can convert deserts and corrupted squares into grasslands.	提升城市的食物產量，並能將沙漠與腐化的格子轉變為草原。	法術描述
+Summons a mighty earth elemental in combat.	在戰鬥中召喚一隻強大的土元素。	法術描述
+The target unit will completely regenerate if its side wins in combat.	若目標單位所屬陣營在戰鬥中獲勝，該單位將完全再生。	法術描述
+Summons a fierce behemoth.	召喚一隻兇猛的比蒙巨獸。	法術描述
+All enemy units lose 1 movement point each combat turn.	所有敵方單位每個戰鬥回合損失 1 點移動力。	法術描述
+Reveals the entire map of both planes and detects all units while the spell is in effect	在法術生效期間，揭示兩個位面的整張地圖並偵測所有單位	法術描述
+Several lightning bolts randomly strike enemy units in combat.	數道閃電在戰鬥中隨機擊中敵方單位。	法術描述
+Summons an awe-inspiring colossus.	召喚一座令人敬畏的巨像。	法術描述
+Units in a city with an earth gate can instantly travel to any other city with an earth gate.	位於擁有大地之門的城市中的單位，可即時移動至任何其他擁有大地之門的城市。	法術描述
+All of the caster's units are completely healed at the end of each turn.	施法者的所有單位在每回合結束時都會完全治療。	法術描述
+Summons a gigantic, poisonous, tunneling land wyrm.	召喚一隻巨大、有毒、會挖掘地道的陸地蠕龍。	法術描述
+All cities owned by a wizard that casts Chaos or Death magic are hit with a minor earthquake.	由施放混沌或死亡魔法的巫師所擁有的所有城市，都將遭受一場小型地震。	法術描述
+Adds 3 to all resistance rolls versus magic.	對所有對抗魔法的抗性骰加 3。	法術描述
+A triple strength version of the arcane spell Dispel Magic.	祕法法術「解除魔法」的三倍強度版本。	法術描述
+Summons a floating island in any water square.	在任意水域格召喚一座浮空島。	法術描述
+The target unit becomes almost totally immune to arrows and sling bullets.	目標單位幾乎完全免疫箭矢與投石彈。	法術描述
+Summons a group of illusory phantom warriors for the duration of the combat.	召喚一群幻影戰士，持續整場戰鬥。	法術描述
+Affected units will wander randomly or can even attack their own side.	受影響的單位會隨機遊走，甚至攻擊自己一方。	法術描述
+Transports a friendly unit back to the caster's summoning circle.	將一個友方單位傳送回施法者的召喚法陣。	法術描述
+All enemy spell cast in combat must resist being dispelled while this spell is in effect.	此法術生效期間，所有敵方在戰鬥中施放的法術都必須抵抗被解除。	法術描述
+Summons a pair of trident wielding nagas.	召喚一對手持三叉戟的娜迦。	法術描述
+A 5 strength illusory attack plus 1 strength for every 2 extra mana spent.	5 強度的幻影攻擊，每額外花費 2 法力增加 1 強度。	法術描述
+All friendly units become more difficult to hit.  Each point of damage has a 10% chance to miss.	所有友方單位變得更難被命中。每點傷害有 10% 機率落空。	法術描述
+A triple strength version of the arcane spell Disenchant Area.	祕法法術「區域祛魔」的三倍強度版本。	法術描述
+The target unit suffers a -2 penalty to hit and loses 1 defense.	目標單位的命中受到 -2 懲罰，並損失 1 點防禦。	法術描述
+Prevents a units enchantments from being dispelled.	防止單位的附魔被解除。	法術描述
+Enchants all roads in a 5x5 area.	為 5x5 範圍內的所有道路附魔。	法術描述
+Bestows the power of flight upon a target unit.	賦予目標單位飛行能力。	法術描述
+Doubles the speed of all ships controlled by a wizard and halves the speed of all others.	使某巫師控制的所有船隻速度加倍，並使其他所有船隻速度減半。	法術描述
+Attempts to destroy an opponent's spell before it has been completely cast.	試圖在對手的法術完全施放前將其摧毀。	法術描述
+Improves relations with enemy wizards every turn.	每回合改善與敵方巫師的關係。	法術描述
+Summons an illusory phantom beast for the duration of the combat.	召喚一隻幻影野獸，持續整場戰鬥。	法術描述
+A triple strength version of the arcane spell Disjunction.	祕法法術「解離術」的三倍強度版本。	法術描述
+Renders the target unit invisible.	使目標單位隱形。	法術描述
+Enables the enchanted unit and all units with it to fly on the overland map.	使受附魔的單位及與其同行的所有單位能在大地圖上飛行。	法術描述
+Attempts to dispel any summoned creature.	試圖解除任何被召喚的生物。	法術描述
+Summons a lightning-bolt wielding storm giant.	召喚一個手持閃電箭的風暴巨人。	法術描述
+Summons an invisible air elemental for the duration of the combat.	召喚一個隱形的風元素，持續整場戰鬥。	法術描述
+Target unit loses 5 strength from all their attacks, defense and resistance.	目標單位的所有攻擊、防禦與抗性各損失 5 強度。	法術描述
+Locks a stack of enemy units in stasis for a considerable time.	將一隊敵方單位鎖入停滯狀態相當長的時間。	法術描述
+Gives a target unit almost complete immunity to all forms of magic.	給予目標單位幾乎完全免疫所有形式的魔法。	法術描述
+Doubles a unit's movement and number of attacks in combat.	使單位在戰鬥中的移動力與攻擊次數加倍。	法術描述
+Summons a spell casting djinn.	召喚一個會施法的迪精。	法術描述
+Completely protects a city from one type of magic. May be cast multiple times.	使一座城市完全免受某一類魔法的侵害。可多次施放。	法術描述
+Attempts to take control of an enemy summoned creature in combat.	試圖在戰鬥中奪取一個敵方召喚生物的控制權。	法術描述
+Renders all friendly units invisible.	使所有友方單位隱形。	法術描述
+Attempts to banish all (including your own) summoned creatures from both Arcanus and Myrror.	試圖將所有（包括你自己的）召喚生物從阿卡努斯與密若兩界放逐。	法術描述
+Attempts to take control of an opponent's global enchantment.	試圖奪取對手某個全域附魔的控制權。	法術描述
+Suspends a wizard's enchanted fortress far above the earth.	將某巫師受附魔的堡壘懸浮於大地之上的高空。	法術描述
+Summons a powerful wind dragon.	召喚一條強大的風龍。	法術描述
+All enemy spell cast on the overland map must resist or be dispelled	所有敵方在大地圖上施放的法術必須抵抗，否則將被解除	法術描述
+Stops the passing of time for enemy wizards and units.	使敵方巫師與單位的時間停止流逝。	法術描述
+Destroys a unit's missile attack ability.	摧毀單位的遠程攻擊能力。	法術描述
+Destroys a section of stone wall.	摧毀一段石牆。	法術描述
+A 5 strength magical fire attack +1 strength per additional mana.	5 強度的魔法火焰攻擊，每額外 1 點法力 +1 強度。	法術描述
+Summons a wild pack of fire-breathing hell hounds	召喚一群噴火的野生地獄犬	法術描述
+Corrupts a map square so that it will yield no food or minerals.	腐化一個地圖格，使其不再產出食物或礦物。	法術描述
+Enchant a unit's weapons so that opponent's defense is reduced.	附魔單位的武器，使敵方的防禦降低。	法術描述
+Units crossing the wall suffer a 4 strength fireball attack.	越過此牆的單位遭受 4 強度的火球攻擊。	法術描述
+Target unit's melee, thrown and missile strengths reduced to 1.	目標單位的近戰、投擲與遠程強度降為 1。	法術描述
+Target unit receives a harmful mutation.	目標單位獲得一項有害的突變。	法術描述
+Summons a fire elemental for the duration of combat.	在戰鬥期間召喚一隻火元素。	法術描述
+A 5 strength armor piercing attack +1 strength per additional mana.	5 強度的破甲攻擊，每額外 1 點法力 +1 強度。	法術描述
+Summons a fire giant.	召喚一隻火巨人。	法術描述
+Normal unit receives a beneficial mutation and becomes a Chaos creature.	普通單位獲得一項有益的突變，並成為混沌生物。	法術描述
+Normal unit's weapons enchanted to +2 attack strength.	普通單位的武器被附魔，攻擊強度 +2。	法術描述
+Summons flying gargoyles that are extremely difficult to damage.	召喚極難被傷害的飛行石像鬼。	法術描述
+A 5 strength magical fire attack that hits each figure of target unit, +1 strength per 3 extra mana	5 強度的魔法火焰攻擊，命中目標單位的每個個體，每額外 3 點法力 +1 強度	法術描述
+Summons a doom bat that has a fearsome fiery aura.	召喚一隻擁有可怖火焰光環的厄運蝙蝠。	法術描述
+Creates a volcano that produces no food or minerals but provides 1 mana per turn	製造一座火山，不產出食物或礦物，但每回合提供 1 點法力	法術描述
+Surrounds unit in fiery aura.  Units in melee with immolating unit are hit with a 4 strength fireball.	以火焰光環環繞單位。與焚身單位近戰的單位會遭受 4 強度的火球攻擊。	法術描述
+Summons a horrific flying, fire breathing, three-headed chimera.	召喚一隻恐怖的飛行、噴火、三頭奇美拉。	法術描述
+Hits target unit with multiple lightning bolts starting at 10 strength and decreasing to 1.	以多道閃電箭命中目標單位，強度從 10 起始遞減至 1。	法術描述
+Enchants all normal units in a combat with a reduced strength(+1) Flame Blade.	為戰鬥中所有普通單位附上降低強度（+1）的烈焰刃。	法術描述
+Summons a fearsome chaos spawn that have multiple gaze attacks.	召喚一隻擁有多重凝視攻擊的可怖混沌孳生體。	法術描述
+Target unit takes 10 points of damage regardless of defense.	目標單位受到 10 點傷害，無視防禦。	法術描述
+Summons randomly moving vortex that damages all in its path.	召喚隨機移動的漩渦，傷害其路徑上的一切。	法術描述
+Summons a spell casting Efreet.	召喚一隻會施法的火焰巨靈。	法術描述
+All enemy units in map square are hit by an 8 strength fireball.	地圖格內所有敵方單位遭受 8 強度的火球攻擊。	法術描述
+All non-Chaos creatures in this combat have a -2 penalty to hit.	此戰鬥中所有非混沌生物的命中受到 -2 懲罰。	法術描述
+All enemy units in combat are hit by a 15 strength magical fire attack.	戰鬥中所有敵方單位遭受 15 強度的魔法火焰攻擊。	法術描述
+Units in an enemy city are struck by 5 randomly targeted 8 strength lightning bolts	敵方城市中的單位遭受 5 道隨機目標的 8 強度閃電箭打擊	法術描述
+Summons a 9-Headed fire-breathing, regenerating Hydra.	召喚一隻 9 頭、噴火、能再生的九頭蛇。	法術描述
+Target unit with a less than 10 resistance is irrevocably destroyed.	抗性低於 10 的目標單位將被不可挽回地摧毀。	法術描述
+All units on overland map not in cities are hit with an 4 strength fireball.	大地圖上所有不在城市中的單位遭受 4 強度的火球攻擊。	法術描述
+Several map squares are corrupted each turn.  The area controlled by the caster's cities is immune.	每回合有數個地圖格被腐化。施法者城市所控制的區域免疫。	法術描述
+All enemy units in combat are hit with a random effect from being healed to being disintegrated.	戰鬥中所有敵方單位遭受隨機效果，從被治療到被瓦解皆有可能。	法術描述
+All Chaos creatures receive a +2 bonus to all attack strengths.	所有混沌生物的全部攻擊強度獲得 +2 加成。	法術描述
+All newly built units are affected by a Chaos Channels spell.	所有新建造的單位都受到混沌通道法術的影響。	法術描述
+Summons the all powerful great drake.	召喚全能的偉大巨龍。	法術描述
+Does a terrific amount of damages to a city and all the units in it.	對一座城市及其中所有單位造成極大量的傷害。	法術描述
+Several volcanoes are raised each turn.  The area controlled by the caster's cities is immune.	每回合隆起數座火山。施法者城市所控制的區域免疫。	法術描述
+Gives increased resistance and defense to the evil magics of Chaos and Death.	提升對混沌與死亡邪惡魔法的抗性與防禦。	法術描述
+A 15 strength attack that is only effective versus Chaos and Death creatures.	一次 15 點強度的攻擊，僅對混沌與死亡生物有效。	法術描述
+Increases a unit's movement rate by 1.	使單位的移動速率+1。	法術描述
+Blesses the target's weapons, giving them a +1 to-hit bonus.	祝福目標的武器，賦予命中+1加成。	法術描述
+Heals up to 5 hits of damage taken by the target unit.	治療目標單位最多 5 點所受傷害。	法術描述
+The target's defense is increased by 2.	目標的防禦+2。	法術描述
+The fame of the casting wizard is increased by 10 as long as this spell is in effect.	只要此法術持續生效，施法巫師的聲望便+10。	法術描述
+Life creatures get a bonus in combat and Death creatures are penalized.	生命生物在戰鬥中獲得加成，死亡生物則受到減益。	法術描述
+Summons a guardian spirit that can meld with nodes to generate magic power.	召喚一隻守護靈，能與節點融合以產生魔力。	法術描述
+The target unit becomes elite.	目標單位成為精銳。	法術描述
+Endows the target unit with Immunity to Illusions.	賦予目標單位幻象免疫。	法術描述
+Shifts a stack of friendly units to the other plane.	將一隊友方單位轉移到另一個位面。	法術描述
+Returns a hero that died in your service to life.	使一名為你效命而陣亡的英雄復活。	法術描述
+Attempts to destroy a Death or Chaos creature.	嘗試摧毀一隻死亡或混沌生物。	法術描述
+Prevents all travel across planes.	阻止一切跨位面的旅行。	法術描述
+Summons a herd of unicorns.  These lovely creatures can teleport to any square on the battlefield.	召喚一群獨角獸。這些美麗的生物能瞬間移動到戰場上的任何一格。	法術描述
+Returns a unit that has just been killed in combat to life.	使一個剛在戰鬥中被殺死的單位復活。	法術描述
+Allows the target unit to shift freely between the planes.	使目標單位能在位面之間自由穿梭。	法術描述
+Calls forth the light of the heavens to shower the city in True Light.	召來天界之光，將城市沐浴於真光術之中。	法術描述
+Increases all rolls by all friendly units by 1.	使所有友方單位的所有擲骰+1。	法術描述
+Adds 3 to a targets attack strength, hits, and resistance.	使目標的攻擊強度、生命與抗性+3。	法術描述
+Summons the powerful hero Torin the Chosen.	召喚強大的英雄「天選者托林」。	法術描述
+The target becomes resistant to non-magical attacks and reduces all damage taken by 2.	使目標對非魔法攻擊產生抗性，並將所受的一切傷害-2。	法術描述
+Gives a target unit almost complete immunity to Chaos and Death magic.	賦予目標單位幾近完全的混沌與死亡魔法免疫。	法術描述
+Increase the gold obtained by a city by 50%.	使城市獲得的金幣+50%。	法術描述
+All units built in the target city are elite.	目標城市建造的所有單位皆為精銳。	法術描述
+Summons an angel.  Friendly units are strengthened by the presence of an angel.	召喚一名天使。天使的存在使友方單位獲得強化。	法術描述
+Turns the target city into a fertile utopia.	將目標城市化為豐饒的樂土。	法術描述
+Heals all units involved in a battle for 5 hit points of damage.	治療參與戰鬥的所有單位 5 點生命傷害。	法術描述
+Attempts to banish all enemy fantastic creatures from a battle.	嘗試將戰鬥中所有敵方奇幻生物放逐。	法術描述
+All friendly units fighting abilities are greatly increased.	所有友方單位的戰鬥能力大幅提升。	法術描述
+Instills a sense of purpose into the local citizenry; that city's production rate rises by 50%.	為當地市民注入使命感；該城市的生產率提升 50%。	法術描述
+Generates a portal in the target city that allows travel to the other plane.	在目標城市生成一道傳送門，允許前往另一個位面。	法術描述
+All normal unit's weapons become holy, giving them a +1 to-hit bonus.	使所有普通單位的武器化為神聖，賦予命中+1加成。	法術描述
+Completely protects a city from all Chaos and Death enchantments.	完全保護城市免受一切混沌與死亡附魔的影響。	法術描述
+All Death spells must resist as they are being cast or be dispelled.	所有死亡法術在施放時必須通過抗性檢定，否則將被解除。	法術描述
+All Chaos spells must resist as they are being cast or be dispelled.	所有混沌法術在施放時必須通過抗性檢定，否則將被解除。	法術描述
+Raises the level of all normal units controlled by the caster by 1.	使施法者控制的所有普通單位等級+1。	法術描述
+Summons the awe-inspiring archangel.  Archangels are powerful Life mages.	召喚令人敬畏的大天使。大天使是強大的生命法師。	法術描述
+Increases the hit points of all friendly units by 25%.	使所有友方單位的生命值+25%。	法術描述
+Summons a group of skeletons that are almost impossible to damage with arrows.	召喚一群骷髏，牠們幾乎無法被弓箭傷害。	法術描述
+Reduces target unit's melee strength by 2.	使目標單位的近戰攻擊力-2。	法術描述
+Doubles power received from shrines, temples, etc.  Reduces city growth by 25%.	使神龕、神殿等所獲得的魔力加倍。城市成長-25%。	法術描述
+Enemy units must resist or they may not attack protected unit.	敵方單位必須抵抗，否則可能無法攻擊受保護的單位。	法術描述
+Target falls into a deep enchanted sleep, taking no action for the rest of the combat.	目標陷入深層的附魔沉眠，在剩餘的戰鬥中無法行動。	法術描述
+Summons a pack of ghouls.  Any unit slain by ghouls may rise up as undead creatures.	召喚一群食屍鬼。任何被食屍鬼殺死的單位都可能化為不死生物。	法術描述
+Target loses one hit point for every point resistance roll is failed.  -1 to roll for 5 mana.	抵抗骰每失敗一點，目標便損失一點生命值。花費 5 法力可使骰值-1。	法術描述
+Every enemy unit must resist or do nothing each combat turn.	每個敵方單位必須抵抗，否則在每個戰鬥回合無法行動。	法術描述
+Death creatures get a bonus in combat and Life creatures are penalized.	死亡生物在戰鬥中獲得加成，生命生物則受到懲罰。	法術描述
+Opponent wizard and spell casting heroes are drained of power during combat.	戰鬥期間，對手巫師與會施法的英雄被汲取魔力。	法術描述
+Opponent wizard is drained of power in overland.	在大地圖上，對手巫師被汲取魔力。	法術描述
+Enemy normal unit becomes yours for duration of combat.  Unit is destroyed after combat.	敵方普通單位在戰鬥期間歸你所有。戰鬥結束後該單位被摧毀。	法術描述
+Normal unit is 'cursed' with lycanthropy and becomes werewolves.	普通單位被「詛咒」染上狼化，化為狼人。	法術描述
+All enemy unit's attacks, defense and resistance is reduced.	所有敵方單位的攻擊、防禦與抵抗皆降低。	法術描述
+Target unit becomes undead and receives a bonus to attack, defense, resistance and hit points.	目標單位成為不死生物，並獲得攻擊、防禦、抵抗與生命值的加成。	法術描述
+Summons an invisible night stalker.	召喚一隻隱形的夜行獵者。	法術描述
+Reduces diplomatic relations of all wizards in contact with target wizard.	降低所有與目標巫師有接觸的巫師的外交關係。	法術描述
+Blocks ranged attacks from outside of wall to inside of wall.	阻擋從牆外射向牆內的遠程攻擊。	法術描述
+Doubles melee attack strength and reduces defense to 0.	使近戰攻擊力加倍，並將防禦降為 0。	法術描述
+Summons a group of shadow demons that can plane shift and regenerate.	召喚一群能位面轉移並再生的暗影惡魔。	法術描述
+Target unit becomes non-corporeal.	目標單位變為非實體。	法術描述
+Each enemy figure must resist every turn of combat or take 1 point of damage.	每個敵方個體在每個戰鬥回合必須抵抗，否則受到 1 點傷害。	法術描述
+Eliminates all power received from shrines, temples, etc. in target city.	消除目標城市從神龕、神殿等所獲得的全部魔力。	法術描述
+Summons a group of non-corporeal life-stealing wraiths.	召喚一群非實體、汲取生命的幽魂。	法術描述
+All combats at target city are under the effects of Darkness.	目標城市的所有戰鬥都處於黑暗術的效果之下。	法術描述
+Node drains 5 mana from owning wizard instead of generating extra mana.	節點不再產生額外法力，反而從擁有者巫師處汲取 5 法力。	法術描述
+All figures in every unit in target overland map square must resist or die.	目標大地圖格內每個單位的所有個體必須抵抗，否則死亡。	法術描述
+All normal units slain in combat are transformed into zombies under your control.	所有在戰鬥中被殺死的普通單位都會變成受你控制的殭屍。	法術描述
+Halves food produced in a city.	使城市的食物產量減半。	法術描述
+Halves production in a city.	使城市的生產減半。	法術描述
+Target wizard loses 1-10 % of casting skill permanently.	目標巫師永久損失 1-10 % 的施法技能。	法術描述
+Each figure in target unit must resist at -5 or be slain.	目標單位的每個個體必須以-5 抵抗，否則被殺死。	法術描述
+Summons a squad of terrifying death knights.	召喚一隊恐怖的死亡騎士。	法術描述
+All figures in every enemy unit in combat must resist or die.	戰鬥中每個敵方單位的所有個體必須抵抗，否則死亡。	法術描述
+Animates a dead enemy or ally unit in combat.	在戰鬥中喚醒一個死亡的敵方或友方單位。	法術描述
+City population is reduced by one if its population exceeds a 1-10 roll.	若城市人口超過 1-10 的骰值，人口便減少一。	法術描述
+All combats are under the effects of a Darkness spell.	所有戰鬥都處於黑暗術的效果之下。	法術描述
+All Nature and Life spell's casting cost is increased by 50%.	所有自然與生命法術的施法花費提高 50%。	法術描述
+All normal units on both planes must resist or die.	兩個位面上的所有普通單位必須抵抗，否則死亡。	法術描述
+Summons a demon lord that can call 3 more lesser demons to fight in combat.	召喚一位惡魔領主，牠能在戰鬥中再召喚 3 隻較弱的惡魔助戰。	法術描述
+Summons magic spirit to meld with nodes and generate magic power.	召喚魔法精靈與節點融合，產生魔力。	法術描述
+Dispels enemy spells on one unit in combat.	解除戰鬥中某一單位身上的敵方法術。	法術描述
+Moves the location of your Summoning Circle to another city.	將你的召喚法陣移至另一座城市。	法術描述
+Dispels all enemy spells in the target map square.	解除目標地圖格上的所有敵方法術。	法術描述
+Removes a friendly hero from combat and returns her to your summoning circle.	將友方英雄撤出戰鬥，並將她送回你的召喚法陣。	法術描述
+Reveals the spell currently being cast by opponent wizards.	揭示對手巫師當前正在施放的法術。	法術描述
+Creates a lesser magical item for use by your heroes.	為你的英雄製作一件較次級的魔法物品。	法術描述
+Summons a lesser hero to lead your army.	召喚一位較弱的英雄來率領你的軍隊。	法術描述
+Reveals the location of all cities on both planes.	揭示兩個位面上所有城市的位置。	法術描述
+Dispels a global enchantment.	解除一項全域附魔。	法術描述
+Creates a magical artifact for use by your heroes.	為你的英雄製作一件魔法神器。	法術描述
+Summons a greater hero to lead your army.	召喚一位較強的英雄來率領你的軍隊。	法術描述
+Banishes all opponent wizards to Limbo.  You win.	將所有對手巫師放逐至靈薄獄。你獲勝。	法術描述
+This spell enables a wizard to return if his fortress is captured.	此法術讓巫師在其堡壘被攻陷時得以歸返。	法術描述

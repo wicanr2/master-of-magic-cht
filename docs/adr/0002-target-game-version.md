@@ -67,6 +67,16 @@ CP 1.60 改寫了這些字串相關 LBX (DOSBox 重寫成大寫 8.3 檔名):
 - [x] 取得實際 1.60 LBX、升級、對 1.31 做字串 diff (見上)。
 - [x] 量化差異:名稱不變,散文 (help/desc/message) 改寫。
 - [ ] 散文類譯文表 (help / buildings / messages) 以 1.60 為來源萃取。
+
+> **2026-06-28 事故根因(玩家回報法術/建築畫面英文)**:上面這條「散文類萃取」TODO **從未完成** ——
+> 這就是法術 help 卷軸、建造畫面建築描述大量顯示英文的主因。三個具體缺口:
+> 1. **`desc.lbx`(法術書施法卷軸的法術描述,215 條)整類從未 dump/翻譯** —— `cht-dump` 與方法論 §4
+>    的 dump 源清單當初**漏列**這個源(已補,見 `localization-methodology.md` §4 [HARD] 清單)。
+> 2. **`help.lbx` 868 條只有 393 條 key 命中當前 `extracted/` dump(475 條過時)** —— `help.tsv` 的 source 欄
+>    不是從實機 reader dump 的字面(混了 wiki/舊版措辭),與「散文須從實際資料萃取」決策不符。
+> 3. **`buildesc.lbx` ~13 條建築描述缺**。
+> **修法**:一律改用「從當前 `extracted/` 實機 reader dump 的精確字面」當 key(方法論 §2 [HARD] key 對齊),
+> 重新對齊 + 補譯 desc/buildesc;並把缺漏的 dump 源補進 `cht-dump`。
 - [ ] **檔名大小寫**:DOSBox 把 patch 過的檔寫成大寫 (`HELP.LBX`),未變的維持小寫;
       Linux 檔案系統大小寫敏感,實際拿 1.60 資料餵引擎時需統一檔名大小寫 (engine 載入測試時處理)。
 - 引擎 commit 已釘選 (`0c7669b`);CP 釘選 1.60。風險:雙邊持續演進,日後需重驗。

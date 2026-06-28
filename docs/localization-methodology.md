@@ -47,14 +47,23 @@
 
 ## 4. 譯文工作流:dump → 翻譯 → embed → 重生字型
 
-1. **dump 精確英文字串**:寫一支 `test/cht-dump`,用**引擎自己的 reader**讀出建築/help/城市名等
+1. **dump 精確英文字串**:寫一支 `test/cht-dump`,用**引擎自己的 reader**讀出**所有**顯示文字源的
    精確字串(LBX 二進位別自己 parse,易錯)。需在 **xvfb** 下跑(Ebiten init 要 display)。
-2. **切塊翻譯**(見 §8 並行 agent)。
-3. **回填 TSV** → `docs/strings/*.tsv`(欄位 `source<TAB>zh<TAB>note`,英文原文即 key)。
-4. **複製進 embed** + **全面重生字型子集**(否則新字顯示空白方塊):
+   **[HARD] 必 dump 的文字源清單(漏一個 = 整類畫面英文)**:
+   - `help.lbx`(右鍵 help 卷軸、法術 help)— `helplib.ReadHelp`
+   - `desc.lbx`(法術書施法卷軸的法術描述)— `spellbook.ReadSpellDescriptionsFromCache` ← **2026-06 漏掉這個整類沒翻**
+   - `buildesc.lbx`(城市建造畫面的建築短描述)— `building.MakeBuildDescriptions`(與 help.lbx 的長版**不同字串**)
+   - `builddat.lbx` 建築名、`cityname.lbx` 城市名、item-powers / artifacts / spells / units / messages / templates…
+   > 教訓:`desc.lbx` / `buildesc.lbx` 是**獨立於 help.lbx** 的文字源;只 dump help.lbx 會漏掉施法卷軸與建造畫面描述。
+2. **[HARD] key 必須對齊「實際 shipping 資料版本」的 dump**:`source` 欄不可用 wiki/手打/憑記憶的英文,
+   一律用 §1 從**當前 `extracted/` 實機 reader dump 出來的字面**。動翻譯前先跑 `comm -12`(dump 的 source ∩ TSV 的 key),
+   命中率 <95% 代表 key 過時/版本漂移,先重新對齊再翻(見 §「版本漂移」與 ADR 0002)。
+3. **切塊翻譯**(見 §8 並行 agent)。
+4. **回填 TSV** → `docs/strings/*.tsv`(欄位 `source<TAB>zh<TAB>note`,英文原文即 key)。
+5. **複製進 embed** + **全面重生字型子集**(否則新字顯示空白方塊):
    收集「引擎所有 .go 的非 ASCII 字 + 全 TSV zh 欄」→ `sort -u` → `pyftsubset` Noto **Regular**
    (非 DemiLight,字重一致)`--font-number=0`。
-5. **重建 + 驗證**(見 §9、§10)。
+6. **重建 + 驗證**(見 §9、§10)。
 
 格式碼處理:help.lbx 本體用 `0x14` 當換行,TSV 以字面 `\n` 表示,override 載入時 `\n`→`0x14`
 還原,讓 source 精確比對、zh 也保有換行。
