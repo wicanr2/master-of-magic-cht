@@ -226,6 +226,7 @@ patch-only。本 repo **不 vendor 引擎本體、不散布任何版權遊戲檔
 | [`docs/mom-strategy-notes.md`](docs/mom-strategy-notes.md) | MoM 策略筆記(5+ 份攻略歸納)+ 自動建議規則依據 |
 | [`docs/dos-vs-remake-ui.md`](docs/dos-vs-remake-ui.md) | 原版 DOS vs 重製引擎的介面差異分析(為何「沒 DOS 感」)+ DOS 長寬比切換對比 |
 | [`docs/crt-shader-guide.md`](docs/crt-shader-guide.md) | CRT shader 從零實作教學(Ebiten/Kage,逐效果第一性原理 + 接進本引擎)|
+| [`docs/promo-video-plan.md`](docs/promo-video-plan.md) | 推廣影片錄製腳本規劃(沿用 u1-cht pipeline;風格 token / 鏡頭清單 / 分鏡 / 配樂)|
 | [`docs/localization-methodology.md`](docs/localization-methodology.md) | **Go/Ebiten 老遊戲繁中化方法論 + 踩雷清單**(可重用 playbook) |
 | [`CONTEXT.md`](CONTEXT.md) | 專案術語表(ubiquitous language) |
 | [`docs/phase1-cjk-prototype.md`](docs/phase1-cjk-prototype.md) | Phase 1 渲染驗證全紀錄(含真實引擎截圖與必修項) |
