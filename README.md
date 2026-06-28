@@ -12,6 +12,13 @@
 >
 > 三十年前的奇幻 4X 神作,如今——**翻開法典,字字繁中。**
 
+<p align="center">
+  <a href="https://youtu.be/bXf6jDos0ms">
+    <img src="https://img.youtube.com/vi/bXf6jDos0ms/hqdefault.jpg" alt="魔法大帝 繁體中文化 推廣影片" width="480"><br>
+    ▶ 觀看推廣影片(60 秒)
+  </a>
+</p>
+
 那是 1994 年。SimTex 剛靠前一年的《Master of Orion》(銀河霸主) 在 4X 圈打響名號,轉頭就端出這款奇幻版的——
 有人直接把它形容成「奇幻版的文明帝國 (Civilization)」。兩個位面、十四本魔法書、上百種法術與單位,
 整套規則密得像一本原文教科書。而台灣玩家面對的,是一片全英文的羊皮紙介面,加上一本厚厚的英文手冊。
