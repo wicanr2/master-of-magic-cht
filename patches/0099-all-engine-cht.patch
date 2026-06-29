@@ -381,10 +381,44 @@ index 8ffae1b..b0843fd 100644
              if highlightedCity != nil {
                  normalFont.Print(screen, float64(99), float64(158), scale.ScaleAmount, ebiten.ColorScale{}, highlightedCity.Name)
 diff --git a/game/magic/cityview/build-screen.go b/game/magic/cityview/build-screen.go
-index 7675f86..cba5fa2 100644
+index 7675f86..13483bc 100644
 --- a/game/magic/cityview/build-screen.go
 +++ b/game/magic/cityview/build-screen.go
-@@ -209,7 +209,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
+@@ -83,20 +83,30 @@ func combineStrings(all []string) string {
+         return ""
+     }
+ 
++    // 中文化:逐元素翻譯(建築名走 buildings.tsv;單位名可能已是中文,translateForDisplay 不命中即原樣),
++    // 連接詞「and」「,」也中文化,避免「Fighters Guild and 戟兵」這種半英文。
++    translated := make([]string, len(all))
++    for i, s := range all {
++        translated[i] = font.TranslateFormat(s)
++    }
++    all = translated
++    andWord := font.TranslateFormat("and")
++    comma := font.TranslateFormat(", ")
++
+     if len(all) == 1 {
+         return all[0]
+     }
+ 
+     if len(all) == 2 {
+-        return all[0] + " and " + all[1]
++        return all[0] + " " + andWord + " " + all[1]
+     }
+ 
+     out := ""
+     for i := 0; i < len(all) - 1; i++ {
+-        out += all[i] + ", "
++        out += all[i] + comma
+     }
+ 
+-    out += "and " + all[len(all) - 1]
++    out += andWord + " " + all[len(all) - 1]
+     return out
+ }
+ 
+@@ -209,7 +219,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
                  }
  
                  fonts.DescriptionFont.PrintOptions(screen, float64(130), float64(12), font.FontOptions{Scale: scale.ScaleAmount}, city.BuildingInfo.Name(building))
@@ -393,7 +427,7 @@ index 7675f86..cba5fa2 100644
  
                  fonts.DescriptionFont.PrintOptions(screen, float64(85), float64(48), font.FontOptions{Scale: scale.ScaleAmount}, "Maintenance")
  
-@@ -429,7 +429,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
+@@ -429,7 +439,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
                  options.GeoM.Translate(float64(cancelX), float64(cancelY))
                  scale.DrawScaled(screen, buttonBackground, &options)
  
@@ -402,7 +436,7 @@ index 7675f86..cba5fa2 100644
              },
          })
  
-@@ -452,7 +452,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
+@@ -452,7 +462,7 @@ func makeBuildUI(cache *lbx.LbxCache, imageCache *util.ImageCache, city *citylib
                  options.GeoM.Translate(float64(okX), float64(okY))
                  scale.DrawScaled(screen, buttonBackground, &options)
  
@@ -1193,10 +1227,10 @@ index b0430fc..3c28720 100644
      DifficultyIntro DifficultySetting = iota
 diff --git a/game/magic/data/settings.go b/game/magic/data/settings.go
 new file mode 100644
-index 0000000..91a85b7
+index 0000000..8f93b95
 --- /dev/null
 +++ b/game/magic/data/settings.go
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,64 @@
 +package data
 +
 +// 執行期遊戲設定(對應原版《魔法大帝》Settings 畫面的部分項目)。
@@ -1233,6 +1267,9 @@ index 0000000..91a85b7
 +    // CRT 質感 shader:掃描線 / 子像素光罩 / 暗角,模擬老 CRT 觀感(見 docs/crt-shader-guide.md)。
 +    // 預設關。純顏色後製,不影響遊戲邏輯與滑鼠座標。
 +    CrtShader bool
++    // 隱藏未研發法術:開啟時,法術書中尚未研發的法術描述顯示「未研發,無法顯示」(取代原版 alien 加密字型);
++    // 關閉時一律顯示完整描述(便於查閱)。預設開(貼近原版「未學會看不懂」,但用乾淨訊息取代亂碼)。
++    HideUnresearchedSpells bool
 +}
 +
 +// DosAspectStretch:DOS 原版 320×200 在 4:3 CRT 上的垂直拉伸係數(PAR 1:1.2)。
@@ -1256,6 +1293,7 @@ index 0000000..91a85b7
 +    AutomaticAdvice:     false, // 預設關:進階玩家會關掉(手冊語)
 +    DosAspect:           false, // 預設關:維持方形像素;開啟還原 DOS 4:3 觀感
 +    CrtShader:           false, // 預設關:開啟疊 CRT 掃描線/光罩/暗角質感
++    HideUnresearchedSpells: true, // 預設開:未研發法術顯示「未研發,無法顯示」(取代原版亂碼)
 +}
 diff --git a/game/magic/diplomacy/diplomacy.go b/game/magic/diplomacy/diplomacy.go
 index a2dd539..1ca091b 100644
@@ -1797,7 +1835,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..73d0040 100644
+index 44c64b8..419639d 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -2076,6 +2114,65 @@ index 44c64b8..73d0040 100644
  
      rect := image.Rect(0, 0, left.Bounds().Dx() + right.Bounds().Dx(), left.Bounds().Dy()).Add(image.Pt(uiX, uiY))
      group.AddElement(&uilib.UIElement{
+@@ -5176,50 +5251,50 @@ func (game *Game) ShowTaxCollectorUI(cornerX int, cornerY int){
+ 
+     taxes := []uilib.Selection{
+         uilib.Selection{
+-            Name: selected("0 gold, 0% unrest", player.TaxRate.IsZero()),
++            Name: selected(font.TranslateFormat("0 gold, 0% unrest"), player.TaxRate.IsZero()),
+             Action: func(){
+                 update(fraction.Zero())
+             },
+         },
+         uilib.Selection{
+-            Name: selected("0.5 gold, 10% unrest", player.TaxRate.Equals(fraction.Make(1, 2))),
++            Name: selected(font.TranslateFormat("0.5 gold, 10% unrest"), player.TaxRate.Equals(fraction.Make(1, 2))),
+             Action: func(){
+                 update(fraction.Make(1, 2))
+             },
+         },
+         uilib.Selection{
+-            Name: selected("1 gold, 20% unrest", player.TaxRate.Equals(fraction.Make(1, 1))),
++            Name: selected(font.TranslateFormat("1 gold, 20% unrest"), player.TaxRate.Equals(fraction.Make(1, 1))),
+             Action: func(){
+                 update(fraction.Make(1, 1))
+             },
+         },
+         uilib.Selection{
+-            Name: selected("1.5 gold, 30% unrest", player.TaxRate.Equals(fraction.Make(3, 2))),
++            Name: selected(font.TranslateFormat("1.5 gold, 30% unrest"), player.TaxRate.Equals(fraction.Make(3, 2))),
+             Action: func(){
+                 update(fraction.Make(3, 2))
+             },
+         },
+         uilib.Selection{
+-            Name: selected("2 gold, 45% unrest", player.TaxRate.Equals(fraction.Make(2, 1))),
++            Name: selected(font.TranslateFormat("2 gold, 45% unrest"), player.TaxRate.Equals(fraction.Make(2, 1))),
+             Action: func(){
+                 update(fraction.Make(2, 1))
+             },
+         },
+         uilib.Selection{
+-            Name: selected("2.5 gold, 60% unrest", player.TaxRate.Equals(fraction.Make(5, 2))),
++            Name: selected(font.TranslateFormat("2.5 gold, 60% unrest"), player.TaxRate.Equals(fraction.Make(5, 2))),
+             Action: func(){
+                 update(fraction.Make(5, 2))
+             },
+         },
+         uilib.Selection{
+-            Name: selected("3 gold, 75% unrest", player.TaxRate.Equals(fraction.Make(3, 1))),
++            Name: selected(font.TranslateFormat("3 gold, 75% unrest"), player.TaxRate.Equals(fraction.Make(3, 1))),
+             Action: func(){
+                 update(fraction.Make(3, 1))
+             },
+         },
+     }
+ 
+-    game.HudUI.AddElements(uilib.MakeSelectionUI(game.HudUI, game.Cache, &game.ImageCache, cornerX, cornerY, "Tax Per Population", taxes, true))
++    game.HudUI.AddElements(uilib.MakeSelectionUI(game.HudUI, game.Cache, &game.ImageCache, cornerX, cornerY, font.TranslateFormat("Tax Per Population"), taxes, true))
+ }
+ 
+ func (game *Game) ShowApprenticeUI(yield coroutine.YieldFunc, player *playerlib.Player){
 @@ -5644,7 +5719,7 @@ func (game *Game) doPlanarTraval() {
                  err := game.PlaneShift(activeStack, player)
                  if err != nil {
@@ -4062,7 +4159,7 @@ index 346c54e..c436d41 100644
  var ScaledGeom ebiten.GeoM
  
 diff --git a/game/magic/settings/settings.go b/game/magic/settings/settings.go
-index 556d824..ee1764d 100644
+index 556d824..dc87271 100644
 --- a/game/magic/settings/settings.go
 +++ b/game/magic/settings/settings.go
 @@ -13,6 +13,8 @@ import (
@@ -4083,14 +4180,14 @@ index 556d824..ee1764d 100644
          },
      })
  
-@@ -103,6 +105,171 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
+@@ -103,6 +105,178 @@ func MakeSettingsUI(cache *lbx.LbxCache, imageCache *util.ImageCache, music *mus
          },
      })
  
 +    // 設定切換鈕共用 helper:雙欄自動排版(避免硬寫座標、撞到 OK 鈕)。每欄 7 列,共可容 14 項;
 +    // 目前 11 項。左欄 x=18、右欄 x=165,列距 13,自 y=66 起,最後一列 y≈144 仍在 OK 鈕(y=176)之上。
 +    toggleIndex := 0
-+    const togglePerColumn = 9
++    const togglePerColumn = 10
 +    addToggle := func(label func() string, onClick func()){
 +        col := toggleIndex / togglePerColumn
 +        row := toggleIndex % togglePerColumn
@@ -4250,6 +4347,13 @@ index 556d824..ee1764d 100644
 +        return onOff("CRT Shader", data.Settings.CrtShader)
 +    }, func(){
 +        data.Settings.CrtShader = !data.Settings.CrtShader
++    })
++
++    // 隱藏未研發法術(開:未研發法術描述顯示「未研發,無法顯示」;關:一律顯示完整描述)。預設開。
++    addToggle(func() string {
++        return onOff("Hide Unresearched Spells", data.Settings.HideUnresearchedSpells)
++    }, func(){
++        data.Settings.HideUnresearchedSpells = !data.Settings.HideUnresearchedSpells
 +    })
 +
      return group, quit
@@ -4548,7 +4652,7 @@ index 0000000..2a93c3d
 +    test.Logf("法術書排序:按類別/按顏色切換正確,分組互斥、總數守恆 → #7 Spell Book Ordering 可用")
 +}
 diff --git a/game/magic/spellbook/spell.go b/game/magic/spellbook/spell.go
-index 4bc65bc..f380252 100644
+index 4bc65bc..fc1e6ed 100644
 --- a/game/magic/spellbook/spell.go
 +++ b/game/magic/spellbook/spell.go
 @@ -46,32 +46,60 @@ func magicToOrder(magic data.MagicType) int {
@@ -4631,25 +4735,58 @@ index 4bc65bc..f380252 100644
      }
  
      return halfPages
-@@ -598,7 +626,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+@@ -445,6 +473,10 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+         spellDescriptionAlienCache[index] = wrapped
+         return wrapped
+     }
++    // 中文化:未研發法術改走 HideUnresearchedSpells 設定(乾淨訊息/完整描述),不再用 alien 加密字型;
++    // 保留下列宣告以備未來「完全加密(連中文)」模式,暫以 _ 消未使用警告。
++    _ = spellTitleAlienFont
++    _ = getSpellDescriptionAlienText
+ 
+     knownSpell := func(spell Spell) bool {
+         return knownSpells.Contains(spell)
+@@ -598,7 +630,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
                          if turns > 1 {
                              turnString = "turns"
                          }
 -                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf("Research Cost:%v (%v %v)", spell.ResearchCost, turns, turnString))
-+                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf(font.TranslateFormat("Research Cost:%v (%v %v)"), spell.ResearchCost, turns, turnString))
++                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf(font.TranslateFormat("Research Cost:%v (%v %v)"), spell.ResearchCost, turns, font.TranslateFormat(turnString)))
                          y += float64(spellTextNormalFont.Height())
                      } else {
                          spellCost := caster.ComputeEffectiveSpellCost(spell, true)
-@@ -611,7 +639,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+@@ -611,7 +643,7 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
                          if turns > 1 {
                              turnString = "turns"
                          }
 -                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf("Casting cost:%v (%v %v)", spellCost, turns, turnString))
-+                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf(font.TranslateFormat("Casting cost:%v (%v %v)"), spellCost, turns, turnString))
++                        spellTextNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &scaleOptions}, fmt.Sprintf(font.TranslateFormat("Casting cost:%v (%v %v)"), spellCost, turns, font.TranslateFormat(turnString)))
                          y += float64(spellTextNormalFont.Height())
                      }
  
-@@ -1417,7 +1445,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -626,9 +658,18 @@ func ShowSpellBook(yield coroutine.YieldFunc, cache *lbx.LbxCache, allSpells Spe
+                     }
+ 
+                 } else {
+-                    spellTitleAlienFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &options}, spell.Name)
+-                    wrapped := getSpellDescriptionAlienText(spell.Index)
+-                    spellTextAlienFont.RenderWrapped(pageImage, x, y + float64(10), wrapped, font.FontOptions{Scale: scale.ScaleAmount, Options: &options})
++                    // 中文化:未研發法術。原版用 alien 加密字型(故意看不懂),但 CJK 注入會讓中文可讀、
++                    // 只剩 ASCII 數字亂碼(半殘)。改由設定切換:
++                    //   HideUnresearchedSpells 開 → 名稱可讀 + 描述顯示「未研發,無法顯示」(取代亂碼)。
++                    //   關 → 一律顯示完整描述。
++                    spellTitleNormalFont.PrintOptions(pageImage, x, y, font.FontOptions{Scale: scale.ScaleAmount, Options: &options}, spell.Name)
++                    if data.Settings.HideUnresearchedSpells {
++                        hidden := spellTextNormalFont.CreateWrappedText(wrapWidth, 1, font.TranslateFormat("(spell not yet researched)"))
++                        spellTextNormalFont.RenderWrapped(pageImage, x, y + float64(10), hidden, font.FontOptions{Scale: scale.ScaleAmount, Options: &options})
++                    } else {
++                        wrapped := getSpellDescriptionNormalText(spell.Index)
++                        spellTextNormalFont.RenderWrapped(pageImage, x, y + float64(10), wrapped, font.FontOptions{Scale: scale.ScaleAmount, Options: &options})
++                    }
+                 }
+             }
+         }
+@@ -1417,7 +1458,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
              textColorOptions.ColorScale = textColorScale
  
              infoFont.PrintOptions(screen, spellX, spellY, font.FontOptions{Options: &textColorOptions, Scale: scale.ScaleAmount}, spell.Name)
@@ -4658,7 +4795,7 @@ index 4bc65bc..f380252 100644
              icon := getMagicIcon(spell)
  
              nameLength := infoFont.MeasureTextWidth(spell.Name, 1) + 1
-@@ -1577,7 +1605,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -1577,7 +1618,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
                  },
                  Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
                      if overland {
@@ -4667,7 +4804,7 @@ index 4bc65bc..f380252 100644
                      }
                      return "", nil
                  },
-@@ -1600,7 +1628,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -1600,7 +1641,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
  
                              ui.RemoveGroup(group)
                          }
@@ -4725,7 +4862,7 @@ index fa66239..bfe65cf 100644
  
  type UIFonts struct {
 diff --git a/game/magic/unitview/unit.go b/game/magic/unitview/unit.go
-index b52c499..00f72f4 100644
+index b52c499..f8a48dd 100644
 --- a/game/magic/unitview/unit.go
 +++ b/game/magic/unitview/unit.go
 @@ -100,9 +100,9 @@ func RenderUnitInfoNormal(screen *ebiten.Image, imageCache *util.ImageCache, uni
@@ -4758,15 +4895,27 @@ index b52c499..00f72f4 100644
  }
  
  // show rows of icons. the second row is offset a bit to the right and down
-@@ -384,7 +384,7 @@ func RenderExperienceBadge(screen *ebiten.Image, imageCache *util.ImageCache, un
+@@ -382,9 +382,9 @@ func RenderExperienceBadge(screen *ebiten.Image, imageCache *util.ImageCache, un
+     pic, _ := imageCache.GetImage("special.lbx", experienceIndex, 0)
+     screen.DrawImage(pic, scale.ScaleOptions(defaultOptions))
      x, y := defaultOptions.GeoM.Apply(0, 0)
-     text := experience.Name()
+-    text := experience.Name()
++    text := font.TranslateFormat(experience.Name())
      if showExperience {
 -        text = fmt.Sprintf("%v (%v ep)", experience.Name(), unit.GetExperience())
-+        text = fmt.Sprintf(font.TranslateFormat("%v (%v ep)"), experience.Name(), unit.GetExperience())
++        text = fmt.Sprintf(font.TranslateFormat("%v (%v ep)"), font.TranslateFormat(experience.Name()), unit.GetExperience())
      }
      showFont.PrintOptions(screen, x + float64(pic.Bounds().Dx() + 2), y + float64(5), font.FontOptions{DropShadow: true, Options: &defaultOptions, Scale: scale.ScaleAmount}, text)
      return float64(pic.Bounds().Dy() + 1)
+@@ -553,7 +553,7 @@ func createUnitAbilitiesElements(cache *lbx.LbxCache, imageCache *util.ImageCach
+ 
+                     printX := x + float64(pic.Bounds().Dx() + 2)
+                     printY := y + float64(5)
+-                    mediumFont.PrintOptions(screen, printX, printY, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, ability.Name())
++                    mediumFont.PrintOptions(screen, printX, printY, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, font.TranslateFormat(ability.Name()))
+                 },
+             })
+ 
 @@ -579,7 +579,7 @@ func createUnitAbilitiesElements(cache *lbx.LbxCache, imageCache *util.ImageCach
                  },
                  LeftClick: func(element *uilib.UIElement){
@@ -4776,6 +4925,15 @@ index b52c499..00f72f4 100644
                          confirm := func(){
                              unit.RemoveEnchantment(enchantment)
                              updateAbilities()
+@@ -600,7 +600,7 @@ func createUnitAbilitiesElements(cache *lbx.LbxCache, imageCache *util.ImageCach
+ 
+                     printX := x + float64(pic.Bounds().Dx() + 2)
+                     printY := y + float64(5)
+-                    mediumFont.PrintOptions(screen, printX, printY, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, enchantment.Name())
++                    mediumFont.PrintOptions(screen, printX, printY, font.FontOptions{DropShadow: true, Options: &options, Scale: scale.ScaleAmount}, font.TranslateFormat(enchantment.Name()))
+                 },
+             })
+ 
 diff --git a/game/magic/util/cht_label.go b/game/magic/util/cht_label.go
 new file mode 100644
 index 0000000..124c9d5
@@ -6155,3 +6313,155 @@ index 850b02e..986b077 100644
  
      return &Engine{
          LbxCache: cache,
+diff --git a/test/promo-music/main.go b/test/promo-music/main.go
+new file mode 100644
+index 0000000..1a774ae
+--- /dev/null
++++ b/test/promo-music/main.go
+@@ -0,0 +1,31 @@
++package main
++
++// 抽 music.lbx 的 XMI → 標準 MIDI 檔(供 fluidsynth + SoundFont 離線算成推廣片配樂)。
++// 跑法:cwd = LBX 目錄(AutoCache)。輸出 /out/song_<idx>.mid。
++
++import (
++	"fmt"
++	"os"
++
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++	"github.com/kazzmir/master-of-magic/lib/xmi"
++)
++
++func main() {
++	cache := lbx.AutoCache()
++	// 104=SongTitle(經典主題曲)、99=SongBackground1(大地圖)、112=SongIntro
++	for _, idx := range []int{104, 99, 112} {
++		song, err := xmi.ReadMidiFromCache(cache, "music.lbx", idx)
++		if err != nil {
++			fmt.Printf("idx %d: ERR %v\n", idx, err)
++			continue
++		}
++		out := fmt.Sprintf("/out/song_%d.mid", idx)
++		if err := song.WriteFile(out); err != nil {
++			fmt.Printf("idx %d write ERR %v\n", idx, err)
++			continue
++		}
++		fi, _ := os.Stat(out)
++		fmt.Printf("idx %d -> %s (%d bytes)\n", idx, out, fi.Size())
++	}
++}
+diff --git a/test/repro-spelldesc/main.go b/test/repro-spelldesc/main.go
+new file mode 100644
+index 0000000..7fe299f
+--- /dev/null
++++ b/test/repro-spelldesc/main.go
+@@ -0,0 +1,68 @@
++package main
++
++// 重現 issue3-A:法術描述數字變亂碼。用 spell.go 同款 spellTextNormalFont(fonts[0]),
++// 把同一句分別用 RenderWrapped(描述路徑) vs PrintOptions(施法費用路徑) 畫出來比對。
++
++import (
++	"image"
++	"image/color"
++	"image/png"
++	"os"
++
++	"github.com/kazzmir/master-of-magic/lib/lbx"
++	"github.com/kazzmir/master-of-magic/lib/font"
++	"github.com/kazzmir/master-of-magic/game/magic/audio"
++	"github.com/kazzmir/master-of-magic/game/magic/mouse"
++	"github.com/kazzmir/master-of-magic/game/magic/data"
++	"github.com/kazzmir/master-of-magic/game/magic/scale"
++	"github.com/hajimehoshi/ebiten/v2"
++)
++
++type Engine struct{ f *font.Font; n int }
++
++func (e *Engine) Update() error { e.n++; return nil }
++func (e *Engine) Layout(int, int) (int, int) { return 960, 300 }
++
++func (e *Engine) Draw(screen *ebiten.Image) {
++	screen.Fill(color.RGBA{R: 200, G: 180, B: 130, A: 255}) // 羊皮紙底
++	mud := "Turns a 5x5 area into thick sticky mud for the duration of a battle."
++	star := "A 15 strength attack that is only effective versus Chaos and Death creatures."
++	var op ebiten.DrawImageOptions
++	fo := font.FontOptions{Scale: scale.ScaleAmount, Options: &op}
++	// (a) 描述路徑:RenderWrapped
++	e.f.RenderWrapped(screen, 10, 10, e.f.CreateWrappedText(130, 1, mud), fo)
++	// (b) 施法費用路徑:直接 PrintOptions(同一句,不 wrap)
++	e.f.PrintOptions(screen, 10, 120, fo, mud)
++	// (c) 另一句確認
++	e.f.PrintOptions(screen, 10, 160, fo, star)
++	// (d) 對照:純英文施法費用樣式
++	e.f.PrintOptions(screen, 10, 200, fo, "Casting cost:30 (1 turn) 5x5 15")
++
++	if e.n == 8 {
++		b := screen.Bounds()
++		buf := make([]byte, 4*b.Dx()*b.Dy())
++		screen.ReadPixels(buf)
++		img := &image.NRGBA{Pix: buf, Stride: 4 * b.Dx(), Rect: image.Rect(0, 0, b.Dx(), b.Dy())}
++		f, _ := os.Create("/out/repro.png")
++		png.Encode(f, img)
++		f.Close()
++		os.Exit(0)
++	}
++}
++
++func main() {
++	cache := lbx.AutoCache()
++	audio.Initialize()
++	mouse.Initialize()
++	fontLbx, _ := cache.GetLbxFile("fonts.lbx")
++	fonts, _ := font.ReadFonts(fontLbx, 0)
++	greyLight := color.RGBA{R: 20, G: 20, B: 20, A: 255}
++	pal := color.Palette{
++		color.RGBA{R: 0, G: 0, B: 0, A: 0},
++		color.RGBA{R: 20, G: 20, B: 20, A: 255},
++		greyLight, greyLight, greyLight, greyLight, greyLight, greyLight,
++	}
++	f := font.MakeOptimizedFontWithPalette(fonts[6], pal)  // ALIEN
++	ebiten.SetWindowSize(data.ScreenWidth*3, data.ScreenHeight*3)
++	ebiten.RunGame(&Engine{f: f})
++}
+diff --git a/test/verify-issue3/main.go b/test/verify-issue3/main.go
+new file mode 100644
+index 0000000..ff2910a
+--- /dev/null
++++ b/test/verify-issue3/main.go
+@@ -0,0 +1,35 @@
++package main
++
++import (
++	"fmt"
++	"github.com/kazzmir/master-of-magic/lib/font"
++)
++
++func main() {
++	keys := []string{
++		"(spell not yet researched)", "Hide Unresearched Spells",
++		"turn", "turns", "and", ", ",
++		"Recruit", "Regular", "Veteran", "Elite", "Ultra Elite", "Champion",
++		"Create Outpost",
++		"Tax Per Population", "0 gold, 0% unrest", "1 gold, 20% unrest", "3 gold, 75% unrest",
++		"FLOATING ISLANDS", "ARMAGEDON", "BASILISKS", "CHIMERA", "HOLY LIGHT",
++	}
++	ok, bad := 0, 0
++	for _, k := range keys {
++		v := font.TranslateFormat(k)
++		hasCJK := false
++		for _, r := range v {
++			if r >= 0x4e00 && r <= 0x9fff {
++				hasCJK = true
++			}
++		}
++		if hasCJK {
++			ok++
++			fmt.Printf("✓ %-28q → %s\n", k, v)
++		} else {
++			bad++
++			fmt.Printf("✗ %-28q → %s (未翻)\n", k, v)
++		}
++	}
++	fmt.Printf("\n翻譯: %d ok / %d 未翻\n", ok, bad)
++}

@@ -372,3 +372,24 @@ Automatic Advice	自動建議
 ADVICE	顧問建議
 DOS Aspect Ratio	DOS 原版長寬比
 CRT Shader	CRT 質感
+Hide Unresearched Spells	隱藏未研發法術	settings
+(spell not yet researched)	未研發,無法顯示	spellbook
+turn	回合	unit
+turns	回合	unit
+and	與	ui
+, 	、	ui
+Recruit	新兵	experience
+Regular	正規兵	experience
+Veteran	老兵	experience
+Elite	精銳	experience
+Ultra Elite	超級精銳	experience
+Champion	勇士	experience
+Create Outpost	建立前哨站	ability
+Tax Per Population	每人口稅率	tax
+0 gold, 0% unrest	0 金幣,0% 動亂	tax
+0.5 gold, 10% unrest	0.5 金幣,10% 動亂	tax
+1 gold, 20% unrest	1 金幣,20% 動亂	tax
+1.5 gold, 30% unrest	1.5 金幣,30% 動亂	tax
+2 gold, 45% unrest	2 金幣,45% 動亂	tax
+2.5 gold, 60% unrest	2.5 金幣,60% 動亂	tax
+3 gold, 75% unrest	3 金幣,75% 動亂	tax
