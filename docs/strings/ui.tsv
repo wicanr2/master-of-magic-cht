@@ -393,3 +393,35 @@ Tax Per Population	每人口稅率	tax
 2 gold, 45% unrest	2 金幣,45% 動亂	tax
 2.5 gold, 60% unrest	2.5 金幣,60% 動亂	tax
 3 gold, 75% unrest	3 金幣,75% 動亂	tax
+Grasslands	草原	terrain
+Grass	草原	terrain
+Forest	森林	terrain
+Mountain	山脈	terrain
+Desert	沙漠	terrain
+Swamp	沼澤	terrain
+Tundra	凍原	terrain
+Hill	丘陵	terrain
+Hills	丘陵	terrain
+Lake	湖泊	terrain
+Ocean	海洋	terrain
+River	河流	terrain
+Shore	海岸	terrain
+Volcano	火山	terrain
+Magic Node	魔法節點	surveyor
+Abandoned Keep	廢棄要塞	surveyor
+Ancient Temple	古老神殿	surveyor
+Cave	洞窟	surveyor
+Dungeon	地城	surveyor
+Fallen Temple	傾頹神殿	surveyor
+Keep	要塞	surveyor
+Lair	巢穴	surveyor
+Monster Lair	怪物巢穴	surveyor
+Mysterious Cave	神秘洞窟	surveyor
+Open Tower	開啟之塔	surveyor
+Ruins	廢墟	surveyor
+Tower	高塔	surveyor
+Temple	神殿	surveyor
+Node	節點	surveyor
+Unexplored	未探索	surveyor
+Cities cannot be built less than 3 squares from any other city.	城市不能建在距離其他城市少於 3 格的範圍內。	surveyor
+Do you wish to allow the Grand Vizier to select what buildings your cities create?	你要讓大臣替你的城市決定建造哪些建築嗎?	grand-vizier

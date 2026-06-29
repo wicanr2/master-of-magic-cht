@@ -2642,7 +2642,7 @@ index f5ef5e5..fb024b3 100644
      }
  
 diff --git a/game/magic/game/surveyor.go b/game/magic/game/surveyor.go
-index fda86fd..d917acd 100644
+index fda86fd..9df1195 100644
 --- a/game/magic/game/surveyor.go
 +++ b/game/magic/game/surveyor.go
 @@ -110,8 +110,8 @@ func (game *Game) doSurveyor(yield coroutine.YieldFunc) {
@@ -2709,6 +2709,33 @@ index fda86fd..d917acd 100644
                              y += float64(fonts.WhiteFont.Height())
                          }
                      }
+@@ -261,13 +261,18 @@ func (game *Game) doSurveyor(yield coroutine.YieldFunc) {
+ 
+     ui.SetElementsFromArray(nil)
+ 
++    // chtHudMenu:與主 HUD 選單同一組中文疊字 (game.go MakeHudUI),勘查畫面頂部按鈕共用
++    chtHudMenu := map[int]string{1: "遊戲", 2: "法術", 3: "軍隊", 4: "城市", 5: "魔法", 6: "資訊"}
++
+     makeButton := func(lbxIndex int, x int, y int) *uilib.UIElement {
+         button, _ := game.ImageCache.GetImage("main.lbx", lbxIndex, 0)
+         var options ebiten.DrawImageOptions
+         options.GeoM.Translate(float64(x), float64(y))
++        rect := image.Rect(x, y, x + button.Bounds().Dx(), y + button.Bounds().Dy())
+         return &uilib.UIElement{
+             Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+                 scale.DrawScaled(screen, button, &options)
++                game.chtButtonLabel(screen, rect, button, chtHudMenu[lbxIndex])
+             },
+         }
+     }
+@@ -339,6 +344,7 @@ func (game *Game) doSurveyor(yield coroutine.YieldFunc) {
+             var options ebiten.DrawImageOptions
+             options.GeoM.Translate(float64(cancelRect.Min.X), float64(cancelRect.Min.Y))
+             scale.DrawScaled(screen, cancel[cancelIndex], &options)
++            util.ChtLabel(screen, cancelRect, cancel[cancelIndex], game.Fonts.ChtMenuFont, "取消")
+         },
+     })
+ 
 diff --git a/game/magic/game/treasure.go b/game/magic/game/treasure.go
 index 1c79f7d..f670f64 100644
 --- a/game/magic/game/treasure.go
@@ -4858,6 +4885,42 @@ index 1d4a24d..f2df03b 100644
  }
  
  func MakeSummonArtifact(cache *lbx.LbxCache, wizard data.WizardBase, short bool) *Summon {
+diff --git a/game/magic/ui/dialogs.go b/game/magic/ui/dialogs.go
+index 1d483e7..08a63b2 100644
+--- a/game/magic/ui/dialogs.go
++++ b/game/magic/ui/dialogs.go
+@@ -332,6 +332,7 @@ func MakeConfirmDialogWithLayerFull(container UIContainer, cache *lbx.LbxCache,
+                     index = 1
+                 }
+                 scale.DrawScaled(window, yesButtons[index], &options)
++                util.ChtLabel(window, util.ImageRect(int(yesX), int(yesY), yesButtons[index]), yesButtons[index], fonts.Yellow, "是")
+             },
+         })
+     }
+@@ -367,6 +368,7 @@ func MakeConfirmDialogWithLayerFull(container UIContainer, cache *lbx.LbxCache,
+                     index = 1
+                 }
+                 scale.DrawScaled(window, noButtons[index], &options)
++                util.ChtLabel(window, util.ImageRect(int(noX), int(noY), noButtons[index]), noButtons[index], fonts.Yellow, "否")
+             },
+         })
+     }
+@@ -467,6 +469,7 @@ func MakeLairConfirmDialogWithLayer(ui UIContainer, cache *lbx.LbxCache, imageCa
+                     index = 1
+                 }
+                 scale.DrawScaled(window, yesButtons[index], &options)
++                util.ChtLabel(window, util.ImageRect(int(yesX), int(yesY), yesButtons[index]), yesButtons[index], fonts.Yellow, "是")
+             },
+         })
+     }
+@@ -503,6 +506,7 @@ func MakeLairConfirmDialogWithLayer(ui UIContainer, cache *lbx.LbxCache, imageCa
+                     index = 1
+                 }
+                 scale.DrawScaled(window, noButtons[index], &options)
++                util.ChtLabel(window, util.ImageRect(int(noX), int(noY), noButtons[index]), noButtons[index], fonts.Yellow, "否")
+             },
+         })
+     }
 diff --git a/game/magic/ui/ui.go b/game/magic/ui/ui.go
 index ad82d56..296ee0e 100644
 --- a/game/magic/ui/ui.go
@@ -6497,3 +6560,12 @@ index 0000000..ff2910a
 +	}
 +	fmt.Printf("\n翻譯: %d ok / %d 未翻\n", ok, bad)
 +}
+diff --git a/test/vgp/main.go b/test/vgp/main.go
+new file mode 100644
+index 0000000..c30cddd
+--- /dev/null
++++ b/test/vgp/main.go
+@@ -0,0 +1,3 @@
++package main
++import ("fmt";"github.com/kazzmir/master-of-magic/lib/font")
++func main(){ for _,k:=range []string{"%v GP","%v MP","%vGP","%vMP"}{ fmt.Printf("%q → %q → %s\n",k,font.TranslateFormat(k),fmt.Sprintf(font.TranslateFormat(k),3)) } }
