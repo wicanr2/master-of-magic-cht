@@ -1457,7 +1457,7 @@ index e264af3..b4eb973 100644
                              getAlpha = group.MakeFadeOut(fadeSpeed)
                              group.AddDelay(7, func(){
 diff --git a/game/magic/game/cast.go b/game/magic/game/cast.go
-index 92ed88e..1b50cf4 100644
+index 92ed88e..84028bb 100644
 --- a/game/magic/game/cast.go
 +++ b/game/magic/game/cast.go
 @@ -1081,7 +1081,7 @@ func (game *Game) MakeSpellBindingUI(caster *playerlib.Player, spell spellbook.S
@@ -1529,6 +1529,17 @@ index 92ed88e..1b50cf4 100644
          default:
              selectMessage = fmt.Sprintf("unhandled location type %v", locationType)
      }
+@@ -1958,8 +1958,8 @@ func (game *Game) selectLocationForSpell(yield coroutine.YieldFunc, spell spellb
+ 
+             ui.StandardDraw(screen)
+ 
+-            game.Fonts.WhiteFont.PrintRight(screen, float64(276), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%v GP", game.Model.GetHumanPlayer().Gold))
+-            game.Fonts.WhiteFont.PrintRight(screen, float64(313), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf("%v MP", game.Model.GetHumanPlayer().Mana))
++            game.Fonts.WhiteFont.PrintRight(screen, float64(276), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%v GP"), game.Model.GetHumanPlayer().Gold))
++            game.Fonts.WhiteFont.PrintRight(screen, float64(313), float64(68), scale.ScaleAmount, ebiten.ColorScale{}, fmt.Sprintf(font.TranslateFormat("%v MP"), game.Model.GetHumanPlayer().Mana))
+ 
+             castingFont.PrintCenter(screen, float64(280), float64(81), scale.ScaleAmount, ebiten.ColorScale{}, "Casting")
+ 
 @@ -2178,7 +2178,7 @@ func (game *Game) selectLocationForSpell(yield coroutine.YieldFunc, spell spellb
                              city := enemy.FindCity(tileX, tileY, game.Model.Plane)
                              if city != nil {
@@ -1835,7 +1846,7 @@ index a350e17..6e77446 100644
          IsConjunction: false,
          Instant: true,
 diff --git a/game/magic/game/game.go b/game/magic/game/game.go
-index 44c64b8..419639d 100644
+index 44c64b8..0ce9ec0 100644
 --- a/game/magic/game/game.go
 +++ b/game/magic/game/game.go
 @@ -73,6 +73,7 @@ type GameFonts struct {
@@ -2304,6 +2315,22 @@ index 44c64b8..419639d 100644
                      }
  
                      if conjunction != "" {
+@@ -6534,13 +6645,13 @@ func (game *Game) MakeHudUI() *uilib.UI {
+ 
+     elements = append(elements, &uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            game.Fonts.WhiteFont.PrintOptions(screen, 276, 68, font.FontOptions{Justify: font.FontJustifyRight, DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v GP", game.Model.GetHumanPlayer().Gold))
++            game.Fonts.WhiteFont.PrintOptions(screen, 276, 68, font.FontOptions{Justify: font.FontJustifyRight, DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v GP"), game.Model.GetHumanPlayer().Gold))
+         },
+     })
+ 
+     elements = append(elements, &uilib.UIElement{
+         Draw: func(element *uilib.UIElement, screen *ebiten.Image){
+-            game.Fonts.WhiteFont.PrintOptions(screen, 314, 68, font.FontOptions{Justify: font.FontJustifyRight, DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf("%v MP", game.Model.GetHumanPlayer().Mana))
++            game.Fonts.WhiteFont.PrintOptions(screen, 314, 68, font.FontOptions{Justify: font.FontJustifyRight, DropShadow: true, Scale: scale.ScaleAmount}, fmt.Sprintf(font.TranslateFormat("%v MP"), game.Model.GetHumanPlayer().Mana))
+         },
+     })
+ 
 @@ -6738,7 +6849,7 @@ func (game *Game) DisbandUnits(player *playerlib.Player) []string {
                  // disband the unit for the right reason
                  if goldIssue && unit.GetUpkeepGold() > 0 {
@@ -4652,7 +4679,7 @@ index 0000000..2a93c3d
 +    test.Logf("法術書排序:按類別/按顏色切換正確,分組互斥、總數守恆 → #7 Spell Book Ordering 可用")
 +}
 diff --git a/game/magic/spellbook/spell.go b/game/magic/spellbook/spell.go
-index 4bc65bc..fc1e6ed 100644
+index 4bc65bc..9d3e857 100644
 --- a/game/magic/spellbook/spell.go
 +++ b/game/magic/spellbook/spell.go
 @@ -46,32 +46,60 @@ func magicToOrder(magic data.MagicType) int {
@@ -4786,7 +4813,7 @@ index 4bc65bc..fc1e6ed 100644
                  }
              }
          }
-@@ -1417,7 +1458,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
+@@ -1417,11 +1458,11 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
              textColorOptions.ColorScale = textColorScale
  
              infoFont.PrintOptions(screen, spellX, spellY, font.FontOptions{Options: &textColorOptions, Scale: scale.ScaleAmount}, spell.Name)
@@ -4795,6 +4822,11 @@ index 4bc65bc..fc1e6ed 100644
              icon := getMagicIcon(spell)
  
              nameLength := infoFont.MeasureTextWidth(spell.Name, 1) + 1
+-            mpLength := infoFont.MeasureTextWidth(fmt.Sprintf("%v MP", costRemaining), 1)
++            mpLength := infoFont.MeasureTextWidth(fmt.Sprintf(font.TranslateFormat("%v MP"), costRemaining), 1)
+ 
+             gibberishPart := gibberish.SubImage(image.Rect(0, 0, gibberish.Bounds().Dx(), gibberishHeight)).(*ebiten.Image)
+ 
 @@ -1577,7 +1618,7 @@ func MakeSpellBookCastUI(ui *uilib.UI, cache *lbx.LbxCache, spells Spells, charg
                  },
                  Tooltip: func (element *uilib.UIElement) (string, *font.Font) {
