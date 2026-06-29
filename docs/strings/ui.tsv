@@ -425,3 +425,52 @@ Node	節點	surveyor
 Unexplored	未探索	surveyor
 Cities cannot be built less than 3 squares from any other city.	城市不能建在距離其他城市少於 3 格的範圍內。	surveyor
 Do you wish to allow the Grand Vizier to select what buildings your cities create?	你要讓大臣替你的城市決定建造哪些建築嗎?	grand-vizier
+Harmony	和睦	外交情緒
+Friendly	友好	外交情緒
+Peaceful	平和	外交情緒
+Calm	平靜	外交情緒
+Relaxed	緩和	外交情緒
+Neutral	中立	外交情緒
+Unease	疑慮	外交情緒
+Restless	不安	外交情緒
+Tense	緊張	外交情緒
+Troubled	動盪	外交情緒
+Hate	憎恨	外交情緒
+Inside you find absolutely nothing.	裡面空無一物。	寶藏結果
+Hero	英雄	英雄經驗階級
+Myrmidon	百夫長	英雄經驗階級
+Captain	隊長	英雄經驗階級
+Commander	指揮官	英雄經驗階級
+Lord	領主	英雄經驗階級
+Grand Lord	大領主	英雄經驗階級
+Super Hero	超級英雄	英雄經驗階級
+Demigod	半神	英雄經驗階級
+Armsmaster	武器大師	英雄技能
+Blademaster	劍術大師	英雄技能
+Constitution	體魄	英雄技能
+Leadership	領導	英雄技能
+Might	神力	英雄技能
+Prayermaster	祈禱大師	英雄技能
+Sage	賢者	英雄技能
+Arcane Power	奧術之力	英雄技能
+Legendary	傳奇	英雄技能
+Super Armsmaster	高階武器大師	英雄技能tier2
+Super Blademaster	高階劍術大師	英雄技能tier2
+Super Constitution	高階體魄	英雄技能tier2
+Super Leadership	高階領導	英雄技能tier2
+Super Might	高階神力	英雄技能tier2
+Super Prayermaster	高階祈禱大師	英雄技能tier2
+Super Sage	高階賢者	英雄技能tier2
+Super Agility	高階敏捷	英雄技能tier2
+Super Arcane Power	高階奧術之力	英雄技能tier2
+Super Legendary	高階傳奇	英雄技能tier2
+To select Archmage you need: 4 picks in any Realm of Magic	選擇大巫師需要:任一魔法領域 4 點	Retort依存說明
+To select Chaos Mastery you need: 4 picks in Chaos Magic	選擇混沌精通需要:混沌魔法 4 點	Retort依存說明
+To select Divine Power you need: 4 picks in Life Magic	選擇神聖力量需要:生命魔法 4 點	Retort依存說明
+To select Infernal Power you need: 4 picks in Death Magic	選擇地獄力量需要:死亡魔法 4 點	Retort依存說明
+To select Mana Focusing you need: 4 picks in any Realm of Magic	選擇法力聚焦需要:任一魔法領域 4 點	Retort依存說明
+To select Nature Mastery you need: 4 picks in Nature Magic	選擇自然精通需要:自然魔法 4 點	Retort依存說明
+To select Node Mastery you need: 1 pick in Chaos Magic, 1 pick in Nature Magic, 1 pick in Sorcery Magic	選擇節點精通需要:混沌魔法 1 點、自然魔法 1 點、巫術魔法 1 點	Retort依存說明
+To select Runemaster you need: 2 picks in any 3 Realms of Magic	選擇符文大師需要:任三個魔法領域各 2 點	Retort依存說明
+To select Sage Master you need: 1 pick in any 2 Realms of Magic	選擇智慧大師需要:任兩個魔法領域各 1 點	Retort依存說明
+To select Sorcery Mastery you need: 4 picks in Sorcery Magic	選擇魔法精通需要:巫術魔法 4 點	Retort依存說明
